@@ -31,10 +31,12 @@ Devices can be created with the following types:
 - types.JOYSTICK: A device that returns joystick events (not implemented).
 """
 
-from micropython import const
-from . import events
 from sys import exit
 
+from micropython import const
+
+from . import events
+from .joystick import JoystickDriver
 
 _DEFAULT_TOUCH_ROTATION_TABLE = (0b000, 0b101, 0b110, 0b011)
 
@@ -60,13 +62,12 @@ def custom_type(type_name, responses):
         ValueError: If a device class with the same name already exists.
 
     Example:
-        To create the KEYPAD device type and `KeypadDevice` class:
+        To create a custom device type and device class:
 
         ```python
-        import eventsys.device as device
-        from eventsys import events
+        from eventsys import devices, events
 
-        KeypadDevice = device.new_type("KEYPAD", [events.KEYDOWN, events.KEYUP])
+        MyDevice = devices.custom_type("MINE", [events.KEYDOWN, events.KEYUP])
         ```
     """
     if not isinstance(type_name, str):
@@ -90,11 +91,11 @@ def custom_type(type_name, responses):
     return NewClass
 
 
-
 class types:
     """
     Device types for the Event System.
     """
+
     UNDEFINED = const(-1)
     BROKER = const(0x00)
     QUEUE = const(0x01)
@@ -137,7 +138,7 @@ class Device:
         self._state = None
         self._user_data = None  # Can be set and retrieved by apps such as lv_config
 
-    def poll(self, *args) -> events:
+    def poll(self, *args) -> [events]:
         """
         Poll the device for events.
 
@@ -145,17 +146,21 @@ class Device:
             *args (Any): Additional arguments that can be passed to the read callback functions.
 
         Returns:
-            Event: The event that was polled or None if no event was polled.
+            list: A list of event objects if events are received, otherwise None.
         """
-        if (event := self._poll()) is not None:
-            if event.type in events.filter:
-                if event.type == events.QUIT:
-                    if self._broker:
-                        self._broker.quit()
+        if (dev_events := self._poll()) is not None:
+            if isinstance(dev_events, list):
+                eventlist = [e for e in dev_events if e.type in events.filter]
+            else:
+                eventlist = [dev_events] if dev_events.type in events.filter else None
+
+            for event in eventlist:
+                if event.type == events.QUIT and self._broker:
+                    self._broker.quit()
                 if callback_list := self._event_callbacks.get(event.type):
                     for callback in callback_list:
                         callback(event, *args)
-                return event
+            return eventlist if len(eventlist) > 0 else None
         return None
 
     def subscribe(self, callback, event_types=None):
@@ -250,7 +255,10 @@ class Broker(Device):
         # Set it like `display_drv.quit_func = cleanup_func` where `cleanup_func` is a
         # function that cleans up resources and calls `sys.exit()`.
         # .poll() must be called periodically to check for the quit event.
+        # When left at the default, quit() delegates cleanup + process exit to the
+        # registered display driver's polymorphic quit() instead (see quit()).
         self._quit_func = exit
+        self._quit_func_customized = False
 
     def subscribe(self, callback, event_types=None, device_types=None):
         """
@@ -363,11 +371,32 @@ class Broker(Device):
         if not callable(value):
             raise ValueError("quit_func must be callable")
         self._quit_func = value
+        self._quit_func_customized = True
 
     def quit(self):
         """
-        Call the quit function.
+        Handle a window-close (QUIT) event.  This runs for every front end
+        (LVGL or not), since the QUIT event is handled here in eventsys.
+
+        If the application installed a custom ``quit_func``, it is called first
+        for app-specific cleanup.  If it returns (for example because ``sys.exit``
+        was swallowed when quit was invoked from a timer or
+        ``micropython.schedule`` callback), cleanup falls through to the
+        registered display driver's ``quit()``.  With no display registered,
+        the broker's fallback ``quit_func`` is used.
         """
+        if self._quit_func_customized:
+            self._quit_func()
+            # A custom handler may call sys.exit(), which is swallowed when quit
+            # is invoked from a timer or micropython.schedule callback.  Fall
+            # through to the display driver's hard exit when that happens.
+
+        for device in self.devices:
+            data = getattr(device, "_data", None)
+            if callable(getattr(data, "deinit", None)) and callable(getattr(data, "quit", None)):
+                data.quit()  # releases resources and terminates; does not return
+
+        # No display registered to handle the exit; fall back.
         self._quit_func()
 
     def _poll(self):
@@ -375,15 +404,17 @@ class Broker(Device):
         Polls the registered devices for events.
 
         Returns:
-            object: The event object if an event is received, otherwise None.
+            list: A list of event objects if events are received, otherwise None.
         """
+        eventlist = []
         for device in self.devices:
-            if (event := device.poll()) is not None:
+            if (dev_events := device.poll()) is not None:
+                eventlist.extend(dev_events)
                 if callback_list := self._device_callbacks.get(device.type):
-                    for func in callback_list():
-                        func(event)
-                return event
-        return None
+                    for func in callback_list:
+                        for event in dev_events:
+                            func(event)
+        return eventlist if len(eventlist) > 0 else None
 
 
 class QueueDevice(Device):
@@ -414,32 +445,30 @@ class QueueDevice(Device):
         Returns:
             Event or None: The next event from the device, or None if no event is available.
         """
-        if (event := self._read()) is not None:
-            if event.type in self._data2:
-                if event.type in (
-                    events.MOUSEMOTION,
-                    events.MOUSEBUTTONDOWN,
-                    events.MOUSEBUTTONUP,
-                ):
-                    if (scale := self.scale) != 1:
+        if (dev_events := self._read()) is not None:
+            eventlist = []
+            for event in dev_events:
+                if event.type in self._data2:
+                    if (
+                        event.type
+                        in (
+                            events.MOUSEMOTION,
+                            events.MOUSEBUTTONDOWN,
+                            events.MOUSEBUTTONUP,
+                        )
+                        and (scale := self.scale) != 1
+                    ):
                         event.pos = (
                             int(event.pos[0] // scale),
                             int(event.pos[1] // scale),
                         )
                         if event.type == events.MOUSEMOTION:
                             event.rel = (event.rel[0] // scale, event.rel[1] // scale)
-                return event
+
+                    eventlist.append(event)
+
+            return eventlist if len(eventlist) > 0 else None
         return None
-
-    def peek(self) -> bool:
-        """
-        Peek at the next event in the queue without removing it.
-
-        Returns:
-            bool: True if there is an event in the queue that matches the filter in self._data, otherwise False.
-                Note: self._data defaults to events.filter but may be set to a different list.
-        """
-        raise NotImplementedError("QueueDevice.peek() not implemented")
 
 
 class TouchDevice(Device):
@@ -671,8 +700,13 @@ class JoystickDevice(Device):
         __init__(*args, **kwargs): Initializes the JoystickDevice instance.
         _poll(): Polls the device for events.
 
+    Args:
+        joystick_driver (JoystickDriver): The joystick driver to use.
+        emulate_digital [(int,int)]: Emulate digital buttons for the given axis pairs. If set, a hat will be added for each axis pair. The hats will be added after any true hats.
+        digital_threshold (float): The threshold to use for digital emulation.
     Raises:
-        NotImplementedError: If the `_poll` method is not implemented.
+        NotImplementedError: If any of the joystick driver methods are not implemented.
+        ValueError: If a hat has an invalid value, e.g. both up and down are true.
     """
 
     type = types.JOYSTICK
@@ -684,12 +718,87 @@ class JoystickDevice(Device):
         events.JOYBUTTONUP,
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        *args,
+        joystick_driver: JoystickDriver,
+        emulate_digital=None,
+        digital_threshold: float = 0.5,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
+        self.joystick_driver = joystick_driver
+        self.emulate_digital = emulate_digital
+        self.digital_threshold = digital_threshold
+        self._state = [
+            [0] * self.joystick_driver.get_numaxes(),
+            [False] * self.joystick_driver.get_numbuttons(),
+            [(0, 0)] * self.joystick_driver.get_numhats(),
+            [(0, 0)] * self.joystick_driver.get_numballs(),
+        ]
+        if self.emulate_digital:
+            self._state.append([0] * len(self.emulate_digital))
+
+    def emulate(self, value):
+        return (
+            -1 if value < -self.digital_threshold else 1 if value > self.digital_threshold else 0
+        )
 
     def _poll(self):
-        raise NotImplementedError("JoystickDevice.read() not implemented")
+        eventlist = []
+        new_state = [
+            [self.joystick_driver.get_axis(i) for i in range(self.joystick_driver.get_numaxes())],
+            [
+                self.joystick_driver.get_button(i)
+                for i in range(self.joystick_driver.get_numbuttons())
+            ],
+            [self.joystick_driver.get_hat(i) for i in range(self.joystick_driver.get_numhats())],
+            [self.joystick_driver.get_ball(i) for i in range(self.joystick_driver.get_numballs())],
+        ]
 
+        instance_id = self.joystick_driver.get_instance_id()
+        # axes
+        for i, (old, new) in enumerate(zip(self._state[0], new_state[0])):
+            if old != new:
+                eventlist.append(events.JoyAxisMotion(events.JOYAXISMOTION, instance_id, i, new))
+
+        # buttons
+        for i, (old, new) in enumerate(zip(self._state[1], new_state[1])):
+            if old != new:
+                eventlist.append(
+                    events.JoyButtonDown(events.JOYBUTTONDOWN, instance_id, i)
+                    if new
+                    else events.JoyButtonUp(events.JOYBUTTONUP, instance_id, i)
+                )
+
+        # hats
+        for i, (old, new) in enumerate(zip(self._state[2], new_state[2])):
+            if old != new:
+                eventlist.append(events.JoyHatMotion(events.JOYHATMOTION, instance_id, i, new))
+
+        # balls
+        for i, (old, new) in enumerate(zip(self._state[3], new_state[3])):
+            if old != new:
+                eventlist.append(events.JoyBallMotion(events.JOYBALLMOTION, instance_id, i, new))
+
+        if self.emulate_digital:
+            axes = new_state[0]
+            new_state.append(
+                [(self.emulate(axes[x]), self.emulate(axes[y])) for x, y in self.emulate_digital]
+            )
+            for i, (old, new) in enumerate(zip(self._state[4], new_state[4])):
+                if old != new:
+                    eventlist.append(
+                        events.JoyHatMotion(
+                            events.JOYHATMOTION,
+                            instance_id,
+                            i + self.joystick_driver.get_numhats(),
+                            new,
+                        )
+                    )
+
+        self._state = new_state
+        return eventlist if len(eventlist) > 0 else None
 
 
 class VirtualDevices:
@@ -719,13 +828,19 @@ class VirtualDevices:
         self.devices = [self._vd_touch, self._vd_encoder, self._vd_keypad]
 
     def poll_queue_device(self):
-        if e:= self._queue_device.poll():
-            if e.type == events.MOUSEBUTTONDOWN or e.type == events.MOUSEBUTTONUP:
-                self._vd_touch.add_event(e)
-            elif e.type == events.MOUSEWHEEL:
-                self._vd_encoder.add_event(e)
-            elif e.type == events.KEYDOWN or e.type == events.KEYUP:
-                self._vd_keypad.add_event(e)
+        if elist := self._queue_device.poll():
+            for e in elist:
+                if (
+                    e.type == events.MOUSEBUTTONDOWN
+                    or e.type == events.MOUSEBUTTONUP
+                    or (e.type == events.MOUSEMOTION and e.buttons[0])
+                ):
+                    self._vd_touch.add_event(e)
+                elif e.type == events.MOUSEWHEEL:
+                    self._vd_encoder.add_event(e)
+                elif e.type == events.KEYDOWN or e.type == events.KEYUP:
+                    self._vd_keypad.add_event(e)
+
 
 _mapping = {
     # Mapping of device types to device classes

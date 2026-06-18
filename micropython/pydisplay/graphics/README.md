@@ -42,7 +42,7 @@ It is important to note that pydisplay is meant to be a foundation for GUI libra
 
 ## Getting Started
 
-This section is under construction.  For now, see [Getting Started](GETTING-STARTED.md) for more information.
+This section is under construction.  For now, see [Getting Started]docs/getting_started.md) for more information.
 
 
 ## Running your first app
@@ -63,7 +63,7 @@ On microcontrollers, either add the following to your `boot.py` (MicroPython) or
 import lib.path
 ```
 
-The  [examples](examples) directory will be on the system path, so to run an app from it, you just need to type:
+The  [examples](src/examples) directory will be on the system path, so to run an app from it, you just need to type:
 ```
 import calculator  # substitute `calculator` with the file OR directory you want to run, omitting the .py extension
 ```

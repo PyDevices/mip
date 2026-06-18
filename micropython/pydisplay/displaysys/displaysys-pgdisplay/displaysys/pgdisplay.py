@@ -6,16 +6,12 @@
 displaysys.pgdisplay
 """
 
-from displaysys import DisplayDriver, color_rgb
 import pygame as pg
 
-try:
-    from typing import Optional, Union, Sequence
-except ImportError:
-    pass
+from displaysys import DisplayDriver, color_rgb
 
 
-def poll() -> Optional[pg.event.Event]:
+def poll():
     """
     Polls for an event and returns the event type and data.
 
@@ -23,6 +19,16 @@ def poll() -> Optional[pg.event.Event]:
         Optional[pg.event.Event | False]: The event type and data.
     """
     return pg.event.poll()
+
+
+def get() -> [pg.event.Event]:
+    """
+    Gets all events from the event queue.
+
+    Returns:
+        [pg.event.Event]: A list of events.
+    """
+    return pg.event.get()
 
 
 class PGDisplay(DisplayDriver):
@@ -175,7 +181,7 @@ class PGDisplay(DisplayDriver):
         super().vscrdef(tfa, vsa, bfa)
         self.render()
 
-    def vscsad(self, vssa: Optional[int] = None) -> int:
+    def vscsad(self, vssa=None) -> int:
         """
         Set the vertical scroll start address.
 
@@ -200,7 +206,7 @@ class PGDisplay(DisplayDriver):
 
     ############### Class Specific Methods ##############
 
-    def render(self, renderRect: Optional[pg.Rect] = None) -> None:
+    def render(self, renderRect=None) -> None:
         """
         Render the display.  Automatically called after blitting or filling the display.
 
@@ -208,10 +214,7 @@ class PGDisplay(DisplayDriver):
             renderRect (Optional[pg.Rect], optional): The rectangle to render. Defaults to None.
         """
         s = self._scale
-        if s != 1:
-            buffer = pg.transform.scale_by(self._buffer, s)
-        else:
-            buffer = self._buffer
+        buffer = pg.transform.scale_by(self._buffer, s) if s != 1 else self._buffer
         if not (y_start := self.vscsad()):
             if renderRect is not None:
                 x, y, w, h = renderRect

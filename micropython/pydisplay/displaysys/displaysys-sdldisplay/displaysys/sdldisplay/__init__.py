@@ -6,87 +6,129 @@
 displaysys.sdldisplay
 """
 
+from sys import implementation
+
 from displaysys import DisplayDriver, color_rgb
 from eventsys import events
-from sys import implementation
-from micropython import schedule
+
 from ._sdl2_lib import (
-    SDL_Init,
-    SDL_Quit,
-    SDL_GetError,
-    SDL_CreateWindow,
-    SDL_CreateRenderer,
-    SDL_DestroyWindow,
-    SDL_DestroyRenderer,
-    SDL_DestroyTexture,
-    SDL_SetRenderDrawColor,
-    SDL_RenderPresent,
-    SDL_RenderSetLogicalSize,
-    SDL_SetWindowSize,
-    SDL_RenderCopyEx,
-    SDL_SetRenderTarget,
-    SDL_SetTextureBlendMode,
-    SDL_RenderFillRect,
-    SDL_RenderCopy,
-    SDL_UpdateTexture,
-    SDL_CreateTexture,
-    SDL_PIXELFORMAT_ARGB8888,
-    SDL_PIXELFORMAT_RGB888,
-    SDL_PIXELFORMAT_RGB565,
-    SDL_TEXTUREACCESS_TARGET,
     SDL_BLENDMODE_NONE,
-    SDL_RENDERER_ACCELERATED,
-    SDL_RENDERER_PRESENTVSYNC,
-    SDL_WINDOWPOS_CENTERED,
-    SDL_WINDOW_SHOWN,
-    SDL_INIT_EVERYTHING,
-    SDL_Rect,
-    SDL_PollEvent,
-    SDL_GetKeyName,
-    SDL_Event,
-    SDL_QUIT,
     SDL_BUTTON_LMASK,
     SDL_BUTTON_MMASK,
     SDL_BUTTON_RMASK,
+    SDL_INIT_EVERYTHING,
+    SDL_KEYDOWN,
+    SDL_KEYUP,
     SDL_MOUSEBUTTONDOWN,
     SDL_MOUSEBUTTONUP,
     SDL_MOUSEMOTION,
     SDL_MOUSEWHEEL,
-    SDL_KEYDOWN,
-    SDL_KEYUP,
+    SDL_PIXELFORMAT_ARGB8888,
+    SDL_PIXELFORMAT_RGB565,
+    SDL_PIXELFORMAT_RGB888,
+    SDL_QUIT,
+    SDL_RENDERER_ACCELERATED,
+    SDL_RENDERER_PRESENTVSYNC,
+    SDL_TEXTUREACCESS_TARGET,
+    SDL_WINDOW_SHOWN,
+    SDL_WINDOWPOS_CENTERED,
+    SDL_CreateRenderer,
+    SDL_CreateTexture,
+    SDL_CreateWindow,
+    SDL_DestroyRenderer,
+    SDL_DestroyTexture,
+    SDL_DestroyWindow,
+    SDL_Event,
+    SDL_GetError,
+    SDL_GetKeyName,
+    SDL_Init,
+    SDL_PollEvent,
+    SDL_Quit,
+    SDL_Rect,
+    SDL_RenderCopy,
+    SDL_RenderCopyEx,
+    SDL_RenderFillRect,
+    SDL_RenderPresent,
+    SDL_RenderSetLogicalSize,
+    SDL_SetRenderDrawColor,
+    SDL_SetRenderTarget,
+    SDL_SetTextureBlendMode,
+    SDL_SetWindowSize,
+    SDL_UpdateTexture,
 )
-
-try:
-    from typing import Optional, Union, Sequence
-except ImportError:
-    pass
 
 if implementation.name == "cpython":
     import ctypes
 
-    is_cpython = True
+    uses_native_event = True
+    uses_ctypes_blit = True
+elif implementation.name == "circuitpython":
+    uses_native_event = True
+    uses_ctypes_blit = False
 else:
-    is_cpython = False
+    uses_native_event = False
+    uses_ctypes_blit = False
 
-try:
-    from time import ticks_ms, ticks_add
-except ImportError:
-    from adafruit_ticks import ticks_ms, ticks_add
+# Linux c_lflag bits (MicroPython termios has no ECHO/ICANON constants).
+_TTY_ICANON = 0x002
+_TTY_ECHO = 0x008
+_saved_tty = None
 
 
-def scheduler(param):
-    func, next_run, interval = param
-    if (current_time := ticks_ms()) >= next_run:
-        interval = func(interval)
-        next_run = ticks_add(current_time, interval)
-    if interval > 0:
-        schedule(scheduler, (func, next_run, interval))
+def _save_tty() -> None:
+    """Save stdin termios before SDL_Init may alter the controlling terminal."""
+    global _saved_tty
+    try:
+        import os
+        import termios
+
+        if os.isatty(0):
+            _saved_tty = termios.tcgetattr(0)
+    except Exception:
+        _saved_tty = None
+
+
+def _restore_tty() -> None:
+    """Restore stdin termios saved at SDL init."""
+    global _saved_tty
+    if _saved_tty is None:
+        return
+    try:
+        import termios
+
+        termios.tcsetattr(0, termios.TCSANOW, _saved_tty)
+    except Exception:
+        pass
+    _saved_tty = None
+
+
+def _ensure_tty_sane() -> None:
+    """
+    Ensure canonical mode and echo are enabled before returning a TTY to the shell.
+
+    SDL_Quit restores the snapshot taken at SDL_Init, which may still reflect a
+    no-echo REPL state.  Forcing sane flags avoids a shell prompt that accepts
+    input but does not echo typed characters.
+    """
+    try:
+        import termios
+
+        attr = termios.tcgetattr(0)
+        attr[3] |= _TTY_ICANON | _TTY_ECHO
+        termios.tcsetattr(0, termios.TCSANOW, attr)
+    except Exception:
+        try:
+            import os
+
+            os.system("stty sane 2>/dev/null")
+        except Exception:
+            pass
 
 
 _event = SDL_Event()
 
 
-def poll() -> Optional[events]:
+def poll():
     """
     Polls for an event and returns the event type and data.
 
@@ -95,13 +137,33 @@ def poll() -> Optional[events]:
     """
     global _event
     if SDL_PollEvent(_event):
-        if is_cpython:
+        if uses_native_event:
             if _event.type in events.filter:
                 return _convert(SDL_Event(_event))
         else:
             if int.from_bytes(_event[:4], "little") in events.filter:
                 return _convert(SDL_Event(_event))
     return None
+
+
+def get() -> [events]:
+    """
+    Gets all events from the event queue.
+
+    Returns:
+        [events]: A list of events.
+    """
+    global _event
+    eventlist = []
+    while SDL_PollEvent(_event):
+        if uses_native_event:
+            if _event.type in events.filter:
+                eventlist.append(_convert(SDL_Event(_event)))
+        else:
+            if int.from_bytes(_event[:4], "little") in events.filter:
+                eventlist.append(_convert(SDL_Event(_event)))
+    return eventlist if len(eventlist) > 0 else None
+
 
 def _convert(e):
     # Convert an SDL event to a Pygame event
@@ -151,6 +213,7 @@ def _convert(e):
     else:
         evt = events.Unknown(e.type)
     return evt
+
 
 def retcheck(retvalue):
     # Check the return value of an SDL function and raise an exception if it's not 0
@@ -210,6 +273,7 @@ class SDLDisplay(DisplayDriver):
         else:
             raise ValueError("Unsupported color_depth")
 
+        _save_tty()
         retcheck(SDL_Init(SDL_INIT_EVERYTHING))
         self._window = SDL_CreateWindow(
             self._title.encode(),
@@ -236,7 +300,9 @@ class SDLDisplay(DisplayDriver):
             raise RuntimeError(f"{SDL_GetError()}")
         retcheck(SDL_SetTextureBlendMode(self._buffer, SDL_BLENDMODE_NONE))
 
-        super().__init__(auto_refresh=True)
+        # SDL rendering must happen on one thread; present with each render() instead
+        # of using a separate auto-refresh timer thread.
+        super().__init__(auto_refresh=False)
 
     ############### Required API Methods ################
 
@@ -276,7 +342,7 @@ class SDLDisplay(DisplayDriver):
         if len(buffer) != pitch * h:
             raise ValueError("Buffer size does not match dimensions")
         blitRect = SDL_Rect(x, y, w, h)
-        if is_cpython:
+        if uses_ctypes_blit:
             if isinstance(buffer, memoryview):
                 buffer_array = (ctypes.c_ubyte * len(buffer.obj)).from_buffer(buffer.obj)
             elif type(buffer) is bytearray:
@@ -353,7 +419,7 @@ class SDLDisplay(DisplayDriver):
         super().vscrdef(tfa, vsa, bfa)
         self.render()
 
-    def vscsad(self, vssa: Optional[int] = None) -> int:
+    def vscsad(self, vssa=None) -> int:
         """
         Set or get the vertical scroll start address.
 
@@ -377,9 +443,8 @@ class SDLDisplay(DisplayDriver):
             value (int): The new rotation value.
         """
 
-        print("here")
         if (angle := (value % 360) - (self._rotation % 360)) != 0:
-            if implementation.name == "cpython":
+            if uses_native_event:
                 tempBuffer = SDL_CreateTexture(
                     self._renderer,
                     self._px_format,
@@ -422,37 +487,35 @@ class SDLDisplay(DisplayDriver):
 
     ############### Class Specific Methods ##############
 
-    def render(self, renderRect: Optional[SDL_Rect] = None):
+    def render(self, renderRect=None):
         """
         Render the display.  Automatically called after blitting or filling the display.
 
         Args:
             renderRect (Optional[SDL_Rect], optional): The rectangle to render. Defaults to None.
         """
-        # if (y_start := self.vscsad()) == False:
-        if False:
-            # The following line is not working on Chromebooks, Ubuntu and Raspberry Pi OS
-            retcheck(SDL_RenderCopy(self._renderer, self._buffer, renderRect, renderRect))
-        else:
-            # Ignore renderRect and render the entire texture to the window in four steps
-            y_start = self.vscsad()
-            if self._tfa > 0:
-                tfaRect = SDL_Rect(0, 0, self.width, self._tfa)
-                retcheck(SDL_RenderCopy(self._renderer, self._buffer, tfaRect, tfaRect))
+        # Single SDL_RenderCopy was disabled: not working on Chromebooks, Ubuntu, Raspberry Pi OS.
+        # Ignore renderRect and render the entire texture to the window in four steps.
+        y_start = self.vscsad()
+        if self._tfa > 0:
+            tfaRect = SDL_Rect(0, 0, self.width, self._tfa)
+            retcheck(SDL_RenderCopy(self._renderer, self._buffer, tfaRect, tfaRect))
 
-            vsaTopHeight = self._vsa + self._tfa - y_start
-            vsaTopSrcRect = SDL_Rect(0, y_start, self.width, vsaTopHeight)
-            vsaTopDestRect = SDL_Rect(0, self._tfa, self.width, vsaTopHeight)
-            retcheck(SDL_RenderCopy(self._renderer, self._buffer, vsaTopSrcRect, vsaTopDestRect))
+        vsaTopHeight = self._vsa + self._tfa - y_start
+        vsaTopSrcRect = SDL_Rect(0, y_start, self.width, vsaTopHeight)
+        vsaTopDestRect = SDL_Rect(0, self._tfa, self.width, vsaTopHeight)
+        retcheck(SDL_RenderCopy(self._renderer, self._buffer, vsaTopSrcRect, vsaTopDestRect))
 
-            vsaBtmHeight = self._vsa - vsaTopHeight
-            vsaBtmSrcRect = SDL_Rect(0, self._tfa, self.width, vsaBtmHeight)
-            vsaBtmDestRect = SDL_Rect(0, self._tfa + vsaTopHeight, self.width, vsaBtmHeight)
-            retcheck(SDL_RenderCopy(self._renderer, self._buffer, vsaBtmSrcRect, vsaBtmDestRect))
+        vsaBtmHeight = self._vsa - vsaTopHeight
+        vsaBtmSrcRect = SDL_Rect(0, self._tfa, self.width, vsaBtmHeight)
+        vsaBtmDestRect = SDL_Rect(0, self._tfa + vsaTopHeight, self.width, vsaBtmHeight)
+        retcheck(SDL_RenderCopy(self._renderer, self._buffer, vsaBtmSrcRect, vsaBtmDestRect))
 
-            if self._bfa > 0:
-                bfaRect = SDL_Rect(0, self._tfa + self._vsa, self.width, self._bfa)
-                retcheck(SDL_RenderCopy(self._renderer, self._buffer, bfaRect, bfaRect))
+        if self._bfa > 0:
+            bfaRect = SDL_Rect(0, self._tfa + self._vsa, self.width, self._bfa)
+            retcheck(SDL_RenderCopy(self._renderer, self._buffer, bfaRect, bfaRect))
+
+        self.show()
 
     def show(self) -> None:
         """
@@ -462,9 +525,55 @@ class SDLDisplay(DisplayDriver):
 
     def deinit(self) -> None:
         """
-        Deinitializes the sdl2lcd instance.
+        Deinitializes the sdl2lcd instance.  Idempotent and safe to call from
+        the quit path.
         """
-        retcheck(SDL_DestroyTexture(self._buffer))
-        retcheck(SDL_DestroyRenderer(self._renderer))
-        retcheck(SDL_DestroyWindow(self._window))
-        retcheck(SDL_Quit())
+        if getattr(self, "_deinitialized", False):
+            return
+        self._deinitialized = True
+        # Stop the auto-refresh timer first (super().deinit()) so a pending
+        # render can't call SDL_RenderPresent on a renderer we destroy here.
+        super().deinit()
+        if self._buffer is not None:
+            SDL_DestroyTexture(self._buffer)
+            self._buffer = None
+        if self._renderer is not None:
+            SDL_DestroyRenderer(self._renderer)
+            self._renderer = None
+        if self._window is not None:
+            SDL_DestroyWindow(self._window)
+            self._window = None
+        SDL_Quit()
+        _restore_tty()
+        _ensure_tty_sane()
+
+    def quit(self, code: int = 0) -> None:
+        """
+        Release SDL resources and terminate the process.
+
+        Delegates to ``display_driver.shutdown`` when that module is loaded so
+        LVGL is torn down before SDL.  Falls back to ``deinit`` + hard exit.
+        """
+        try:
+            import display_driver
+
+            display_driver.shutdown(code, exit_process=True)
+            return
+        except ImportError:
+            pass
+        self.deinit()
+        _ensure_tty_sane()
+        try:
+            import ffi
+
+            ffi.open("libc.so.6").func("v", "_exit", "i")(code)
+            return
+        except Exception:
+            pass
+        try:
+            import os
+
+            os._exit(code)
+        except Exception:
+            pass
+        raise SystemExit(code)

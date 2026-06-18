@@ -7,11 +7,12 @@
 An Event System including event types and device types for *Python.
 """
 
-from micropython import const
 from collections import namedtuple
 
+from micropython import const
 
-def custom_type(types: dict[str, int]={}, classes: dict[str, str]={}):
+
+def custom_type(types=None, classes=None):
     """
     Create new event types and classes for the events class.
 
@@ -31,6 +32,10 @@ def custom_type(types: dict[str, int]={}, classes: dict[str, str]={}):
         types (dict[str, int]): Dictionary of event types and values.
         classes (dict[str, str]): Dictionary of event classes and fields.
     """
+    if classes is None:
+        classes = {}
+    if types is None:
+        types = {}
     for type_name, value in types.items():
         type_name = type_name.upper()
         if hasattr(events, type_name):
@@ -51,6 +56,7 @@ def custom_type(types: dict[str, int]={}, classes: dict[str, str]={}):
                 event_class_name,
                 namedtuple(event_class_name, event_class_fields),  # noqa: PYI024
             )
+
 
 class events:
     """
@@ -80,6 +86,11 @@ class events:
         MOUSEBUTTONDOWN,
         MOUSEBUTTONUP,
         MOUSEWHEEL,
+        JOYAXISMOTION,
+        JOYBALLMOTION,
+        JOYHATMOTION,
+        JOYBUTTONDOWN,
+        JOYBUTTONUP,
     ]
 
     # Event classes from PyGame
@@ -90,3 +101,8 @@ class events:
     Key = namedtuple("Key", "type name key mod scancode window")  # noqa: PYI024
     Quit = namedtuple("Quit", "type")  # noqa: PYI024
     Any = namedtuple("Any", "type")  # noqa: PYI024
+    JoyAxisMotion = namedtuple("JoyAxisMotion", "type instance_id axis value")  # noqa: PYI024
+    JoyButtonUp = namedtuple("JoyButtonUp", "type instance_id button")  # noqa: PYI024
+    JoyButtonDown = namedtuple("JoyButtonDown", "type instance_id button")  # noqa: PYI024
+    JoyHatMotion = namedtuple("JoyHatMotion", "type instance_id hat value")  # noqa: PYI024
+    JoyBallMotion = namedtuple("JoyBallMotion", "type instance_id ball rel")  # noqa: PYI024

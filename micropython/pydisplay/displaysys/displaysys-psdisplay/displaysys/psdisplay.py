@@ -6,9 +6,10 @@
 displaysys.psdisplay
 """
 
-from displaysys import DisplayDriver, color_rgb
+from js import console, document
 from pyscript.ffi import create_proxy
-from js import document, console
+
+from displaysys import DisplayDriver, color_rgb
 
 
 def log(*args):
@@ -26,8 +27,6 @@ class PSDevices:
     def __init__(self, id):
         self.canvas = document.getElementById(id)
         self._mouse_pos = None
-
-        #         self.canvas.oncontextmenu = self._no_context
 
         # Proxy functions are required for javascript
         self.on_down = create_proxy(self._on_down)
@@ -77,11 +76,6 @@ class PSDevices:
         log("Mouse leave")
         self._mouse_pos = None
 
-    def _no_context(self, e):
-        e.preventDefault()
-        e.stopPropagation()
-        return False
-
 
 class PSDisplay(DisplayDriver):
     """
@@ -101,7 +95,6 @@ class PSDisplay(DisplayDriver):
         self._requires_byteswap = False
         self._rotation = 0
         self.color_depth = 16
-        self._draw = self._ctx
 
         super().__init__()
 
