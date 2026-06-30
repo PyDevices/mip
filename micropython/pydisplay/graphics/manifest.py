@@ -1,8 +1,8 @@
 metadata(
     description="PyDisplay graphics",
-    version="0.0.3",
+    version="0.0.5",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
-    pypi_publish="graphics",
+    pypi_publish="pydisplay-graphics",
 )
 package("graphics")
