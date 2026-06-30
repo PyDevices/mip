@@ -3,29 +3,98 @@
 # SPDX-License-Identifier: MIT
 
 """
-`displaysys`
-====================================================
+displaysys — shared display core for *Python.
 
-A collection of classes and functions for working with displays and input devices
-in *Python.  The goal is to provide a common API for working with displays and
-input devices across different platforms including MicroPython, CircuitPython and
-CPython.  It works on microcontrollers, desktops, web browsers and Jupyter notebooks.
+Each backend is a separate submodule; import only what your target needs::
+
+    from displaysys import DisplayDriver, color565, capabilities
+    from displaysys.busdisplay import BusDisplay
 """
 
 import gc
+import sys
 
 try:
-    from byteswap import byteswap
+    from byteswap import byteswap as _byteswap_native
+
+    byteswap = _byteswap_native
+    _BYTESWAP_BACKEND = "native"
 except ImportError:
 
     def byteswap(buf):
-        """
-        Swap the bytes of a 16-bit buffer in place with no dependencies.
-        """
-        buf[::2], buf[1::2] = buf[1::2], buf[::2]
+        """Swap 16-bit pixel bytes in place (portable fallback)."""
+        n = len(buf) & ~1
+        for i in range(0, n, 2):
+            b0 = buf[i]
+            buf[i] = buf[i + 1]
+            buf[i + 1] = b0
+
+    _BYTESWAP_BACKEND = "pure_python"
+
+__all__ = [
+    "DisplayDriver",
+    "alloc_buffer",
+    "byteswap",
+    "capabilities",
+    "color332",
+    "color565",
+    "color565_swapped",
+    "color_rgb",
+    "default_quit_chord",
+]
+
+_DEFAULT_AUTO_REFRESH_PERIOD = 33
 
 
-gc.collect()
+def capabilities():
+    """Static metadata for the modular displaysys install model (no backend imports)."""
+    return {
+        "dialect": sys.implementation.name,
+        "byteswap": _BYTESWAP_BACKEND,
+        "modules": {
+            "busdisplay": {"eventsys": False, "auto_refresh": False},
+            "fbdisplay": {"eventsys": False, "auto_refresh": False},
+            "sdldisplay": {
+                "eventsys": True,
+                "auto_refresh": True,
+                "default_period_ms": _DEFAULT_AUTO_REFRESH_PERIOD,
+                "async_default": False,
+                "touch_scale": "1.0 (logical renderer size)",
+                "scroll_emulation": True,
+            },
+            "pgdisplay": {
+                "eventsys": True,
+                "auto_refresh": True,
+                "default_period_ms": _DEFAULT_AUTO_REFRESH_PERIOD,
+                "async_default": False,
+                "touch_scale": "window scale",
+                "scroll_emulation": True,
+            },
+            "psdisplay": {
+                "eventsys": True,
+                "auto_refresh": True,
+                "default_period_ms": _DEFAULT_AUTO_REFRESH_PERIOD,
+                "async_default": True,
+                "touch_scale": "canvas layout scale",
+                "scroll_emulation": True,
+            },
+            "jndisplay": {
+                "eventsys": True,
+                "auto_refresh": True,
+                "default_period_ms": _DEFAULT_AUTO_REFRESH_PERIOD,
+                "async_default": True,
+                "touch_scale": "1.0",
+                "scroll_emulation": True,
+            },
+        },
+    }
+
+
+def default_quit_chord():
+    """Default CTRL+Q quit chord for event-backend displays (lazy-imports eventsys.keys)."""
+    from eventsys.keys import Keys
+
+    return (Keys.K_q, Keys.KMOD_CTRL)
 
 
 def alloc_buffer(size):
@@ -60,8 +129,17 @@ def color565(r, g=None, b=None):
 
 
 def color565_swapped(r, g=0, b=0):
-    # Convert r, g, b in range 0-255 to a 16 bit color value RGB565
-    # ggbbbbbb rrrrrggg
+    """
+    Convert RGB to 16-bit RGB565 with byte order swapped for some displays.
+
+    Args:
+        r (int | tuple | list): Red value, or an (r, g, b) sequence.
+        g (int): Green value when r is an int.
+        b (int): Blue value when r is an int.
+
+    Returns:
+        int: Byte-swapped RGB565 color.
+    """
     if isinstance(r, (tuple, list)):
         r, g, b = r[:3]
     color = color565(r, g, b)
@@ -69,14 +147,29 @@ def color565_swapped(r, g=0, b=0):
 
 
 def color332(r, g, b):
-    # Convert r, g, b in range 0-255 to an 8 bit color value RGB332
-    # rrrgggbb
+    """
+    Convert RGB to 8-bit RGB332 color.
+
+    Args:
+        r (int): Red (0-255).
+        g (int): Green (0-255).
+        b (int): Blue (0-255).
+
+    Returns:
+        int: RGB332 color byte.
+    """
     return (r & 0xE0) | ((g >> 3) & 0x1C) | (b >> 6)
 
 
 def color_rgb(color):
     """
-    color can be an 16-bit integer or a tuple, list or bytearray of length 2 or 3.
+    Expand a display color to an (r, g, b) tuple.
+
+    Args:
+        color (int | tuple | list | bytearray): 16-bit RGB565 int or 2-3 byte sequence.
+
+    Returns:
+        tuple[int, int, int]: Red, green, blue (0-255 each).
     """
     if isinstance(color, int):
         # convert 16-bit int color to 2 bytes
@@ -91,28 +184,53 @@ def color_rgb(color):
 
 
 class DisplayDriver:
-    def __init__(self, auto_refresh=False):
-        print(f"Initializing {self.__class__.__name__}...")
+    """
+    Base class for all display backends (BusDisplay, SDLDisplay, PGDisplay, FBDisplay, etc.).
+
+    Subclasses implement bus- or platform-specific drawing and refresh. Most applications
+    use a concrete driver from ``board_config.display`` rather than instantiating this
+    class directly.
+
+    Args:
+        auto_refresh: If ``True`` or an integer period in ms, starts a ``multimer`` timer
+            that calls ``show()`` automatically.
+        async_: When ``auto_refresh`` is enabled, use ``multimer.AsyncTimer`` if
+            ``True``, otherwise sync ``multimer.Timer``. Defaults to ``False``.
+    """
+
+    def __init__(self, auto_refresh=False, *, async_=False):
+        if not hasattr(self, "_quiet"):
+            self._quiet = False
+        if not self._quiet:
+            print(f"Initializing {self.__class__.__name__}...")
         gc.collect()
 
         self.byteswap = byteswap
+        self.touch_scale = 1.0
         self._vssa = False  # False means no vertical scroll
         self._auto_byteswap = self.requires_byteswap
         self._touch_device = None
-        if auto_refresh:
-            period = 33 if isinstance(auto_refresh, bool) else auto_refresh
-            try:
-                from multimer import get_timer
-
-                self._timer = get_timer(self.show, period=period)
-            except ImportError:
-                raise ImportError("multimer is required for auto_refresh") from None
-        else:
-            self._timer = None
+        self._timer = None
         self.init()
         gc.collect()
-        print(f"{self.__class__.__name__}: initialized.")
-        print(f"{self.__class__.__name__}: requires_byteswap = {self.requires_byteswap}")
+        if auto_refresh:
+            period = (
+                _DEFAULT_AUTO_REFRESH_PERIOD if isinstance(auto_refresh, bool) else auto_refresh
+            )
+            try:
+                from multimer import periodic
+
+                self._timer = periodic(
+                    self.show,
+                    period=period,
+                    async_=async_,
+                )
+            except ImportError:
+                raise ImportError("multimer is required for auto_refresh") from None
+        self._deinitialized = False
+        if not self._quiet:
+            print(f"{self.__class__.__name__}: initialized.")
+            print(f"{self.__class__.__name__}: requires_byteswap = {self.requires_byteswap}")
 
     def __del__(self):
         self.deinit()
@@ -155,9 +273,11 @@ class DisplayDriver:
         if value == self._rotation:
             return
 
-        print(f"{self.__class__.__name__}.rotation():  Setting rotation to {value}")
+        if not self._quiet:
+            print(f"{self.__class__.__name__}.rotation():  Setting rotation to {value}")
         self._rotation_helper(value)
-        print("done setting rotation")
+        if not self._quiet:
+            print("done setting rotation")
 
         self._rotation = value
 
@@ -240,7 +360,8 @@ class DisplayDriver:
             self._auto_byteswap = not value
         else:
             self._auto_byteswap = False
-        print(f"{self.__class__.__name__}:  auto byte swapping = {self._auto_byteswap}")
+        if not self._quiet:
+            print(f"{self.__class__.__name__}:  auto byte swapping = {self._auto_byteswap}")
         return not self._auto_byteswap
 
     @property
@@ -385,10 +506,10 @@ class DisplayDriver:
     @property
     def tfa_area(self):
         """
-        The top fixed area as an Area object.
+        Top fixed area for vertical scrolling.
 
         Returns:
-            (tuple): The top fixed area.
+            tuple[int, int, int, int]: ``(x, y, width, height)`` of the top fixed band.
         """
         return (0, 0, self.width, self.tfa)
 
@@ -528,27 +649,30 @@ class DisplayDriver:
 
     def deinit(self) -> None:
         """
-        Deinitialize the display.  Stops the auto-refresh timer so it can't fire
-        after resources are released.  Idempotent.  Subclasses that override
-        this should call ``super().deinit()``.
+        Stop the auto-refresh timer (so it can't fire after resources are
+        released) and then run subclass cleanup. Idempotent.
         """
+        if getattr(self, "_deinitialized", False):
+            return
+        self._deinitialized = True
         if getattr(self, "_timer", None) is not None:
             self._timer.deinit()
             self._timer = None
+        self._deinit()
 
-    def quit(self, code: int = 0) -> None:
-        """
-        Release resources and terminate the program.
+    def _deinit(self) -> None:
+        """Subclass resource cleanup hook, called after the timer is stopped."""
+        return
 
-        Called by ``eventsys.devices.Broker.quit()`` on a window-close (QUIT)
-        event.  The base implementation deinitializes the display and raises
-        ``SystemExit``, which is correct for front ends that poll on the main
-        thread.  Drivers needing a platform-specific exit (e.g. ``SDLDisplay``,
-        where ``SystemExit`` raised from the LVGL scheduled task handler is
-        swallowed on the unix port) should override this.
-        """
+    def quit(self, code: int = 0, force: bool = False) -> None:
+        """Release display resources (REPL-safe unless ``force=True``). Called by ``broker.on_quit`` on QUIT."""
         self.deinit()
-        raise SystemExit(code)
+        if force:
+            raise SystemExit(code)
+
+    def force_quit(self, code: int = 0) -> None:
+        """Release resources then exit the process (alias for ``quit(code, force=True)``)."""
+        self.quit(code, force=True)
 
     def show(self, *args, **kwargs) -> None:
         """

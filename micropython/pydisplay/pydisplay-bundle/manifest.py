@@ -1,6 +1,6 @@
 metadata(
     description="PyDisplay bundle",
-    version="0.0.2",
+    version="0.0.3",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="pydisplay-bundle",
@@ -8,5 +8,4 @@ metadata(
 require("eventsys")
 require("graphics")
 require("multimer")
-require("palettes")
 require("displaysys")
