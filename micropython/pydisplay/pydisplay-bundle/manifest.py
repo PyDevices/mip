@@ -1,6 +1,6 @@
 metadata(
     description="PyDisplay bundle",
-    version="0.0.6",
+    version="0.0.7",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="pydisplay-bundle",

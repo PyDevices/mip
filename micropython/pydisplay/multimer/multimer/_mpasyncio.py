@@ -4,14 +4,19 @@
 # SPDX-License-Identifier: MIT
 #
 # Minimal asyncio event loop for MicroPython builds that ship ``_asyncio`` but
-# not the frozen ``asyncio`` / ``uasyncio`` packages (e.g. micropython.exe dev).
+# not frozen ``asyncio`` / ``uasyncio`` (e.g. micropython.exe standard).
 # Adapted from MicroPython extmod/asyncio/core.py.
 
 from _asyncio import Task, TaskQueue
-import select
 import sys
-from time import ticks_add, ticks_diff
-from time import ticks_ms as ticks
+
+from ._ticks import ticks_add, ticks_diff
+from ._ticks import ticks_ms as ticks
+
+try:
+    import select
+except ImportError:
+    select = None
 
 
 class CancelledError(BaseException):
@@ -45,6 +50,30 @@ class SingletonGenerator:
 _sleep_ms_sgen = SingletonGenerator()
 
 
+class Event:
+    def __init__(self):
+        self.state = False
+        self.waiting = TaskQueue()
+
+    def is_set(self):
+        return self.state
+
+    def set(self):
+        while self.waiting.peek():
+            _task_queue.push(self.waiting.pop())
+        self.state = True
+
+    def clear(self):
+        self.state = False
+
+    def wait(self):
+        if not self.state:
+            self.waiting.push(cur_task)
+            cur_task.data = self.waiting
+            yield
+        return True
+
+
 def sleep_ms(t, sgen=_sleep_ms_sgen):
     assert sgen.state is None
     sgen.state = ticks_add(ticks(), max(0, t))
@@ -57,6 +86,8 @@ def sleep(t):
 
 class IOQueue:
     def __init__(self):
+        if select is None:
+            raise ImportError("_mpasyncio IOQueue requires select")
         self.poller = select.poll()
         self.map = {}
 
@@ -124,6 +155,10 @@ def create_task(coro):
     t = Task(coro, globals())
     _task_queue.push(t)
     return t
+
+
+def ensure_future(aw):
+    return _promote_to_task(aw)
 
 
 def run_until_complete(main_task=None):

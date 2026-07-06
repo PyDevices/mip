@@ -1,8 +1,9 @@
 metadata(
-    description="PyDisplay displaysys",
+    description="PyDisplay displaysys-epaperdisplay",
     version="0.0.7",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
-    pypi_publish="displaysys",
+    pypi_publish="displaysys-epaperdisplay",
 )
+require("displaysys")
 package("displaysys")
