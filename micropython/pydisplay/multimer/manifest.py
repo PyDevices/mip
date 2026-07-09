@@ -1,6 +1,6 @@
 metadata(
     description="PyDisplay multimer",
-    version="0.0.8",
+    version="0.0.9",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="multimer",
