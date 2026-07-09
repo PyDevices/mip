@@ -10,7 +10,13 @@ from sys import implementation
 
 import usdl2
 
-from displaysys import DisplayDriver, color_rgb, default_quit_chord
+from displaysys import (
+    DisplayDriver,
+    color_rgb,
+    default_quit_chord,
+    fit_scale_to_desktop,
+    notify_board_config_scale_override,
+)
 from eventsys import events
 
 _NATIVE_USDL2 = not hasattr(usdl2, "_USE_FFI")
@@ -284,6 +290,8 @@ def _hard_process_exit(code: int = 0) -> None:
 
 
 class SDLDisplay(DisplayDriver):
+    needs_refresh = True
+
     """
     A class to emulate an LCD using SDL2.
     Provides scrolling and rotation functions similar to an LCD.  The .texture
@@ -350,6 +358,16 @@ class SDLDisplay(DisplayDriver):
 
         _save_tty()
         retcheck(usdl2.SDL_Init(usdl2.SDL_INIT_EVERYTHING))
+        requested_scale = self._scale
+        desktop_w, desktop_h = usdl2.SDL_desktop_size()
+        fitted = fit_scale_to_desktop(
+            self.width, self.height, requested_scale, desktop_w, desktop_h
+        )
+        notify_board_config_scale_override(
+            "SDLDisplay", requested_scale, fitted, quiet=getattr(self, "_quiet", False)
+        )
+        if fitted != requested_scale:
+            self._scale = fitted
         _init_joysticks()
         self._window = usdl2.SDL_CreateWindow(
             self._title.encode(),
@@ -362,6 +380,11 @@ class SDLDisplay(DisplayDriver):
         if not self._window:
             raise RuntimeError(f"{usdl2.SDL_GetError()}")
         self._renderer = usdl2.SDL_CreateRenderer(self._window, -1, render_flags)
+        if not self._renderer and (render_flags & usdl2.SDL_RENDERER_ACCELERATED):
+            render_flags = (
+                render_flags & ~usdl2.SDL_RENDERER_ACCELERATED
+            ) | usdl2.SDL_RENDERER_SOFTWARE
+            self._renderer = usdl2.SDL_CreateRenderer(self._window, -1, render_flags)
         if not self._renderer:
             raise RuntimeError(f"{usdl2.SDL_GetError()}")
 
@@ -377,7 +400,7 @@ class SDLDisplay(DisplayDriver):
         retcheck(usdl2.SDL_SetTextureBlendMode(self._buffer, usdl2.SDL_BLENDMODE_NONE))
 
         _displays.append(self)
-        super().__init__(auto_refresh=implementation.name == "cpython")
+        super().__init__()
 
     ############### Required API Methods ################
 

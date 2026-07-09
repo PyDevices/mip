@@ -19,7 +19,7 @@ Quick start::
 
 from ._area import Area
 from ._bmp565 import BMP565
-from ._capabilities import capabilities, framebuf_backend
+from ._capabilities import _PYDISPLAY_LIB, capabilities, framebuf_backend, implementation
 from ._draw import Draw
 from ._files import (
     bmp_to_framebuffer,
@@ -37,6 +37,7 @@ from ._framebuf_plus import (
     MONO_HMSB,
     MONO_VLSB,
     RGB565,
+    RGB888,
     FrameBuffer,
 )
 from ._shapes import (
@@ -86,6 +87,7 @@ __all__ = [
     "framebuf_backend",
     "gradient_rect",
     "hline",
+    "implementation",
     "line",
     "load_image",
     "pbm_to_framebuffer",

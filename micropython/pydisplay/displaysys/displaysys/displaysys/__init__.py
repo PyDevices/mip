@@ -33,6 +33,7 @@ except ImportError:
 
 __all__ = [
     "DisplayDriver",
+    "FFmpegFrameRecorder",
     "alloc_buffer",
     "byteswap",
     "capabilities",
@@ -44,6 +45,32 @@ __all__ = [
 ]
 
 _DEFAULT_AUTO_REFRESH_PERIOD = 33
+_DESKTOP_SCALE_MARGIN = 48
+
+
+def fit_scale_to_desktop(
+    width, height, scale, desktop_w, desktop_h, *, margin=_DESKTOP_SCALE_MARGIN
+):
+    """Return the largest scale <= *scale* so the window fits on the desktop."""
+    if scale <= 0 or desktop_w <= 0 or desktop_h <= 0:
+        return 1.0 if scale <= 0 else scale
+    max_w = desktop_w - margin
+    max_h = desktop_h - margin
+    if max_w <= 0 or max_h <= 0:
+        return scale
+    fit = min(max_w / width, max_h / height)
+    if fit < scale:
+        return fit
+    return scale
+
+
+def notify_board_config_scale_override(driver_name, requested, fitted, *, quiet=False):
+    """Tell the user when a desktop driver reduces board_config scale to fit the screen."""
+    if quiet or fitted == requested:
+        return
+    print(
+        f"{driver_name}: overriding board_config scale {requested} -> {fitted:.2f} to fit desktop"
+    )
 
 
 def capabilities():
@@ -55,12 +82,10 @@ def capabilities():
             "busdisplay": {"eventsys": False, "auto_refresh": False},
             "fbdisplay": {"eventsys": False, "auto_refresh": False},
             "pixeldisplay": {"eventsys": False, "auto_refresh": False},
-            "epaperdisplay": {"eventsys": False, "auto_refresh": False, "buffer_push": "displayio_or_bus"},
-            "boarddisplay": {
+            "epaperdisplay": {
                 "eventsys": False,
                 "auto_refresh": False,
-                "platform": "circuitpython",
-                "target": "board.DISPLAY",
+                "buffer_push": "displayio_or_bus",
             },
             "sdldisplay": {
                 "eventsys": True,
@@ -191,6 +216,78 @@ def color_rgb(color):
     return (r, g, b)
 
 
+class FFmpegFrameRecorder:
+    """Pipe fixed-size RGB24 frames to ffmpeg for MP4 output."""
+
+    __slots__ = ("_closed", "_frame_bytes", "_frames", "_proc", "fps", "height", "path", "width")
+
+    def __init__(self, path, width, height, fps=12):
+        import subprocess
+
+        self.path = path
+        self.width = width
+        self.height = height
+        self.fps = fps
+        self._frames = 0
+        self._closed = False
+        self._frame_bytes = width * height * 3
+        self._proc = subprocess.Popen(
+            [
+                "ffmpeg",
+                "-y",
+                "-f",
+                "rawvideo",
+                "-pix_fmt",
+                "rgb24",
+                "-s",
+                f"{width}x{height}",
+                "-r",
+                str(fps),
+                "-i",
+                "pipe:0",
+                "-an",
+                "-c:v",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
+                path,
+            ],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+
+    def write(self, rgb_bytes):
+        if self._closed:
+            return
+        if len(rgb_bytes) != self._frame_bytes:
+            raise ValueError(
+                f"frame size {len(rgb_bytes)} != expected {self._frame_bytes} "
+                f"for {self.width}x{self.height} RGB24"
+            )
+        self._proc.stdin.write(rgb_bytes)
+        self._frames += 1
+
+    def close(self):
+        if self._closed:
+            return self._frames
+        self._closed = True
+        try:
+            self._proc.stdin.close()
+        except Exception:
+            pass
+        err = self._proc.stderr.read().decode("utf-8", errors="replace")
+        try:
+            self._proc.stderr.close()
+        except Exception:
+            pass
+        rc = self._proc.wait()
+        if rc != 0:
+            tail = "\n".join(err.strip().splitlines()[-8:])
+            raise RuntimeError(f"ffmpeg exited {rc} for {self.path}:\n{tail}")
+        return self._frames
+
+
 class DisplayDriver:
     """
     Base class for all display backends (BusDisplay, SDLDisplay, PGDisplay, FBDisplay, etc.).
@@ -199,14 +296,13 @@ class DisplayDriver:
     use a concrete driver from ``board_config.display`` rather than instantiating this
     class directly.
 
-    Args:
-        auto_refresh: If ``True`` or an integer period in ms, starts a ``multimer`` timer
-            that calls ``show()`` automatically.
-        async_: When ``auto_refresh`` is enabled, use ``multimer.AsyncTimer`` if
-            ``True``, otherwise sync ``multimer.Timer``. Defaults to ``False``.
+    Periodic presentation when needed is driven by ``eventsys.Runtime`` (see
+    ``needs_refresh``); the driver only implements ``show()`` and ``deinit()``.
     """
 
-    def __init__(self, auto_refresh=False, *, async_=False):
+    needs_refresh = False
+
+    def __init__(self):
         if not hasattr(self, "_quiet"):
             self._quiet = False
         if not self._quiet:
@@ -218,26 +314,9 @@ class DisplayDriver:
         self._vssa = False  # False means no vertical scroll
         self._auto_byteswap = self.requires_byteswap
         self._touch_device = None
-        self._timer = None
+        self._frame_recorder = None
         self.init()
         gc.collect()
-        if auto_refresh:
-            period = (
-                _DEFAULT_AUTO_REFRESH_PERIOD if isinstance(auto_refresh, bool) else auto_refresh
-            )
-            try:
-                from multimer import AsyncTimer, Timer
-
-                TimerClass = AsyncTimer if async_ else Timer
-                if TimerClass is not None:
-                    self._timer = TimerClass(-1)
-                    self._timer.init(
-                        mode=TimerClass.PERIODIC,
-                        period=period,
-                        callback=self._auto_refresh,
-                    )
-            except ImportError:
-                raise ImportError("multimer is required for auto_refresh") from None
         self._deinitialized = False
         if not self._quiet:
             print(f"{self.__class__.__name__}: initialized.")
@@ -245,9 +324,6 @@ class DisplayDriver:
 
     def __del__(self):
         self.deinit()
-
-    def _auto_refresh(self, timer=None):
-        self.show(timer)
 
     ############### Universal API Methods, not usually overridden ################
 
@@ -661,17 +737,56 @@ class DisplayDriver:
         """
         return
 
+    @property
+    def frame_recording(self) -> bool:
+        """True while a frame recorder is attached (PGDisplay only today)."""
+        return self._frame_recorder is not None
+
+    def open_frame_recorder(self, path, *, fps=12, width=None, height=None):
+        """
+        Attach an ffmpeg-backed recorder that receives one RGB24 frame per ``show()``.
+
+        Only PGDisplay implements this today; other backends raise
+        ``NotImplementedError``.
+        """
+        raise NotImplementedError(f"{self.__class__.__name__} does not support frame recording")
+
+    def open_frame_recorder_from_env(
+        self, env_var="PYDISPLAY_VIDEO", fps_env="PYDISPLAY_VIDEO_FPS"
+    ):
+        """Open a recorder when ``env_var`` points at an output ``.mp4`` path."""
+        import os
+
+        path = os.environ.get(env_var, "").strip()
+        if not path:
+            return None
+        fps = int(os.environ.get(fps_env, "12"))
+        return self.open_frame_recorder(path, fps=fps)
+
+    def close_frame_recorder(self):
+        """Finalize and detach any active frame recorder."""
+        recorder = self._frame_recorder
+        self._frame_recorder = None
+        if recorder is not None:
+            recorder.close()
+
+    def _record_frame(self, rgb_bytes) -> None:
+        """Deliver one presented RGB24 frame to the active recorder, if any."""
+        if self._frame_recorder is not None:
+            self._frame_recorder.write(rgb_bytes)
+
     def deinit(self) -> None:
         """
-        Stop the auto-refresh timer (so it can't fire after resources are
-        released) and then run subclass cleanup. Idempotent.
+        Run subclass cleanup. Idempotent.
+
+        The broker owns the shared refresh timer, so there is no display-owned
+        timer to stop here; ``board_config`` stops the timer on quit via
+        ``runtime.stop_timer``.
         """
         if getattr(self, "_deinitialized", False):
             return
         self._deinitialized = True
-        if getattr(self, "_timer", None) is not None:
-            self._timer.deinit()
-            self._timer = None
+        self.close_frame_recorder()
         self._deinit()
 
     def _deinit(self) -> None:
@@ -679,7 +794,7 @@ class DisplayDriver:
         return
 
     def quit(self, code: int = 0, force: bool = False) -> None:
-        """Release display resources (REPL-safe unless ``force=True``). Called by ``broker.on_quit`` on QUIT."""
+        """Release display resources (REPL-safe unless ``force=True``). Called on QUIT."""
         self.deinit()
         if force:
             raise SystemExit(code)
