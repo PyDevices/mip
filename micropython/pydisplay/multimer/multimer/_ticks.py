@@ -114,8 +114,72 @@ def _raw_sleep_ms(ms):
         time.sleep(ms / 1000)
 
 
-def sleep_ms(ms):
-    """Block for ``ms`` milliseconds."""
+# Optional development/troubleshooting hook only — not part of normal app use.
+# Single-threaded hosts (e.g. browser WASM) cannot inject quit from another
+# thread; a test harness may register a zero-arg callable invoked from
+# sleep_ms (and optionally from an app poll loop) to enforce a wall-clock
+# deadline. Production code should leave this unset (None).
+_deadline_hook = None
+
+
+def set_deadline_hook(hook):
+    """Register or clear a cooperative deadline hook (dev/troubleshooting only).
+
+    This is **not** an application API. Use it only from test harnesses or
+    interactive debugging when you need a wall-clock deadline on hosts that
+    cannot run a background quit thread (for example browser WASM).
+
+    ``hook`` is a zero-arg callable, or ``None`` to clear. :func:`sleep_ms`
+    calls it before and after sleeping; callers may also invoke
+    :func:`run_deadline_hook` from a poll loop. The hook's return value is
+    passed through by :func:`run_deadline_hook`.
+
+    Example (harness)::
+
+        def on_deadline():
+            runtime.request_quit()
+            return True
+
+        multimer.set_deadline_hook(on_deadline)
+        # ... run bounded demo ...
+        multimer.set_deadline_hook(None)
+    """
+    global _deadline_hook
+    _deadline_hook = hook
+
+
+def run_deadline_hook():
+    """Invoke the registered deadline hook, if any (dev/troubleshooting only).
+
+    Returns the hook's result, or ``False`` when no hook is registered.
+    Prefer leaving this to :func:`sleep_ms` unless you are writing harness
+    code that also polls without sleeping.
+    """
+    hook = _deadline_hook
+    if hook is None:
+        return False
+    return hook()
+
+
+def _sleep_ms_signal(ms):
+    """Sleep for signal-based backends (librt; ``uses_signals``).
+
+    The periodic timer fires via an RT signal on the main thread during the
+    sleep, so the scheduler/event queue does not need pumping here (pumping
+    would only add avoidable work and reentrancy on the signal path).
+    """
+    run_deadline_hook()
+    _raw_sleep_ms(ms)
+    run_deadline_hook()
+
+
+def _sleep_ms_pump(ms):
+    """Sleep for pump-based backends (win32 APC, SDL2, threading fallback).
+
+    These deliver timer callbacks only while the main thread pumps, so drain
+    the cooperative scheduler and the backend event queue around the wait.
+    """
+    run_deadline_hook()
     from ._schedule import _run_pending
     from ._select import _drain as _backend_drain
     from ._select import _sleep_ms as _backend_sleep_ms
@@ -127,9 +191,30 @@ def sleep_ms(ms):
         _backend_sleep_ms(ms)
     else:
         _raw_sleep_ms(ms)
+    run_deadline_hook()
     _run_pending()
     if _backend_drain is not None:
         _backend_drain()
 
 
-_sleep_ms = sleep_ms
+async def _sleep_ms_async(ms):
+    """Awaitable sleep for async-only runtimes (PyScript/Jupyter host loop).
+
+    Yields to the event loop so the async timer tasks run. ``asyncio.sleep_ms``
+    exists only on uasyncio; fall back to ``asyncio.sleep`` (CPython/PyScript).
+    """
+    from ._asyncio_loader import load_asyncio
+
+    aio = load_asyncio()
+    _sleep = getattr(aio, "sleep_ms", None)
+    if _sleep is not None:
+        await _sleep(ms)
+    else:
+        await aio.sleep(ms / 1000)
+    run_deadline_hook()
+
+
+# Default binding = the pumping variant (safe everywhere). ``multimer/__init__``
+# rebinds the public ``sleep_ms`` per active backend (signal / pump / async).
+sleep_ms = _sleep_ms_pump
+_sleep_ms = _sleep_ms_pump

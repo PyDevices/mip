@@ -71,7 +71,7 @@ It also drops straight in under [Nano-GUI](https://github.com/peterhinch/micropy
 PyDisplay is a **foundation layer**, not a GUI toolkit. It provides:
 
 - **`displaysys`** — display backends (`BusDisplay`, `SDLDisplay`, `PGDisplay`, `PSDisplay`, `JNDisplay`, `FBDisplay`) with a unified drawing API.
-- **`eventsys`** — a broker that turns touch, mouse, keyboards, keypads, encoders, and joysticks into uniform PyGame/SDL2-style events.
+- **`eventsys`** — a `Runtime` that turns touch, mouse, keyboards, keypads, encoders, and joysticks into uniform PyGame/SDL2-style events.
 - **`graphics`** — a portable `framebuf`-compatible drawing surface plus shapes, fonts, bitmap loaders, and `Area` helpers.
 - **`multimer`** — cross-platform periodic timers (sync, threaded, polled, and `asyncio`) with a `machine.Timer`-style API.
 
@@ -98,7 +98,7 @@ The right display backend is selected automatically: `BusDisplay` on MCUs, `SDLD
 
 Full details and per-platform notes: **[Portability & platforms](https://pydisplay.readthedocs.io/en/latest/platforms/)**.
 
-## 3. Quick start
+## 3. 🚀 Quick start
 
 ### 3.1 Try it in the browser (no install)
 
@@ -183,7 +183,7 @@ PyDisplay also integrates with:
 - [russhughes TFT / st7789py](https://pydisplay.readthedocs.io/en/latest/guis/tft-gui/) ports
 - the bundled [PyWidgets](https://pydisplay.readthedocs.io/en/latest/guis/pywidgets/) toolkit (`add_ons/pdwidgets`)
 
-## 7. Documentation map
+## 7. 📚 Documentation map
 
 Everything lives in one place — the **[documentation site](https://pydisplay.readthedocs.io)**:
 
@@ -197,7 +197,7 @@ Everything lives in one place — the **[documentation site](https://pydisplay.r
 | GUI libraries | [GUI integration](https://pydisplay.readthedocs.io/en/latest/guis/lvgl/) |
 | API | [API reference](https://pydisplay.readthedocs.io/en/latest/reference/) |
 
-## 8. Contributing
+## 8. 🤝 Contributing
 
 Fork, branch, and open a PR. See the [Contributing guide](https://pydisplay.readthedocs.io/en/latest/contributing/) and the open [GitHub Issues](https://github.com/PyDevices/pydisplay/issues). Roadmap items include EPaper displays, CircuitPython `circup` packages, end-user PyPI wheels, and more C bus drivers.
 

@@ -23,7 +23,9 @@ except ImportError:
 
     def byteswap(buf):
         """Swap 16-bit pixel bytes in place (portable fallback)."""
-        n = len(buf) & ~1
+        n = len(buf)
+        if n & 1:
+            raise ValueError("buffer size must be a multiple of 2")
         for i in range(0, n, 2):
             b0 = buf[i]
             buf[i] = buf[i + 1]
@@ -33,7 +35,6 @@ except ImportError:
 
 __all__ = [
     "DisplayDriver",
-    "FFmpegFrameRecorder",
     "alloc_buffer",
     "byteswap",
     "capabilities",
@@ -42,10 +43,87 @@ __all__ = [
     "color565_swapped",
     "color_rgb",
     "default_quit_chord",
+    "env_bool",
+    "env_get",
+    "env_set",
 ]
 
 _DEFAULT_AUTO_REFRESH_PERIOD = 33
 _DESKTOP_SCALE_MARGIN = 48
+
+# Process-local overrides for ports without ``os.environ`` / ``os.putenv``.
+_overrides = {}
+
+
+def env_set(name, value):
+    """Set an environment variable portably (CPython, MicroPython, CircuitPython).
+
+    Always records a process-local override so ``env_bool`` sees the value even
+    when the host ``os`` module has no ``environ``. When available, also updates
+    ``os.environ`` or calls ``os.putenv``.
+    """
+    text = "" if value is None else str(value)
+    _overrides[name] = text
+
+    import os
+
+    environ = getattr(os, "environ", None)
+    if environ is not None:
+        try:
+            environ[name] = text
+            return
+        except Exception:
+            pass
+    putenv = getattr(os, "putenv", None)
+    if putenv is not None:
+        try:
+            putenv(name, text)
+        except Exception:
+            pass
+
+
+def env_bool(name, default=False):
+    """Read a truthy/falsey environment variable with a portable fallback chain."""
+    raw = _env_raw(name)
+    if raw is None:
+        return bool(default)
+    text = str(raw).strip().lower()
+    if text in ("1", "true", "yes", "on"):
+        return True
+    if text in ("0", "false", "no", "off"):
+        return False
+    return bool(default)
+
+
+def env_get(name, default=None):
+    """Read a string environment variable portably (honors ``env_set`` overrides)."""
+    raw = _env_raw(name)
+    if raw is None:
+        return default
+    return raw
+
+
+def _env_raw(name):
+    if name in _overrides:
+        return _overrides[name]
+
+    import os
+
+    environ = getattr(os, "environ", None)
+    if environ is not None:
+        try:
+            value = environ.get(name)
+        except Exception:
+            value = None
+        if value is not None:
+            return value
+    getenv = getattr(os, "getenv", None)
+    if getenv is None:
+        return None
+    try:
+        return getenv(name)
+    except Exception:
+        return None
 
 
 def fit_scale_to_desktop(
@@ -216,95 +294,23 @@ def color_rgb(color):
     return (r, g, b)
 
 
-class FFmpegFrameRecorder:
-    """Pipe fixed-size RGB24 frames to ffmpeg for MP4 output."""
-
-    __slots__ = ("_closed", "_frame_bytes", "_frames", "_proc", "fps", "height", "path", "width")
-
-    def __init__(self, path, width, height, fps=12):
-        import subprocess
-
-        self.path = path
-        self.width = width
-        self.height = height
-        self.fps = fps
-        self._frames = 0
-        self._closed = False
-        self._frame_bytes = width * height * 3
-        self._proc = subprocess.Popen(
-            [
-                "ffmpeg",
-                "-y",
-                "-f",
-                "rawvideo",
-                "-pix_fmt",
-                "rgb24",
-                "-s",
-                f"{width}x{height}",
-                "-r",
-                str(fps),
-                "-i",
-                "pipe:0",
-                "-an",
-                "-c:v",
-                "libx264",
-                "-pix_fmt",
-                "yuv420p",
-                path,
-            ],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
-        )
-
-    def write(self, rgb_bytes):
-        if self._closed:
-            return
-        if len(rgb_bytes) != self._frame_bytes:
-            raise ValueError(
-                f"frame size {len(rgb_bytes)} != expected {self._frame_bytes} "
-                f"for {self.width}x{self.height} RGB24"
-            )
-        self._proc.stdin.write(rgb_bytes)
-        self._frames += 1
-
-    def close(self):
-        if self._closed:
-            return self._frames
-        self._closed = True
-        try:
-            self._proc.stdin.close()
-        except Exception:
-            pass
-        err = self._proc.stderr.read().decode("utf-8", errors="replace")
-        try:
-            self._proc.stderr.close()
-        except Exception:
-            pass
-        rc = self._proc.wait()
-        if rc != 0:
-            tail = "\n".join(err.strip().splitlines()[-8:])
-            raise RuntimeError(f"ffmpeg exited {rc} for {self.path}:\n{tail}")
-        return self._frames
-
-
 class DisplayDriver:
     """
     Base class for all display backends (BusDisplay, SDLDisplay, PGDisplay, FBDisplay, etc.).
 
-    Subclasses implement bus- or platform-specific drawing and refresh. Most applications
-    use a concrete driver from ``board_config.display`` rather than instantiating this
-    class directly.
+    Subclasses implement drawing (``blit_rect``, ``fill_rect``, ``pixel``),
+    presentation (``show()``), and teardown (``quit()`` / ``deinit()``). Most
+    applications use a concrete driver from ``board_config.display`` rather than
+    instantiating this class directly.
 
     Periodic presentation when needed is driven by ``eventsys.Runtime`` (see
-    ``needs_refresh``); the driver only implements ``show()`` and ``deinit()``.
+    ``needs_refresh``).
     """
 
     needs_refresh = False
 
-    def __init__(self):
-        if not hasattr(self, "_quiet"):
-            self._quiet = False
+    def __init__(self, *, quiet=False):
+        self._quiet = quiet
         if not self._quiet:
             print(f"Initializing {self.__class__.__name__}...")
         gc.collect()
@@ -314,7 +320,6 @@ class DisplayDriver:
         self._vssa = False  # False means no vertical scroll
         self._auto_byteswap = self.requires_byteswap
         self._touch_device = None
-        self._frame_recorder = None
         self.init()
         gc.collect()
         self._deinitialized = False
@@ -738,44 +743,6 @@ class DisplayDriver:
         """
         return
 
-    @property
-    def frame_recording(self) -> bool:
-        """True while a frame recorder is attached (PGDisplay only today)."""
-        return self._frame_recorder is not None
-
-    def open_frame_recorder(self, path, *, fps=12, width=None, height=None):
-        """
-        Attach an ffmpeg-backed recorder that receives one RGB24 frame per ``show()``.
-
-        Only PGDisplay implements this today; other backends raise
-        ``NotImplementedError``.
-        """
-        raise NotImplementedError(f"{self.__class__.__name__} does not support frame recording")
-
-    def open_frame_recorder_from_env(
-        self, env_var="PYDISPLAY_VIDEO", fps_env="PYDISPLAY_VIDEO_FPS"
-    ):
-        """Open a recorder when ``env_var`` points at an output ``.mp4`` path."""
-        import os
-
-        path = os.environ.get(env_var, "").strip()
-        if not path:
-            return None
-        fps = int(os.environ.get(fps_env, "12"))
-        return self.open_frame_recorder(path, fps=fps)
-
-    def close_frame_recorder(self):
-        """Finalize and detach any active frame recorder."""
-        recorder = self._frame_recorder
-        self._frame_recorder = None
-        if recorder is not None:
-            recorder.close()
-
-    def _record_frame(self, rgb_bytes) -> None:
-        """Deliver one presented RGB24 frame to the active recorder, if any."""
-        if self._frame_recorder is not None:
-            self._frame_recorder.write(rgb_bytes)
-
     def deinit(self) -> None:
         """
         Run subclass cleanup. Idempotent.
@@ -787,7 +754,6 @@ class DisplayDriver:
         if getattr(self, "_deinitialized", False):
             return
         self._deinitialized = True
-        self.close_frame_recorder()
         self._deinit()
 
     def _deinit(self) -> None:
