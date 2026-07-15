@@ -6,6 +6,12 @@
 from graphics import FrameBuffer
 
 
+def _framebuffer_from_module(mod):
+    # MicroPython FrameBuffer requires a writable buffer; Font.export-style modules
+    # ship ``memoryview(bytes)``, which raises TypeError on MP/PyScript.
+    return FrameBuffer(bytearray(mod.BITMAP), mod.WIDTH, mod.HEIGHT, mod.FORMAT)
+
+
 def load_framebuffer(value):
     """Load a framebuffer from a package module name or filesystem path.
 
@@ -22,7 +28,7 @@ def load_framebuffer(value):
         (".pbm", ".bmp", ".pgm", ".py")
     ):
         mod = __import__(value, None, None, ("BITMAP", "WIDTH", "HEIGHT", "FORMAT"))
-        return FrameBuffer(mod.BITMAP, mod.WIDTH, mod.HEIGHT, mod.FORMAT)
+        return _framebuffer_from_module(mod)
 
     if value.endswith(".py"):
         # Filesystem .py module (authoring / absolute path).
@@ -36,6 +42,6 @@ def load_framebuffer(value):
             raise ValueError(f"Cannot load icon module {value!r}")
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        return FrameBuffer(mod.BITMAP, mod.WIDTH, mod.HEIGHT, mod.FORMAT)
+        return _framebuffer_from_module(mod)
 
     return FrameBuffer.from_file(value)
