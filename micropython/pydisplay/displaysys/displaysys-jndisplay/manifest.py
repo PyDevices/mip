@@ -1,6 +1,6 @@
 metadata(
     description="PyDisplay displaysys-jndisplay",
-    version="0.0.13",
+    version="0.0.14",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="displaysys-jndisplay",
