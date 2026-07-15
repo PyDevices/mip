@@ -54,7 +54,7 @@ Runtime icons are **importable Python modules** under [`src/pdwidgets/icons/`](s
 # 1) Optional: regenerate mono .pbm / color .bmp from Material Design
 .venv/bin/python scripts/assets_generate_pdwidgets_icons.py
 .venv/bin/python scripts/assets_make_color_icons.py
-# 2) Convert binaries → .py modules (installs pydisplay-graphics from TestPyPI)
+# 2) Convert binaries → .py modules (BITMAP = bytearray; uses sibling or TestPyPI graphics)
 .venv/bin/python scripts/assets_icons_to_py.py --delete-binaries
 # Optional bulk dump into assets/icons/
 .venv/bin/python scripts/assets_convert_md_png_to_pbm.py
