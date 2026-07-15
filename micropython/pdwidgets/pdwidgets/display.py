@@ -182,9 +182,9 @@ class Display(Widget):
             area = area.clip(self._clip_stack[-1])
         self._clip_stack.append(area)
         try:
-            from graphics import ClippedCanvas
-        except ImportError:
             from graphics._clip import ClippedCanvas
+        except ImportError:
+            from graphics import ClippedCanvas
 
         self.framebuf = ClippedCanvas(self._framebuf_real, area)
 
@@ -195,9 +195,9 @@ class Display(Widget):
         self._clip_stack.pop()
         if self._clip_stack:
             try:
-                from graphics import ClippedCanvas
-            except ImportError:
                 from graphics._clip import ClippedCanvas
+            except ImportError:
+                from graphics import ClippedCanvas
 
             self.framebuf = ClippedCanvas(self._framebuf_real, self._clip_stack[-1])
         else:
