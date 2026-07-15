@@ -17,7 +17,7 @@ mip.install("palettes", index="https://PyDevices.github.io/micropython-lib/mip/P
 pip install \
   -i https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  pydevices-palettes
+  palettes
 ```
 
 ## Quick start
