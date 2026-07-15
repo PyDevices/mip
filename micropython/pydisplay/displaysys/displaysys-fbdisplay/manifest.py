@@ -1,6 +1,6 @@
 metadata(
     description="PyDisplay displaysys-fbdisplay",
-    version="0.0.16",
+    version="0.0.17",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="displaysys-fbdisplay",
