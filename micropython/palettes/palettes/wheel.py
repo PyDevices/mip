@@ -1,35 +1,43 @@
-"""
-`pypalette.wheel`
-====================================================
-This module contains the cool wheel color palette as a class object.
+# SPDX-FileCopyrightText: 2024 Brad Barnett
+#
+# SPDX-License-Identifier: MIT
+"""HSV and RGB color-wheel palettes.
 
+Build a smooth color wheel or fixed-saturation HSV ramp. Named Windows
+16-color attributes (``RED``, ``BLACK``, etc.) are available on each
+instance.
 
-Usage:
-    from palettes import get_palette
-    palette = get_palette(name="wheel", color_depth=16, swapped=False, length=256)
-    # OR
-    palette = get_palette(name="wheel")
-
-    # OR
-    from palettes.wheel import WheelPalette
-    palette = WheelPalette(color_depth=16, swapped=False, length=256)
-
-    print(f"Palette: {palette.name}, Length: {len(palette)}")
-    for i, color in enumerate(palette):
-        for i, color in enumerate(palette):  print(f"{i}. {color:#06X} {palette.color_name(i)}")
-
-    # to access the named colors directly:
-    x = palette.RED
-    x = palette.BLACK
-
+Example:
+    >>> from palettes import get_palette
+    >>> palette = get_palette(name="wheel", length=256, saturation=1.0)
+    >>> palette[0]
+    >>> palette.RED
 """
 
 from . import Palette as _Palette
 
 
 class WheelPalette(_Palette):
-    """
-    A class to represent a color wheel as a palette.
+    """Color wheel or HSV ramp palette.
+
+    With ``saturation=None`` and ``value=None`` (the default when both are
+    omitted), indices follow a classic RGB color wheel. When either
+    ``saturation`` or ``value`` is set, indices map linearly through hue at
+    fixed saturation and value.
+
+    Args:
+        name: Prefix for :attr:`~palettes.Palette.name` (length suffix is added).
+        color_depth: Output format; see :class:`~palettes.Palette`.
+        swapped: Byte-swap 16-bit colors when ``True``.
+        cached: Memoize index lookups when ``True`` (default).
+        length: Number of colors in the wheel (default ``256``).
+        saturation: HSV saturation in ``0.0``–``1.0``, or ``None`` for
+            classic wheel mode.
+        value: HSV value in ``0.0``–``1.0``, or ``None`` for classic wheel mode.
+
+    Raises:
+        ValueError: If ``saturation`` or ``value`` is outside ``0``–``1`` in
+            HSV mode.
     """
 
     def __init__(

@@ -1,41 +1,19 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
-"""
-`palettes.material_design`
-====================================================
-This module contains the Material Design color palette as a class object.
+"""Material Design color palette.
 
+256 swatches from the Material Design spec, exposed as indexed colors and
+named attributes. Each hue family includes shades ``S50``–``S900``; most
+families also provide accent colors ``A100``, ``A200``, ``A400``, and
+``A700``.
 
-Usage:
-    from palettes import get_palette
-    palette = get_palette(name="material_design", color_depth=16, swapped=False)
-    # OR
-    palette = get_palette("material_design")
-
-    # OR
-    from palettes.material_design import MDPalette
-    palette = MDPalette(size=5, color_depth=24)
-
-    # to access the primary variant of a color family by name:
-    x = palette.RED
-    x = palette.BLACK
-
-    # to access all 256 colors directly:
-    x = palette[127]  # color at index 127
-
-    # to access a shade by name:
-    x = palette.RED_S500  # shade 500
-    x = palette.RED_S900  # shade 900
-    x = palette.RED_S50  # shade 50
-
-    # to access an accent of a color family by name:
-    x = palette.RED_A100
-    x = palette.RED_A700
-
-    # to iterate over all 256 colors:
-        for x in palette:
-            pass
+Example:
+    >>> from palettes import get_palette
+    >>> palette = get_palette(name="material_design", color_depth=16)
+    >>> palette.RED
+    >>> palette.RED_S900
+    >>> palette[127]
 """
 
 from . import MappedPalette
@@ -43,8 +21,19 @@ from ._material_design import COLORS, FAMILIES, LENGTHS
 
 
 class MDPalette(MappedPalette):
-    """
-    A class to represent the Material Design color palette.
+    """Material Design swatch palette.
+
+    Colors are stored in a flat RGB map. During initialization, named
+    attributes are created for each family and shade (for example
+    ``RED``, ``RED_S500``, ``RED_A700``). The unsuffixed name always
+    refers to the ``S500`` primary shade.
+
+    Args:
+        name: Label for :attr:`~palettes.Palette.name`; defaults to
+            ``"MaterialDesign"`` when empty.
+        color_depth: Output format; see :class:`~palettes.Palette`.
+        swapped: Byte-swap 16-bit colors when ``True``.
+        color_map: RGB byte map; defaults to the built-in Material Design table.
     """
 
     _shades = [

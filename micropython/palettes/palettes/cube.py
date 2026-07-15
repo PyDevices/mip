@@ -1,32 +1,34 @@
-# SPDIX:# SPDX-FileCopyrightText: 2024 Brad Barnett
+# SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
-"""
-`palettes.cube`
-====================================================
-Makes a color cube palette.
+"""RGB color-cube palettes.
 
-Usage:
-    from palettes import get_palette
-    palette = get_palette(name="cube", size=5, color_depth=16, swapped=False)
-    # OR
-    palette = get_palette(name="cube")
+Samples the RGB cube at evenly spaced points. Supported cube sizes are
+2, 3, 4, and 5 (8, 27, 64, or 125 colors). Each size uses a built-in
+name table for :meth:`~palettes.Palette.color_name`.
 
-    # OR
-    from palettes.cube import CubePalette
-    palette = CubePalette(size=5, color_depth=24)
-
-    print(f"Palette: {palette.name}, Length: {len(palette)}")
-    for i, color in enumerate(palette):
-        for i, color in enumerate(palette):  print(f"{i}. {color:#06X} {palette.color_name(i)}")
+Example:
+    >>> from palettes import get_palette
+    >>> palette = get_palette(name="cube", size=5, color_depth=16)
+    >>> len(palette)
+    125
 """
 
 from . import Palette as _Palette
 
 
 class CubePalette(_Palette):
-    """
-    A color cube palette.  The size of the cube is determined by the size parameter.
+    """Evenly spaced RGB cube palette.
+
+    Indices traverse the cube in ``x``, then ``y``, then ``z`` order. Channel
+    values are spaced from ``0`` to ``255`` inclusive.
+
+    Args:
+        name: Prefix for :attr:`~palettes.Palette.name` (length suffix is added).
+        color_depth: Output format; see :class:`~palettes.Palette`.
+        swapped: Byte-swap 16-bit colors when ``True``.
+        cached: Memoize index lookups when ``True`` (default).
+        size: Cube edge length. Must be ``2``, ``3``, ``4``, or ``5``.
     """
 
     def __init__(self, name="", color_depth=16, swapped=False, cached=True, size=5):
