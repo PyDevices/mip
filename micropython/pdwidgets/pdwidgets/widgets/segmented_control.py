@@ -10,6 +10,7 @@ from ..widget import Widget
 
 
 class SegmentedControl(Widget):
+    """Exclusive pill-style segment selector."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,
@@ -51,6 +52,7 @@ class SegmentedControl(Widget):
         self.value = idx
 
     def draw(self, _=None):
+        """Draw segment backgrounds and labels."""
         pa = self.padded_area
         self.display.framebuf.round_rect(*pa, self.radius, self.color_theme.segment, f=True)
         n = len(self.labels) or 1

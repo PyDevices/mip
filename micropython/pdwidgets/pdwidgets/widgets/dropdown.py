@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Dropdown selection widget."""
+
 from eventsys import events
 
 from .._constants import ALIGN, ICON_SIZE, PAD
@@ -14,6 +16,7 @@ from .label import Label
 
 
 class Dropdown(Widget):
+    """Header button that opens a modal list of options."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,
@@ -73,19 +76,25 @@ class Dropdown(Widget):
         self._open_event = None
         self._arrow = Icon(
             self,
-            align=ALIGN.RIGHT,
-            fg=fg,
-            bg=bg,
-            value=icon_theme.dropdown(ICON_SIZE.SMALL),
+            0,
+            0,
+            None,
+            None,
+            ALIGN.RIGHT,
+            None,
+            fg,
+            bg,
+            True,
+            icon_theme.dropdown(ICON_SIZE.SMALL),
         )
         self._sel_label = Label(
-            self, value=str(value or ""), x=PAD + radius, align=ALIGN.LEFT, fg=fg, bg=bg
+            self, PAD + radius, 0, None, None, ALIGN.LEFT, None, fg, bg, True, str(value or "")
         )
         # A full-screen, transparent overlay on the root screen grabs modal
         # pointer capture while open; the option Card lives inside it.
         screen = _root_screen(self)
         self._overlay = Widget(
-            screen, 0, 0, self.display.width, self.display.height, visible=False
+            screen, 0, 0, self.display.width, self.display.height, None, None, None, None, False
         )
         # A None bg makes the overlay's draw a no-op (Widget.__init__ would
         # otherwise inherit the parent's bg and repaint the whole screen); the

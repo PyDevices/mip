@@ -1,11 +1,14 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Page stack navigator."""
+
 from ..widget import Widget
 from .page import Page
 
 
 class Navigator(Widget):
+    """Page stack with push, pop, and replace navigation."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,

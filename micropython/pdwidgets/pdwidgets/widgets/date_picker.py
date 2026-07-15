@@ -30,6 +30,7 @@ def _weekday(y, m, d):
 
 
 class DatePicker(Widget):
+    """Month calendar for selecting a date."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,
@@ -144,6 +145,7 @@ class DatePicker(Widget):
             self.value = (self._year, self._month, self._day)
 
     def draw(self, _=None):
+        """Draw the month header and day grid."""
         pa = self.padded_area
         self.display.framebuf.fill_rect(*pa, self.bg)
         top, cell_w, cell_h, left = self._cell_grid()

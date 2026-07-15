@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Checkbox toggle widget."""
+
 from .._constants import ICON_SIZE
 from .._themes import icon_theme
 from ..widget import Widget
@@ -8,6 +10,7 @@ from .toggle import Toggle
 
 
 class CheckBox(Toggle):
+    """Boolean toggle rendered as checked/unchecked icons."""
     def __init__(
         self,
         parent: Widget,

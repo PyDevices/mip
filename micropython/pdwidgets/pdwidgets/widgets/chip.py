@@ -10,6 +10,7 @@ from ..widget import Widget
 
 
 class Chip(Widget):
+    """Compact selectable filter chip."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,
@@ -45,6 +46,7 @@ class Chip(Widget):
         self.value = not self._value
 
     def draw(self, _=None):
+        """Draw the chip background and label."""
         pa = self.padded_area
         selected = bool(self._value)
         fill = self.color_theme.chip_selected if selected else self.color_theme.chip

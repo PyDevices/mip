@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Vertical layout container."""
+
 from ._layout import _Layout
 
 

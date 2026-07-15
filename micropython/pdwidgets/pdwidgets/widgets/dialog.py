@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Modal dialog widget."""
+
 from eventsys import events
 
 from .._constants import ALIGN, ICON_SIZE, PAD
@@ -12,6 +14,7 @@ from .label import Label
 
 
 class Dialog(Widget):
+    """Modal message box with title, body, and action buttons."""
     def __init__(
         self,
         parent: Widget,
@@ -65,7 +68,7 @@ class Dialog(Widget):
         self.on_result = on_result
         # Pointer modal capture (FocusManager remains independent for key focus).
         super().__init__(
-            screen, 0, 0, display.width, display.height, fg=fg, bg=None, visible=False
+            screen, 0, 0, display.width, display.height, None, None, fg, None, False
         )
         w = w or min(display.width - 2 * ICON_SIZE.LARGE, ICON_SIZE.LARGE * 8)
         h = h or min(display.height - 2 * ICON_SIZE.LARGE, ICON_SIZE.LARGE * 5)

@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Radio button widget."""
+
 from .._constants import ICON_SIZE
 from .._themes import icon_theme
 from ..widget import Widget
@@ -9,6 +11,7 @@ from .toggle import Toggle
 
 
 class RadioButton(Toggle):
+    """Mutually exclusive checked icon; belongs to a :class:`RadioGroup`."""
     def __init__(
         self,
         parent: Widget,

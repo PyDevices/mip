@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Icon toggle base class."""
+
 from eventsys import events
 
 from ..widget import Widget
@@ -8,6 +10,7 @@ from .icon_button import IconButton
 
 
 class Toggle(IconButton):
+    """Icon button that toggles between on and off states."""
     def __init__(
         self,
         parent: Widget,

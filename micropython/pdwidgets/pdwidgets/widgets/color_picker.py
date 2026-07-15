@@ -37,6 +37,7 @@ def _hsv_to_rgb565(h, s, v, color565):
 
 
 class ColorPicker(Widget):
+    """RGB565 color picker with hue strip and saturation/value region."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,
@@ -101,6 +102,7 @@ class ColorPicker(Widget):
         self.value = self._make_color()
 
     def draw(self, _=None):
+        """Draw the hue strip and saturation/value region."""
         pa = self.padded_area
         strip_h = 14
         sv_h = pa.h - strip_h - PAD

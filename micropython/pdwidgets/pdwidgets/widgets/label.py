@@ -1,11 +1,14 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Text label widget."""
+
 from .._constants import ALIGN, TEXT_SIZE, TEXT_WIDTH
 from ..widget import Widget
 
 
 class Label(Widget):
+    """Text display using romfont or an optional proportional font."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,
@@ -109,8 +112,10 @@ class Label(Widget):
 
     @property
     def char_width(self):
+        """Rendered character width in pixels."""
         return TEXT_WIDTH * self.scale
 
     @property
     def char_height(self):
+        """Rendered character height in pixels."""
         return self.text_height * self.scale

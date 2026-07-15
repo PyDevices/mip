@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Icon display widget."""
+
 from graphics import RGB565, FrameBuffer
 
 from .._constants import DEFAULT_PADDING
@@ -8,6 +10,7 @@ from ..widget import Widget
 
 
 class Icon(Widget):
+    """Monochrome or BMP565 icon display."""
     cache = {}
     # Reusable 2-entry (bg, fg) palette. Rewritten on every draw, so a single
     # shared buffer avoids allocating a 4-byte FrameBuffer per draw call.

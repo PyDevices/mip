@@ -1,11 +1,14 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Progress bar widget."""
+
 from .._constants import ICON_SIZE
 from ..widget import Widget
 
 
 class ProgressBar(Widget):
+    """Horizontal or vertical progress indicator (0–1)."""
     def __init__(
         self,
         parent: Widget,
@@ -126,6 +129,7 @@ class ProgressBar(Widget):
                 self.display.framebuf.fill_rect(x, y, progress_width, h, self.fg)
 
     def changed(self):
+        """Invalidate after the progress value changes."""
         # Ensure value is between 0 and 1
         if self.value < 0:
             self.value = 0

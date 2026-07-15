@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Standard on/off toggle button."""
+
 from .._constants import ICON_SIZE
 from .._themes import icon_theme
 from ..widget import Widget
@@ -8,6 +10,7 @@ from .toggle import Toggle
 
 
 class ToggleButton(Toggle):
+    """Pre-themed :class:`Toggle` using standard on/off icons."""
     def __init__(
         self,
         parent: Widget,

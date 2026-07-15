@@ -12,6 +12,7 @@ from .card import Card
 
 
 class Drawer(Widget):
+    """Modal side panel that slides in from the left or right."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,
@@ -32,7 +33,7 @@ class Drawer(Widget):
         bg = bg if bg is not None else parent.color_theme.surface
         fg = fg if fg is not None else parent.color_theme.on_surface
         super().__init__(
-            screen, 0, 0, display.width, display.height, fg=fg, bg=None, visible=False
+            screen, 0, 0, display.width, display.height, None, None, fg, None, False
         )
         panel_w = w or display.width // 2
         align = ALIGN.LEFT if side != "right" else ALIGN.RIGHT
@@ -50,6 +51,7 @@ class Drawer(Widget):
 
     @property
     def content(self):
+        """The :class:`Card` panel; add child widgets here."""
         return self.panel
 
     def _scrim_tap(self, data=None, event=None):
@@ -58,16 +60,19 @@ class Drawer(Widget):
             self.hide_drawer()
 
     def show(self):
+        """Show the drawer, grab modal capture, and redraw."""
         self.visible = True
         self.set_modal(True)
         self.invalidate()
 
     def hide_drawer(self):
+        """Hide the drawer, release modal capture, and call ``on_dismiss``."""
         self.set_modal(False)
         self.visible = False
         if self.on_dismiss:
             self.on_dismiss()
 
     def draw(self, area=None):
+        """Fill the scrim behind the side panel."""
         area = area or self.area
         self.display.framebuf.fill_rect(*area, self.scrim)

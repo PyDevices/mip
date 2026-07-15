@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Scrollbar widget."""
+
 from eventsys import events
 
 from .._constants import ALIGN, ICON_SIZE
@@ -11,6 +13,7 @@ from .slider import Slider
 
 
 class ScrollBar(Widget):
+    """Scroll control with end arrows and a central slider."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,

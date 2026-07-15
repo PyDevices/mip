@@ -1,12 +1,15 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Card container widget."""
+
 from .._constants import ALIGN, PAD
 from ..widget import Widget
 from .label import Label
 
 
 class Card(Widget):
+    """Rounded container with optional title and drop shadow."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,

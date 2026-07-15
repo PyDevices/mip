@@ -11,6 +11,7 @@ from .button import Button
 
 
 class Accordion(Widget):
+    """Stack of titled expansion panels; ``exclusive`` keeps at most one open."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,

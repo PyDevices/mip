@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Single-line text input field."""
+
 from eventsys import events
 from eventsys.keys import Keys
 
@@ -9,6 +11,7 @@ from ..widget import Widget
 
 
 class TextInput(Widget):
+    """Single-line editable text field with focus management."""
     _focused = None  # back-compat alias; prefer display.focus_manager.focused
 
     def __init__(  # noqa: PLR0913

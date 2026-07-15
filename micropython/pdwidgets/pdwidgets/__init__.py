@@ -34,14 +34,15 @@ Timer architecture:
 from eventsys import events
 from graphics import Area
 
+from . import pct
 from ._constants import (
-    ALIGN,
-    DEFAULT_PADDING,
-    ICON_SIZE,
-    PAD,
-    POSITION,
-    TEXT_SIZE,
-    TEXT_WIDTH,
+    ALIGN,  #: Widget alignment flags (``ALIGN.TOP_LEFT``, ``ALIGN.CENTER``, …).
+    DEFAULT_PADDING,  #: Default ``(PAD, PAD, PAD, PAD)`` inset for widgets.
+    ICON_SIZE,  #: Valid icon sizes: ``SMALL`` (18), ``MEDIUM`` (24), ``LARGE`` (36), ``XLARGE`` (48).
+    PAD,  #: Default padding unit in pixels (2).
+    POSITION,  #: Bit flags combined into :data:`ALIGN` (``LEFT``, ``TOP``, ``OUTER``, …).
+    TEXT_SIZE,  #: Romfont heights: ``SMALL`` (8), ``MEDIUM`` (14), ``LARGE`` (16).
+    TEXT_WIDTH,  #: Fixed romfont character width in pixels (8).
 )
 from ._themes import ColorTheme, IconTheme, get_palette, icon_theme
 from .display import Display, tick
@@ -49,8 +50,8 @@ from .screen import Screen
 from .task import Task
 from .widget import Widget
 
-DEBUG = False
-MARK_UPDATES = False
+DEBUG = False  #: When ``True``, enable extra debug logging in pdwidgets.
+MARK_UPDATES = False  #: When ``True``, draw a colored border around flushed areas.
 
 # Widget / alias name -> (import path, attribute). Core names live above.
 _LAZY = {
@@ -118,6 +119,7 @@ __all__ = [
     "DEFAULT_PADDING",
     "ICON_SIZE",
     "MARK_UPDATES",
+    "pct",
     "PAD",
     "POSITION",
     "TEXT_SIZE",

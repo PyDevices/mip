@@ -13,6 +13,14 @@ class Form:
     """
 
     def __init__(self, on_commit=None, error_label=None):
+        """
+        Create a form binder.
+
+        Args:
+            on_commit (callable | None): Called as ``on_commit(values)`` when
+                :meth:`commit` succeeds.
+            error_label (Label | None): Shows the first validation error.
+        """
         self._fields = {}
         self._validators = {}
         self.on_commit = on_commit
@@ -53,7 +61,7 @@ class Form:
                 self.error_label.value = ""
         return errors
 
-    def commit(self):
+    def commit(self) -> bool:
         """Validate then invoke ``on_commit(values)`` when valid.
 
         Returns:

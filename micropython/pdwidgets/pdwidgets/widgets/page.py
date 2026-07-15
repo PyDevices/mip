@@ -1,10 +1,13 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Navigator/tab content page."""
+
 from ..widget import Widget
 
 
 class Page(Widget):
+    """Full-bleed content page for :class:`Navigator` or :class:`TabView`."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,

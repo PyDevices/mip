@@ -38,6 +38,8 @@ from . import TEXT_SIZE, TEXT_WIDTH, Widget
 
 
 class Console(io.IOBase, Widget):
+    """Framebuffer text console with optional vertical scrolling."""
+
     def __init__(
         self,
         parent,
@@ -51,6 +53,21 @@ class Console(io.IOBase, Widget):
         scale=1,
         font_data=None,
     ):
+        """
+        Initialize a text console in the display's vertical scroll area.
+
+        Args:
+            parent (Widget): Parent widget (usually a :class:`Screen` partition).
+            fg (int | None): Default text color.
+            bg (int | None): Console background color.
+            visible (bool): Initial visibility.
+            value (str | None): Unused; kept for :class:`Widget` API compatibility.
+            by_char (bool): When ``True``, flush each character as it is written.
+            margin (int): Character margin in cells from the left edge.
+            text_height (int): Romfont height (``TEXT_SIZE`` constant).
+            scale (int): Pixel scale factor for romfont glyphs.
+            font_data (str | None): Alternate romfont data source.
+        """
         self.margin = margin
         if text_height not in TEXT_SIZE:
             raise ValueError("Text height must be 8, 14 or 16 pixels.")
@@ -78,16 +95,38 @@ class Console(io.IOBase, Widget):
         self.display.vscroll = 0
 
     def clear(self):
+        """Erase the console and reset the text cursor."""
         self.dirty_areas.append(self.display.framebuf.fill_rect(*self.area, self.bg))
         self._reset_cursor()
 
-    def readinto(self, buf, nbytes=0):  # overrides io.IOBase.readinto
+    def readinto(self, buf, nbytes=0) -> int | None:  # overrides io.IOBase.readinto
+        """
+        Read bytes into ``buf`` (``io.IOBase`` interface).
+
+        Args:
+            buf (bytearray): Destination buffer.
+            nbytes (int): Maximum bytes to read.
+
+        Returns:
+            int | None: Number of bytes read, or ``None`` if no reader is set.
+        """
         if self._readobj is not None:
             return self._readobj.readinto(buf, nbytes)
         else:
             return None
 
-    def write(self, buf, fg=None, bg=None):  # overrides io.IOBase.write
+    def write(self, buf, fg=None, bg=None) -> int:  # overrides io.IOBase.write
+        """
+        Write text to the console (``io.IOBase`` interface).
+
+        Args:
+            buf (bytes | str): Text or bytes to render.
+            fg (int | None): Foreground color override.
+            bg (int | None): Background color override.
+
+        Returns:
+            int: Number of bytes written.
+        """
         fg = fg if fg is not None else self.parent.fg
         bg = bg if bg is not None else self.parent.bg
         if isinstance(buf, str):
@@ -210,6 +249,7 @@ class Console(io.IOBase, Widget):
         return (self._cursor_y_rel % self.display.vsa) + self.display.tfa
 
     def draw(self):
+        """Flush accumulated dirty console regions to the display."""
         if self.dirty_areas:
             dirty = self.dirty_areas[0]
             for area in self.dirty_areas[1:]:

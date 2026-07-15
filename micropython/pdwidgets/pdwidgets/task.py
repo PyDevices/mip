@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Scheduled repeating tasks for :class:`Display`."""
+
 try:
     from time import ticks_add, ticks_ms
 except ImportError:

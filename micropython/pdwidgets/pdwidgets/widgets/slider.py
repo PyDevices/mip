@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Slider widget."""
+
 from eventsys import events
 
 from .._constants import ALIGN, ICON_SIZE
@@ -9,6 +11,7 @@ from .progress_bar import ProgressBar
 
 
 class Slider(ProgressBar):
+    """Draggable 0–1 value control with a circular knob."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,

@@ -1,11 +1,14 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Arc gauge widget."""
+
 from .._constants import ICON_SIZE, TEXT_SIZE
 from ..widget import Widget
 
 
 class Gauge(Widget):
+    """Arc gauge displaying a normalized value in ``[0, 1]``."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,

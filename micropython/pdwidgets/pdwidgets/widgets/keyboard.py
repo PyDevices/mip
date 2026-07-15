@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""On-screen keyboard widget."""
+
 from eventsys import events
 
 from .._constants import ALIGN, PAD, TEXT_SIZE
@@ -17,6 +19,7 @@ _ROWS = (
 
 
 class Keyboard(Widget):
+    """On-screen QWERTY keyboard for focused text fields."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,

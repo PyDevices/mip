@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Numeric stepper widget."""
+
 from eventsys import events
 
 from .._constants import ALIGN, ICON_SIZE, PAD
@@ -11,6 +13,7 @@ from .text_box import TextBox
 
 
 class NumberStepper(Widget):
+    """Bounded numeric stepper with ``-`` / ``+`` buttons."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,

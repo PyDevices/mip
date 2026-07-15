@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Raster image widget."""
+
 from graphics import RGB565, FrameBuffer
 
 from .._constants import DEFAULT_PADDING
@@ -8,6 +10,7 @@ from ..widget import Widget
 
 
 class Image(Widget):
+    """Raster image widget (``.pbm`` or BMP565 ``.bmp``)."""
     cache = {}
 
     def __init__(  # noqa: PLR0913
@@ -60,6 +63,7 @@ class Image(Widget):
         self._swapped = None
 
     def changed(self):
+        """Invalidate after the image path changes."""
         if self._value:
             self._load(self._value)
         else:

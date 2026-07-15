@@ -12,6 +12,7 @@ from .grid import Grid
 
 
 class PinPad(Widget):
+    """3×4 numeric keypad for PIN or code entry."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,

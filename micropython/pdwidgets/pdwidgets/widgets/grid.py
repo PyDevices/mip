@@ -8,6 +8,7 @@ from ..widget import Widget
 
 
 class Grid(Widget):
+    """Fixed-column grid layout container."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,
@@ -33,11 +34,13 @@ class Grid(Widget):
         super().__init__(parent, x, y, w, h, align, align_to, fg, bg, visible, value, padding)
 
     def add_child(self, child):
+        """Add a child at the next grid cell."""
         self.children.append(child)
         self._layout()
         child.invalidate()
 
     def remove_child(self, child):
+        """Remove a child and reflow remaining cells."""
         self.children.remove(child)
         self._layout()
         self.invalidate()

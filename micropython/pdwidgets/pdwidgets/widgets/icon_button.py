@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Icon-only button."""
+
 from .._constants import ALIGN
 from ..widget import Widget
 from .button import Button
@@ -8,6 +10,7 @@ from .icon import Icon
 
 
 class IconButton(Button):
+    """Button whose content is a centered icon."""
     def __init__(
         self,
         parent: Widget,
@@ -47,7 +50,7 @@ class IconButton(Button):
         """
         fg = fg if fg is not None else parent.fg
         bg = bg if bg is not None else parent.bg
-        self.icon = Icon(None, align=ALIGN.CENTER, fg=fg, bg=bg, value=icon_file)
+        self.icon = Icon(None, 0, 0, None, None, ALIGN.CENTER, None, fg, bg, True, icon_file)
         w = w or self.icon.width
         h = h or self.icon.height
         super().__init__(parent, x, y, w, h, align, align_to, fg, bg, visible, value, padding)

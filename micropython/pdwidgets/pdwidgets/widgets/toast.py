@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
-import contextlib
+"""Transient toast notification."""
 
 from .._constants import ALIGN, ICON_SIZE, PAD, TEXT_SIZE
 from .._util import _root_screen
@@ -15,6 +15,7 @@ except ImportError:
 
 
 class Toast(Widget):
+    """Transient bottom banner that auto-hides after a duration."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,
@@ -92,8 +93,10 @@ class Toast(Widget):
         if ticks_ms() >= self._hide_at:
             self.visible = False
             if self._task is not None:
-                with contextlib.suppress(ValueError):
+                try:
                     self.display.remove_task(self._task)
+                except ValueError:
+                    pass
                 self._task = None
 
     def draw(self, area=None):

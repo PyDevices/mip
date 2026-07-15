@@ -1,11 +1,14 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Horizontal divider widget."""
+
 from .._constants import PAD
 from ..widget import Widget
 
 
 class Divider(Widget):
+    """Thin horizontal rule for separating sections."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,

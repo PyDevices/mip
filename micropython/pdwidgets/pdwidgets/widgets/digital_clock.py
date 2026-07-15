@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Live digital clock label."""
+
 from time import localtime
 
 from .._constants import TEXT_SIZE, TEXT_WIDTH
@@ -9,6 +11,7 @@ from .label import Label
 
 
 class DigitalClock(Label):
+    """Live-updating HH:MM:SS clock label."""
     def __init__(
         self,
         parent: Widget,
@@ -72,6 +75,7 @@ class DigitalClock(Label):
         self.task = self.display.add_task(self.update_time, 1000)
 
     def update_time(self):
+        """Refresh the displayed time from the system clock."""
         if self.visible:
             _y, _m, _d, h, min, sec, *_ = localtime()
             self.value = f"{h:02}:{min:02}:{sec:02}"

@@ -13,6 +13,7 @@ from .card import Card
 
 
 class Menu(Widget):
+    """Modal popup action menu of labeled callbacks."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,
@@ -38,7 +39,7 @@ class Menu(Widget):
         fg = fg if fg is not None else parent.color_theme.on_menu
         self._items = list(items or [])
         super().__init__(
-            screen, 0, 0, display.width, display.height, fg=fg, bg=None, visible=False
+            screen, 0, 0, display.width, display.height, None, None, fg, None, False
         )
         row_h = TEXT_SIZE.LARGE + 2 * PAD
         n = max(1, len(self._items))
@@ -81,15 +82,18 @@ class Menu(Widget):
         return handler
 
     def show(self):
+        """Show the menu, grab modal capture, and redraw."""
         self.visible = True
         self.set_modal(True)
         self.invalidate()
 
     def hide_menu(self):
+        """Hide the menu and release modal capture."""
         self.set_modal(False)
         self.visible = False
 
     def draw(self, area=None):
+        """Fill the scrim behind the popup menu."""
         area = area or self.area
         self.display.framebuf.fill_rect(*area, self.scrim)
 

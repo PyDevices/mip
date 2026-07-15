@@ -8,6 +8,7 @@ from ..widget import Widget
 
 
 class Chart(Widget):
+    """Lightweight line or bar chart for numeric sequences."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,
@@ -53,6 +54,7 @@ class Chart(Widget):
         return [max(0.0, min(1.0, float(v))) for v in data]
 
     def draw(self, _=None):
+        """Draw the chart axes and data series."""
         pa = self.padded_area
         self.display.framebuf.fill_rect(*pa, self.bg)
         self.display.framebuf.rect(pa.x, pa.y, pa.w, pa.h, self.color_theme.outline)

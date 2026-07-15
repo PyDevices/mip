@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Application title bar."""
+
 from eventsys import events
 
 from .._constants import ALIGN, ICON_SIZE, PAD, TEXT_SIZE
@@ -11,6 +13,7 @@ from .label import Label
 
 
 class AppBar(Widget):
+    """Top title bar with optional leading back button."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,

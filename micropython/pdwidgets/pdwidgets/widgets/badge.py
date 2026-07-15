@@ -1,11 +1,14 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Status badge widget."""
+
 from .._constants import PAD, TEXT_SIZE, TEXT_WIDTH
 from ..widget import Widget
 
 
 class Badge(Widget):
+    """Small status dot or rounded count pill."""
     def __init__(
         self,
         parent: Widget,

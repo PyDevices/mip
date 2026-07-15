@@ -1,11 +1,14 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Read-only formatted text display."""
+
 from .._constants import DEFAULT_PADDING, PAD, TEXT_SIZE, TEXT_WIDTH
 from ..widget import Widget
 
 
 class TextBox(Widget):
+    """Read-only formatted text display."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,
@@ -84,8 +87,10 @@ class TextBox(Widget):
 
     @property
     def char_width(self):
+        """Rendered character width in pixels."""
         return TEXT_WIDTH * self.scale
 
     @property
     def char_height(self):
+        """Rendered character height in pixels."""
         return self.text_height * self.scale

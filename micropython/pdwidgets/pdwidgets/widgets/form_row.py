@@ -1,12 +1,15 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Label plus control form row."""
+
 from .._constants import ALIGN, ICON_SIZE, PAD, TEXT_SIZE
 from ..widget import Widget
 from .label import Label
 
 
 class FormRow(Widget):
+    """Horizontal row with a left label and trailing control."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,

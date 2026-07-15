@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Display framebuffer, rendering, and runtime integration."""
+
 from random import getrandbits
 
 try:
@@ -34,6 +36,12 @@ def _mark_updates_enabled():
 
 
 class Display(Widget):
+    """Root display surface that owns the framebuffer, event loop, and widget tree.
+
+    Construct with a board ``display_drv`` and ``eventsys.Runtime``. The runtime
+    drives input dispatch and periodic :meth:`tick` rendering; apps call
+    ``runtime.run_forever()`` after building the UI.
+    """
     displays = []
     timer = None  # pdwidgets owns no timer; kept as None for API/back-compat.
     tick_period = 10  # Render tick period (ms) for the runtime on_tick subscription.
@@ -55,7 +63,18 @@ class Display(Widget):
         """
         self.display_drv = display_drv
         super().__init__(
-            None, 0, 0, display_drv.width, display_drv.height, fg=-1, bg=0, padding=(0, 0, 0, 0)
+            None,
+            0,
+            0,
+            display_drv.width,
+            display_drv.height,
+            None,
+            None,
+            -1,
+            0,
+            True,
+            None,
+            (0, 0, 0, 0),
         )
         display_drv.set_vscroll(tfa, bfa)
         display_drv.vscroll = 0
@@ -108,43 +127,53 @@ class Display(Widget):
 
     @property
     def parent(self):
+        """Always ``None``; the display is the root."""
         return None
 
     @parent.setter
     def parent(self, parent):
+        """Raise :exc:`ValueError` if a parent is assigned."""
         if parent is not None:
             raise ValueError("Display object cannot have a parent.")
 
     @property
     def x(self):
+        """Display x offset (always 0)."""
         return self._x
 
     @property
     def y(self):
+        """Display y offset (always 0)."""
         return self._y
 
     @property
     def width(self):
+        """Framebuffer width in pixels."""
         return self._w
 
     @property
     def height(self):
+        """Framebuffer height in pixels."""
         return self._h
 
     @property
     def display(self):
+        """Return ``self``."""
         return self
 
     @property
     def color_theme(self):
+        """Semantic color theme for this display."""
         return self._color_theme
 
     @property
     def visible(self):
+        """Always ``True``."""
         return True
 
     @visible.setter
     def visible(self, visible):
+        """Raise :exc:`ValueError`; the display cannot be hidden."""
         raise ValueError("Cannot set visibility of Display object.")
 
     def clip_push(self, area: Area):
@@ -152,7 +181,10 @@ class Display(Widget):
         if self._clip_stack:
             area = area.clip(self._clip_stack[-1])
         self._clip_stack.append(area)
-        from graphics._clip import ClippedCanvas
+        try:
+            from graphics import ClippedCanvas
+        except ImportError:
+            from graphics._clip import ClippedCanvas
 
         self.framebuf = ClippedCanvas(self._framebuf_real, area)
 
@@ -162,7 +194,10 @@ class Display(Widget):
             return
         self._clip_stack.pop()
         if self._clip_stack:
-            from graphics._clip import ClippedCanvas
+            try:
+                from graphics import ClippedCanvas
+            except ImportError:
+                from graphics._clip import ClippedCanvas
 
             self.framebuf = ClippedCanvas(self._framebuf_real, self._clip_stack[-1])
         else:
@@ -195,20 +230,24 @@ class Display(Widget):
 
     @property
     def active_screen(self):
+        """The currently attached :class:`Screen`, if any."""
         if self.children:
             return self.children[0]
         return None
 
     @active_screen.setter
     def active_screen(self, screen):
+        """Replace the active screen (removes any previous screen)."""
         for child in self.children:
             self.remove_child(child)
         super().add_child(screen)
 
     def add_child(self, screen):
+        """Set :attr:`active_screen` to ``screen``."""
         self.active_screen = screen
 
     def set_position(self, *args, **kwargs):
+        """Reset geometry to the full display size."""
         self._x = 0
         self._y = 0
         self._w = self.display_drv.width
@@ -216,7 +255,7 @@ class Display(Widget):
         self._align = ALIGN.TOP_LEFT
         self._align_to = None
 
-    def add_task(self, callback, delay):
+    def add_task(self, callback, delay) -> Task:
         """
         Schedule a repeating task run from :meth:`tick`.
 

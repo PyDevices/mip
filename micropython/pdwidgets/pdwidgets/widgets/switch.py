@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""On/off switch widget."""
+
 from eventsys import events
 
 from .._constants import ICON_SIZE
@@ -8,6 +10,7 @@ from ..widget import Widget
 
 
 class Switch(Widget):
+    """Pill track with sliding knob for boolean on/off."""
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,

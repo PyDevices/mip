@@ -17,7 +17,7 @@ mip.install("pdwidgets", index="https://PyDevices.github.io/micropython-lib/mip/
 pip install \
   -i https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  pdwidgets displaysys pydisplay-graphics eventsys multimer palettes
+  pdwidgets displaysys pydisplay-graphics eventsys multimer pydevices-palettes
 ```
 
 Requires a pydisplay `board_config` and display stack. See [documentation](https://pdwidgets.readthedocs.io).

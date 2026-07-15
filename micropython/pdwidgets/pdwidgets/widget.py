@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
+"""Base widget class and geometry/event primitives."""
+
 from graphics import Area
 
 from ._constants import ALIGN, DEFAULT_PADDING, POSITION
@@ -9,6 +11,14 @@ from ._util import _POINTER_EVENTS, _cond_always, _cond_pointer, _log
 
 
 class Widget:
+    """Base class for all pdwidgets UI elements.
+
+    Subclass :class:`Widget` for custom controls, or use it as a simple
+    container. Geometry uses relative ``x``/``y`` plus an :data:`ALIGN`
+    constant; :attr:`value` changes trigger :meth:`changed` and redraw via
+    :meth:`invalidate`. Pointer events route through :meth:`handle_event`;
+    use :meth:`add_event_cb` to register handlers.
+    """
     next_instance_id = 0
 
     def __init__(
@@ -87,7 +97,7 @@ class Widget:
         Register event callbacks for the widget.  Subclasses should override this method to register event callbacks.
         """
 
-    def add_event_cb(self, event_type: int, callback: callable, data=None):
+    def add_event_cb(self, event_type, callback, data=None):
         """
         Register a callback for an event type on this widget.
 
@@ -149,10 +159,17 @@ class Widget:
 
     @property
     def parent(self):
+        """Parent widget that contains this widget."""
         return self._parent
 
     @parent.setter
     def parent(self, parent):
+        """
+        Reparent this widget.
+
+        Args:
+            parent (Widget): New parent, or ``None`` to detach.
+        """
         if parent != self._parent:
             if self._parent:
                 self._parent.remove_child(self)
@@ -163,7 +180,7 @@ class Widget:
                     self.set_position(align_to=parent)
 
     @property
-    def area(self):
+    def area(self) -> Area:
         """
         Absolute bounding box of the widget on screen.
 
@@ -174,6 +191,7 @@ class Widget:
 
     @property
     def padded_area(self):
+        """Bounding box inset by :attr:`padding`."""
         return self.area.inset(*self.padding)
 
     @property
@@ -198,6 +216,7 @@ class Widget:
 
     @x.setter
     def x(self, x):
+        """Set the relative x-coordinate (triggers relayout)."""
         self.set_position(x=x)
 
     @property
@@ -222,46 +241,57 @@ class Widget:
 
     @y.setter
     def y(self, y):
+        """Set the relative y-coordinate (triggers relayout)."""
         self.set_position(y=y)
 
     @property
     def width(self):
+        """Widget width in pixels."""
         return int(self._w)
 
     @width.setter
     def width(self, w):
+        """Set widget width in pixels."""
         self.set_position(w=w)
 
     @property
     def height(self):
+        """Widget height in pixels."""
         return int(self._h)
 
     @height.setter
     def height(self, h):
+        """Set widget height in pixels."""
         self.set_position(h=h)
 
     @property
     def align(self):
+        """Alignment constant from :data:`ALIGN`."""
         return self._align
 
     @align.setter
     def align(self, align):
+        """Set alignment relative to :attr:`align_to`."""
         self.set_position(align=align)
 
     @property
     def align_to(self):
+        """Widget used as the alignment anchor."""
         return self._align_to
 
     @align_to.setter
     def align_to(self, align_to):
+        """Set the alignment anchor widget."""
         self.set_position(align_to=align_to)
 
     @property
     def display(self):
+        """Root :class:`Display` for this widget subtree."""
         return self.parent.display
 
     @property
     def color_theme(self) -> ColorTheme:
+        """Semantic color palette from the display."""
         return self.display.color_theme
 
     @property
@@ -282,10 +312,12 @@ class Widget:
 
     @property
     def value(self):
+        """Widget value (text, number, bool, etc.)."""
         return self._value
 
     @value.setter
     def value(self, value):
+        """Set the value and call :meth:`changed` when it differs."""
         if value != self._value:
             self._value = value
             self.changed()
@@ -385,12 +417,14 @@ class Widget:
             self.parent.invalidate()
 
     def add_dirty_widget(self, child):
+        """Mark a direct child as dirty for rendering."""
         self.dirty_widgets.add(child)
         self.dirty_descendants.add(child)
         if self.parent:
             self.parent.add_dirty_descendant(self)
 
     def add_dirty_descendant(self, branch):
+        """Bubble a dirty descendant up the tree."""
         self.dirty_descendants.add(branch)
         if self.parent:
             self.parent.add_dirty_descendant(self)
@@ -425,14 +459,16 @@ class Widget:
                 self.parent.remove_dirty_widget(self)
 
     def remove_dirty_widget(self, child):
+        """Clear a child from the dirty set."""
         self.dirty_widgets.discard(child)
         if not self.dirty_widgets and not self.dirty_descendants and self.parent:
             self.parent.remove_dirty_descendant(self)
 
     def remove_dirty_descendant(self, branch):
+        """Clear a descendant branch from the dirty set."""
         self.dirty_descendants.discard(branch)
 
-    def set_value(self, value):
+    def set_value(self, value) -> None:
         """
         Set the widget's value (equivalent to assigning ``widget.value``).
 
