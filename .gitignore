@@ -4,3 +4,7 @@ __pycache__
 */dist/
 *.org
 *.1
+
+# Cursor IDE throwaways (do not ignore the whole .cursor/ tree)
+.cursor/debug*
+.cursor/plans/
