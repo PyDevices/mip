@@ -59,7 +59,10 @@ class MDPalette(MappedPalette):
         # The colors are already available as pal[0], pal[1], etc.
         # Now we want to add pal.BLACK = pal[0], pal.WHITE = pal[1], etc.
         color_index = 0
-        for name, length in zip(FAMILIES, LENGTHS, strict=True):
+        if len(FAMILIES) != len(LENGTHS):
+            raise ValueError("FAMILIES and LENGTHS must have the same length")
+        for i, name in enumerate(FAMILIES):
+            length = LENGTHS[i]
             if length == 1:  # black or white
                 setattr(self, name.upper(), self[color_index])
                 color_index += 1
