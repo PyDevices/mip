@@ -34,10 +34,9 @@ class Label(Widget):
 
         By default the built-in 8-pixel-wide romfont is used. Passing ``font``
         (a proportional bitmap font module from the ``write_font_converter``
-        pipeline, e.g. ``chango_32``) renders the text with the optional
-        ``add_ons/tft_write`` renderer instead — see the module docstring note
-        on that dependency. Proportional text is opaque, so a solid ``bg`` is
-        used (the parent's ``bg`` when none is given).
+        pipeline, e.g. ``chango_32``) renders via the private
+        :mod:`pdwidgets._write_font` helper. Proportional text is opaque, so a
+        solid ``bg`` is used (the parent's ``bg`` when none is given).
 
         Args:
             parent (Widget): The parent widget or screen that contains this label.
@@ -56,7 +55,7 @@ class Label(Widget):
             scale (int): The scale of the romfont text (default is 1).
             inverted (bool): Invert the romfont text (default is False).
             font_data (str): Alternate romfont file/memoryview for the text.
-            font (module): Proportional bitmap font module (``tft_write`` style);
+            font (module): Proportional bitmap font module (``_write_font`` style);
                 when given, overrides romfont rendering and sizing.
         """
         if text_height not in TEXT_SIZE:
@@ -65,7 +64,7 @@ class Label(Widget):
         value = value if value is not None else ""
         self._font = font
         if font is not None:
-            from tft_write import write_width
+            from .._write_font import write_width
 
             w = w or write_width(font, value) + padding[0] + padding[2]
             h = h or font.HEIGHT + padding[1] + padding[3]
@@ -88,12 +87,12 @@ class Label(Widget):
         """
         x, y, _, _ = self.padded_area
         if self._font is not None:
-            # Proportional font: tft_write fills each glyph's background itself.
-            from tft_write import write as _tft_write
+            # Proportional font: _write_font fills each glyph's background itself.
+            from .._write_font import write
 
             bg = self.bg if self.bg is not self.parent.color_theme.transparent else self.parent.bg
             self.display.framebuf.fill_rect(*self.padded_area, bg)
-            _tft_write(self.display.framebuf, self._font, self.value, x, y, self.fg, bg)
+            write(self.display.framebuf, self._font, self.value, x, y, self.fg, bg)
             return
         if self.bg is not self.parent.color_theme.transparent:
             self.display.framebuf.fill_rect(

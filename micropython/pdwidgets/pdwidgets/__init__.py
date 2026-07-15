@@ -21,9 +21,10 @@ Convenience::
 
 See ``WIDGET_DEPS.md`` for the peer import graph.
 
-Optional add-on dependency:
+Proportional fonts:
     ``Label`` (and widgets built on it) gains proportional-font rendering when a
-    ``font`` module is supplied. That path lazily imports **``add_ons/tft_write``**.
+    ``font`` module is supplied. That path uses the private
+    :mod:`pdwidgets._write_font` helper (fonts from ``write_font_converter``).
 
 Timer architecture:
     pdwidgets owns **no** timer of its own. Each :class:`Display` wires itself
