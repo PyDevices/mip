@@ -21,7 +21,7 @@ from pdwidgets.widgets.button import Button
 
 Convenience `import pdwidgets as pd` resolves names lazily via `__getattr__`
 (loads a widget module on first access). Icons under `icons/` are optional —
-omit them if no `IconTheme` / `.pbm` assets are used.
+omit them if no `IconTheme` / icon modules are used.
 
 ## Widget → direct peer imports
 

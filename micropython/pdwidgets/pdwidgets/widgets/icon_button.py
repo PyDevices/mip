@@ -46,7 +46,7 @@ class IconButton(Button):
             icon_file (str): The icon file to display.
 
         Usage:
-            icon_button = IconButton(screen, icon_file="icon.pbm")
+            icon_button = IconButton(screen, icon_file="pdwidgets.icons.home_filled_36dp")
         """
         fg = fg if fg is not None else parent.fg
         bg = bg if bg is not None else parent.bg

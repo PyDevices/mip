@@ -1,6 +1,6 @@
 metadata(
     description="pdwidgets widget toolkit for pydisplay",
-    version="0.0.2",
+    version="0.0.3",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="pdwidgets",

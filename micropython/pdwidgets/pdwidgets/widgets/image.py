@@ -6,11 +6,12 @@
 from graphics import RGB565, FrameBuffer
 
 from .._constants import DEFAULT_PADDING
+from .._icon_load import load_framebuffer
 from ..widget import Widget
 
 
 class Image(Widget):
-    """Raster image widget (``.pbm`` or BMP565 ``.bmp``)."""
+    """Raster image widget (package icon module or ``.pbm`` / ``.bmp`` path)."""
     cache = {}
 
     def __init__(  # noqa: PLR0913
@@ -30,7 +31,8 @@ class Image(Widget):
         chroma=None,
     ):
         """
-        Raster image widget (``.pbm`` or BMP565 ``.bmp``), same loaders as Icon.
+        Raster image widget (package icon module or ``.pbm`` / ``.bmp`` path),
+        same loaders as :class:`Icon`.
 
         Use for logos / gallery frames that are not tiny monochrome icons.
         When ``value`` is ``None``, a solid ``bg`` placeholder rect is drawn.
@@ -56,7 +58,7 @@ class Image(Widget):
         if value in Image.cache:
             self._fbuf = Image.cache[value]
         else:
-            self._fbuf = FrameBuffer.from_file(value)
+            self._fbuf = load_framebuffer(value)
             Image.cache[value] = self._fbuf
         self._img_w, self._img_h = self._fbuf.width, self._fbuf.height
         self._is_color = self._fbuf.format == RGB565

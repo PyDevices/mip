@@ -9,14 +9,12 @@ from palettes import get_palette  # noqa: F401
 
 from ._constants import ICON_SIZE
 
-try:
-    from os import sep  # PyScript doesn't have os.sep
-except ImportError:
-    sep = "/"
-
 
 class IconTheme:
-    _suffix = "dp.pbm"
+    """Resolve shipped icon assets as importable ``pdwidgets.icons.*`` modules."""
+
+    _suffix = "dp"
+    _pkg = "pdwidgets.icons"
     _home = "home_filled_"
     _up_arrow = "keyboard_arrow_up_"
     _down_arrow = "keyboard_arrow_down_"
@@ -37,33 +35,28 @@ class IconTheme:
     _dropdown = "expand_more_"
     _menu = "menu_"
 
-    def __init__(self, path):
+    def __init__(self, path=None):
         """
-        A class to manage icon themes.  The path is the directory where the icons are stored.
-        Icon file names are in the format "icon_name_18dp.pbm" where 18dp is the size of the icon.
-        Valid sizes are in the ICON_SIZE enumeration, which are 18, 24, 36, and 48 pixels.
+        Manage the curated icon set shipped as Python modules under
+        ``pdwidgets.icons``.
 
-        Args:
-            path (str): The path to the directory containing the icon files.
+        Module stems look like ``home_filled_36dp`` (sizes from
+        :data:`ICON_SIZE`: 18, 24, 36, 48). ``path`` is accepted for
+        compatibility and ignored — icons are always loaded by module name.
 
-        Usage:
-            from pdwidgets import IconTheme, ICON_SIZE
-            icon_theme = IconTheme("/path/to/icons/")
-            ...
-            icon_button = IconButton(screen, icon_file=icon_theme.home(ICON_SIZE.LARGE), ...)
+        Usage::
+
+            from pdwidgets import IconTheme, ICON_SIZE, IconButton
+            icon_theme = IconTheme()
+            IconButton(screen, icon_file=icon_theme.home(ICON_SIZE.LARGE))
         """
-        try:
-            from os import sep  # PyScipt doesn't have os.sep
-        except ImportError:
-            sep = "/"
-        if path[-1] != sep:
-            path += sep
-        self._path = path
+        del path  # retained for call-site compatibility
 
     def _icon(self, name, size):
         if size not in ICON_SIZE:
             raise ValueError("Invalid icon size.")
-        return f"{self._path}{getattr(self, '_' + name)}{size}{self._suffix}"
+        stem = f"{getattr(self, '_' + name)}{size}{self._suffix}"
+        return f"{self._pkg}.{stem}"
 
     def __getattr__(self, name):
         if name.startswith("_"):
@@ -71,7 +64,7 @@ class IconTheme:
         return lambda size: self._icon(name, size)
 
 
-icon_theme = IconTheme(sep.join(__file__.split(sep)[0:-1]) + sep + "icons" + sep)
+icon_theme = IconTheme()
 
 
 class ColorTheme:

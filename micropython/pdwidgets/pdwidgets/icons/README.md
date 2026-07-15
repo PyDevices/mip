@@ -1,7 +1,13 @@
 icons from https://github.com/google/material-design-icons/tree/master/png
 
+Runtime set for ``pdwidgets.icon_theme``: importable ``.py`` modules
+(``WIDTH`` / ``HEIGHT`` / ``FORMAT`` / ``BITMAP``). No binary ``.pbm``/``.bmp``
+are shipped.
 
-## License
+Regenerate (from repo root)::
 
-We (Google) have made these icons available for you to incorporate into your products under the [Apache License Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt). Feel free to remix and re-share these icons and documentation in your products.
-We'd love attribution in your app's *about* screen, but it's not required.
+    # binaries into icons/ (optional when re-pulling Material sources)
+    .venv/bin/python scripts/assets_generate_pdwidgets_icons.py
+    .venv/bin/python scripts/assets_make_color_icons.py
+    # convert → .py and remove binaries
+    .venv/bin/python scripts/assets_icons_to_py.py --delete-binaries

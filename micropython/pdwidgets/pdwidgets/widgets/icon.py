@@ -6,11 +6,13 @@
 from graphics import RGB565, FrameBuffer
 
 from .._constants import DEFAULT_PADDING
+from .._icon_load import load_framebuffer
 from ..widget import Widget
 
 
 class Icon(Widget):
-    """Monochrome or BMP565 icon display."""
+    """Monochrome or RGB565 icon display."""
+
     cache = {}
     # Reusable 2-entry (bg, fg) palette. Rewritten on every draw, so a single
     # shared buffer avoids allocating a 4-byte FrameBuffer per draw call.
@@ -35,12 +37,11 @@ class Icon(Widget):
         """
         Initialize an Icon widget to display an icon.
 
-        Two asset kinds are supported, both loaded via ``FrameBuffer.from_file``:
+        Asset kinds (via :func:`pdwidgets._icon_load.load_framebuffer`):
 
-        * **Monochrome ``.pbm``** (1 bit-per-pixel) — recolored to the icon's
-          ``fg``/``bg`` at draw time via a 2-entry palette (the default).
-        * **Color RGB565 ``.bmp`` (BMP565)** — blitted as-is; pass ``chroma`` to
-          treat one color as transparent. No PNG is used anywhere.
+        * **Package module** — ``pdwidgets.icons.<stem>`` (monochrome or RGB565).
+        * **Filesystem** — monochrome ``.pbm`` or RGB565 ``.bmp`` via
+          ``FrameBuffer.from_file``.
 
         Args:
             parent (Widget): The parent widget or screen that contains this icon.
@@ -53,16 +54,17 @@ class Icon(Widget):
             fg (int): The color of the icon (monochrome assets only).
             bg (int): The background color of the icon.
             visible (bool): The visibility of the icon.
-            value (str): The icon file to display (``.pbm`` or BMP565 ``.bmp``).
+            value (str): Module name (e.g. ``pdwidgets.icons.home_filled_36dp``)
+                or a filesystem ``.pbm`` / ``.bmp`` path.
             padding (tuple): The padding on each side of the icon.
-            chroma (int): Transparent color key for color (BMP565) icons.
+            chroma (int): Transparent color key for color (RGB565) icons.
 
         Usage:
-            icon = Icon(screen, value="icon.pbm")
-            status = Icon(bar, value="battery_color_24dp.bmp")
+            icon = Icon(screen, value=pd.icon_theme.home(pd.ICON_SIZE.LARGE))
+            status = Icon(bar, value="pdwidgets.icons.battery_full_color_24dp")
         """
         if not value:
-            raise ValueError("Icon value must be set to the filename with path.")
+            raise ValueError("Icon value must be set to a module name or file path.")
         self.chroma = chroma
         self.load_icon(value)
         padding = padding if padding is not None else DEFAULT_PADDING
@@ -71,11 +73,11 @@ class Icon(Widget):
         super().__init__(parent, x, y, w, h, align, align_to, fg, bg, visible, value, padding)
 
     def load_icon(self, value):
-        """Load icon file, cache it, and record whether it is a color asset."""
+        """Load icon asset, cache it, and record whether it is a color asset."""
         if value in Icon.cache:
             self._fbuf = Icon.cache[value]
         else:
-            self._fbuf = FrameBuffer.from_file(value)
+            self._fbuf = load_framebuffer(value)
             Icon.cache[value] = self._fbuf
         self._icon_width, self._icon_height = self._fbuf.width, self._fbuf.height
         self._is_color = self._fbuf.format == RGB565
@@ -96,7 +98,7 @@ class Icon(Widget):
         return self._swapped
 
     def changed(self):
-        """Update the icon when the value (file) changes."""
+        """Update the icon when the value changes."""
         self.display.framebuf.fill_rect(*self.padded_area, self.bg)
         self.load_icon(self.value)
         super().changed()
@@ -105,7 +107,7 @@ class Icon(Widget):
         """
         Draw the icon on the screen.
 
-        Color (BMP565) icons are blitted directly (with ``chroma`` as the
+        Color (RGB565) icons are blitted directly (with ``chroma`` as the
         transparent key when set); monochrome icons are recolored to
         ``fg``/``bg`` via the shared 2-entry palette buffer.
         """
@@ -113,7 +115,7 @@ class Icon(Widget):
         if self._is_color:
             fbuf = self._fbuf
             chroma = self.chroma
-            # BMP565 assets are stored non-swapped; match the display's byte
+            # Color assets are stored non-swapped; match the display's byte
             # order when it draws pre-swapped colors (swapped MCU panels).
             if self.display.needs_swap:
                 fbuf, chroma = self._swapped_color()
