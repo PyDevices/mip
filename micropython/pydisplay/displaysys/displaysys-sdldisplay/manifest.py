@@ -7,5 +7,4 @@ metadata(
 )
 require("displaysys")
 require("eventsys")
-require("usdl2", pypi="usdl2")
 package("displaysys")

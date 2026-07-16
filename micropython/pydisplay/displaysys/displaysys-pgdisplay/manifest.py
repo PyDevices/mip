@@ -7,5 +7,4 @@ metadata(
 )
 require("displaysys")
 require("eventsys")
-require("pygame-ce", pypi="pygame-ce")
 package("displaysys")
