@@ -4,13 +4,6 @@ Color palette toolkit for [pydisplay](https://github.com/PyDevices/pydisplay) �
 
 ## Install
 
-### MicroPython (MIP, precompiled)
-
-```python
-import mip
-mip.install("palettes", index="https://PyDevices.github.io/micropython-lib/mip/PyDevices")
-```
-
 ### CPython (TestPyPI)
 
 ```bash
@@ -18,6 +11,13 @@ pip install \
   -i https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
   palettes
+```
+
+### MicroPython (MIP)
+
+```python
+import mip
+mip.install("palettes", index="https://PyDevices.github.io/micropython-lib/mip/PyDevices")
 ```
 
 ## Quick start
@@ -37,16 +37,19 @@ cube = get_palette(name="cube", size=5, color_depth=16)
 material = get_palette(name="material_design", color_depth=16)
 ```
 
-## Documentation
+## What you get
 
-- [palettes.readthedocs.io](https://palettes.readthedocs.io)
-- [PyScript demos](https://pydevices.github.io/pydisplay/pyscript/) (`palettes_demo.py` installs `palettes` via MIP)
+- `get_palette(...)` factory for wheel, cube, material_design, and named palettes
+- Indexing and `color_name()` helpers
+- Works on MicroPython, CircuitPython, and CPython (no native extension)
 
-## Related
+## Links
 
-- [pydisplay](https://github.com/PyDevices/pydisplay) — display, events, graphics backend
-- [pdwidgets](https://github.com/PyDevices/pdwidgets) — widget toolkit (depends on `palettes`)
-- [micropython-lib](https://github.com/PyDevices/micropython-lib) — MIP package index
+- [Documentation](https://palettes.readthedocs.io)
+- [Source](https://github.com/PyDevices/palettes)
+- [Issues](https://github.com/PyDevices/palettes/issues)
+- [PyScript demos](https://pydevices.github.io/pydisplay/pyscript/) (`palettes_demo.py`)
+- Related: [pydisplay](https://github.com/PyDevices/pydisplay), [pdwidgets](https://github.com/PyDevices/pdwidgets)
 
 ## License
 
