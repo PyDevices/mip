@@ -1,6 +1,6 @@
 metadata(
     description="PyDisplay displaysys-pgdisplay",
-    version="0.0.19",
+    version="0.0.20",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="displaysys-pgdisplay",

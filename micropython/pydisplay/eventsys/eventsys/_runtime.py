@@ -272,7 +272,8 @@ class Runtime:
         * sync, signal-based backend (``multimer.uses_signals()``), interactive
           session (``-i`` or bare REPL then ``import``): return immediately —
           the REPL stays alive and the RT signal drives the auto-service, so a
-          keep-alive loop is optional here.
+          keep-alive loop is optional here. Soft-timer coalescing / pacing in
+          ``multimer`` prevents LVGL catch-up from busy-locking the REPL.
         * sync otherwise: block until quit, then tear down.
 
         The coroutine :meth:`run` stays public for ``await`` composition inside an
@@ -283,6 +284,20 @@ class Runtime:
         if self._timer_async:
             if self._event_loop_running():
                 self.arm_async_refresh()
+                # LVGL display_driver may defer event_loop.arm() when import ran
+                # without a real get_running_loop() (e.g. sync MicroPython Run
+                # click). Arm it here so task_handler/flush can run. No-op if
+                # display_driver is unused or already armed.
+                try:
+                    import sys as _sys
+
+                    _dd = _sys.modules.get("display_driver")
+                    if _dd is not None:
+                        _inst = _dd.event_loop.current_instance()
+                        if _inst is not None:
+                            _inst.arm()
+                except Exception:
+                    pass
                 return
             from multimer import asyncio
 
