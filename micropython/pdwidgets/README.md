@@ -4,13 +4,6 @@ Cross-platform widget toolkit for [pydisplay](https://github.com/PyDevices/pydis
 
 ## Install
 
-### MicroPython (MIP, precompiled)
-
-```python
-import mip
-mip.install("pdwidgets", index="https://PyDevices.github.io/micropython-lib/mip/PyDevices")
-```
-
 ### CPython (TestPyPI)
 
 ```bash
@@ -20,7 +13,14 @@ pip install \
   pdwidgets displaysys pydisplay-graphics eventsys multimer palettes
 ```
 
-Requires a pydisplay `board_config` and display stack. See [documentation](https://pdwidgets.readthedocs.io).
+Requires a pydisplay `board_config` and display stack.
+
+### MicroPython (MIP)
+
+```python
+import mip
+mip.install("pdwidgets", index="https://PyDevices.github.io/micropython-lib/mip/PyDevices")
+```
 
 ## Quick start
 
@@ -40,12 +40,27 @@ Lean imports (MCU-friendly):
 from pdwidgets.widgets.button import Button
 ```
 
-## Documentation
+## What you get
 
-- [pdwidgets.readthedocs.io](https://pdwidgets.readthedocs.io)
-- [PyScript demos](https://pydevices.github.io/pydisplay/pyscript/) (widget examples install `pdwidgets` via MIP)
+- Screens, themes, and a growing widget set (buttons, lists, navigation, …)
+- Works with pydisplay `displaysys` + `eventsys.Runtime`
+- Importable icon modules under `pdwidgets.icons` (no binary MIP assets)
 
-## Icon assets
+## Links
+
+- [Documentation](https://pdwidgets.readthedocs.io)
+- [Source](https://github.com/PyDevices/pdwidgets)
+- [Issues](https://github.com/PyDevices/pdwidgets/issues)
+- [PyScript demos](https://pydevices.github.io/pydisplay/pyscript/)
+- Related: [pydisplay](https://github.com/PyDevices/pydisplay), [palettes](https://github.com/PyDevices/palettes)
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+---
+
+## Icon assets (maintainers)
 
 Runtime icons are **importable Python modules** under [`src/pdwidgets/icons/`](src/pdwidgets/icons/)
 (no binary mip). Authoring:
@@ -61,12 +76,3 @@ Runtime icons are **importable Python modules** under [`src/pdwidgets/icons/`](s
 # PNG smoke probe (pydisplay display stack + material-design-icons png/)
 SDL_VIDEODRIVER=dummy ../pydisplay/.venv/bin/python tools/png_test.py
 ```
-
-## Related
-
-- [pydisplay](https://github.com/PyDevices/pydisplay) — display, events, graphics backend
-- [micropython-lib](https://github.com/PyDevices/micropython-lib) — MIP package index
-
-## License
-
-MIT — see [LICENSE](LICENSE).
