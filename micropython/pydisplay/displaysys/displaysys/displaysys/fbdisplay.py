@@ -27,12 +27,17 @@ class FBDisplay(DisplayDriver):
         self, buffer, width=None, height=None, reverse_bytes_in_word=False, *, quiet=False
     ):
         self._raw_buffer = buffer
-        self._buffer = memoryview(buffer)
+        mv = memoryview(buffer)
         self._width = width if width else buffer.width
         self._height = height if height else buffer.height
         self._requires_byteswap = reverse_bytes_in_word
         self._rotation = 0
         self.color_depth = 16
+        # Native framebuffers may expose RGB565 as bytes ('B') or uint16 ('H').
+        # FBDisplay indexes in bytes; detect half-word buffers by length.
+        pix = self._width * self._height
+        self._buffer_u16 = len(mv) == pix
+        self._buffer = mv
 
         super().__init__(quiet=quiet)
 
@@ -57,16 +62,36 @@ class FBDisplay(DisplayDriver):
         Returns:
             (tuple): A tuple containing the x, y, w, h values
         """
+        if self._buffer_u16:
+            color = c & 0xFFFF
+            if self._auto_byteswap:
+                color = ((color & 0xFF) << 8) | (color >> 8)
+            buf = self._buffer
+            for _y in range(y, y + h):
+                begin = _y * self.width + x
+                end = begin + w
+                for i in range(begin, end):
+                    buf[i] = color
+            return (x, y, w, h)
+
         BPP = self.color_depth // 8
         if self._auto_byteswap:
             color_bytes = (c & 0xFFFF).to_bytes(2, "big")
         else:
             color_bytes = (c & 0xFFFF).to_bytes(2, "little")
 
+        # Full-width: one contiguous assign (same mipidsi row-slice cost as blit_rect).
+        if x == 0 and w == self.width:
+            block = color_bytes * (w * h)
+            begin = y * self.width * BPP
+            self._buffer[begin : begin + len(block)] = block
+            return (x, y, w, h)
+
+        rowbytes = color_bytes * w
         for _y in range(y, y + h):
             begin = (_y * self.width + x) * BPP
             end = begin + w * BPP
-            self._buffer[begin:end] = color_bytes * w
+            self._buffer[begin:end] = rowbytes
         return (x, y, w, h)
 
     def blit_rect(self, buf, x, y, w, h):
@@ -91,6 +116,32 @@ class FBDisplay(DisplayDriver):
             raise ValueError("The provided x, y, w, h values are out of range")
         if len(buf) != w * h * BPP:
             raise ValueError("The source buffer is not the correct size")
+
+        if self._buffer_u16:
+            # Source is byte-packed RGB565; dest buffer is uint16 elements.
+            src = memoryview(buf)
+            for row in range(h):
+                for col in range(w):
+                    i = (row * w + col) * 2
+                    color = src[i] | (src[i + 1] << 8)
+                    self._buffer[(y + row) * self.width + x + col] = color
+            return (x, y, w, h)
+
+        # Native FB blit (mipidsi on ESP32-P4): Python memoryview row slices into
+        # SPIRAM are ~25ms/row; C memcpy is sub-millisecond for LVGL partials.
+        native_blit = getattr(self._raw_buffer, "blit", None)
+        if native_blit is not None:
+            native_blit(buf, x, y, w, h)
+            return (x, y, w, h)
+
+        # Contiguous copy for full-width strips (and full frames). Per-row
+        # memoryview slice assigns into some native FBs (e.g. mipidsi on
+        # ESP32-P4 720x720) are ~28ms/row — a height/10 LVGL partial was ~2s.
+        if x == 0 and w == self.width:
+            begin = y * self.width * BPP
+            self._buffer[begin : begin + h * self.width * BPP] = buf
+            return (x, y, w, h)
+
         for row in range(h):
             source_begin = row * w * BPP
             source_end = source_begin + w * BPP
