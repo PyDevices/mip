@@ -1,6 +1,6 @@
 metadata(
     description="Pure-Python graphics for pydisplay (FrameBuffer, Draw, fonts); import as graphics",
-    version="0.0.22",
+    version="0.0.23",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="pydisplay-graphics",
