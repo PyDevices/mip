@@ -181,12 +181,11 @@ class Button(Widget):
         self.display.framebuf.round_rect(*pa, self.radius, self.bg, f=True)
 
     def _redraw_content(self):
-        """Repaint face and visible children (used for raised press invert)."""
+        """Repaint face and visible children into the framebuffer (no flush)."""
         self.draw()
         for child in self.children:
             if child.visible:
                 child.draw()
-        self.display.refresh(self.area)
 
     @property
     def backdrop(self):
@@ -224,23 +223,14 @@ class Button(Widget):
         self._draw_face(pressed=self._pressed and self._style == "raised")
 
     def press(self, data=None, event=None):
-        """Draw pressed-state feedback (mouse down handler)."""
+        """Mark pressed and dirty; flush via the display tick (not inline I80)."""
+        # Synchronous ``display.refresh`` from the input/service tick nested
+        # I80 blits under the soft timer and panicked the ESP32-S3 (HARD_RESET
+        # = ESP_RST_PANIC) when tapping raised roku_widgets keys.
         self._pressed = True
-        if self._style == "raised":
-            self._redraw_content()
-            return
-        self.display.framebuf.round_rect(
-            *self.padded_area, self.radius, self.fg, f=False
-        )
-        self.display.refresh(self.area)
+        self.invalidate()
 
     def release(self, data=None, event=None):
-        """Restore normal face (mouse up handler)."""
+        """Clear pressed and dirty; flush via the display tick."""
         self._pressed = False
-        if self._style == "raised":
-            self._redraw_content()
-            return
-        self.display.framebuf.round_rect(
-            *self.padded_area, self.radius, self.bg, f=False
-        )
-        self.display.refresh(self.area)
+        self.invalidate()
