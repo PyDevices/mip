@@ -342,11 +342,28 @@ class Display(Widget):
             self.render_dirty_widgets()
         self._tick_busy = False
 
+    @staticmethod
+    def _dirty_children_z_order(widget):
+        """Dirty direct children in paint order (``children`` index = z-order).
+
+        ``dirty_widgets`` / ``dirty_descendants`` are sets, so iterating them
+        directly is unordered on MicroPython and can paint a later sibling
+        under an earlier one (e.g. D-pad disc Card over Up/Left keys, while
+        labels — next BFS level — still appear on top).
+        """
+        dirty = widget.dirty_widgets | widget.dirty_descendants
+        if not dirty:
+            return []
+        return [c for c in widget.children if c in dirty]
+
     def render_dirty_widgets(self):
         """Redraw all invalidated widgets, breadth-first, without recursion."""
-        # Non-recursive redraw traversal using an explicit stack
-        # Use a stack to avoid recursion / stack overflow
-        stack = list(self.dirty_descendants)
+        # Non-recursive redraw; enqueue with reversed() so stack.pop() paints
+        # earlier children first (painter's algorithm).
+        stack = list(reversed(self._dirty_children_z_order(self)))
+        if not stack and self.dirty_descendants:
+            # Fallback when dirt is not under ``children`` (should be rare).
+            stack = list(self.dirty_descendants)
 
         while stack:
             # Collect all widgets at the current level
@@ -358,10 +375,9 @@ class Display(Widget):
                     self._dirty_areas.append(widget.area)
                 current_level.append(widget)
 
-            # Now process the next level of descendants from current_level
+            # Next level: dirty children in z-order (not set iteration order).
             for widget in current_level:
-                stack.extend(reversed(list(widget.dirty_widgets)))
-                stack.extend(reversed(list(widget.dirty_descendants)))
+                stack.extend(reversed(self._dirty_children_z_order(widget)))
 
     def __getattr__(self, name):
         if name in _display_drv_get_attrs:

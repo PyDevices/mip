@@ -7,10 +7,12 @@ from eventsys import events
 
 from .._constants import PAD, TEXT_SIZE, TEXT_WIDTH
 from ..widget import Widget
+from ._raised import fill_raised_round_rect, normalize_style, raised_face_colors
 
 
 class SegmentedControl(Widget):
     """Exclusive pill-style segment selector."""
+
     def __init__(  # noqa: PLR0913
         self,
         parent: Widget,
@@ -28,17 +30,32 @@ class SegmentedControl(Widget):
         labels=None,
         text_height=TEXT_SIZE.MEDIUM,
         radius=8,
+        style="flat",
+        bg_hi=None,
+        bg_lo=None,
+        rim=None,
     ):
         """Exclusive segments; ``value`` is the selected index."""
         self.labels = list(labels or ["A", "B"])
         self.text_height = text_height
         self.radius = radius
+        self._style = normalize_style(style)
+        self._bg_hi = bg_hi
+        self._bg_lo = bg_lo
+        self._rim = rim
         n = len(self.labels)
         w = w or (sum(len(s) for s in self.labels) * TEXT_WIDTH + n * 4 * PAD)
         h = h or text_height + 2 * PAD
         bg = bg if bg is not None else parent.color_theme.segment
         fg = fg if fg is not None else parent.color_theme.on_segment
-        super().__init__(parent, x, y, w, h, align, align_to, fg, bg, visible, value, padding)
+        super().__init__(
+            parent, x, y, w, h, align, align_to, fg, bg, visible, value, padding
+        )
+
+    @property
+    def style(self):
+        """Face style: ``\"flat\"`` or ``\"raised\"`` (raised applies to selected)."""
+        return self._style
 
     def _register_callbacks(self):
         self.add_event_cb(events.MOUSEBUTTONDOWN, self._tap)
@@ -54,17 +71,47 @@ class SegmentedControl(Widget):
     def draw(self, _=None):
         """Draw segment backgrounds and labels."""
         pa = self.padded_area
-        self.display.framebuf.round_rect(*pa, self.radius, self.color_theme.segment, f=True)
+        self.display.framebuf.round_rect(
+            *pa, self.radius, self.color_theme.segment, f=True
+        )
         n = len(self.labels) or 1
         seg_w = pa.w // n
+        pal = self.display.pal
         for i, label in enumerate(self.labels):
             x = pa.x + i * seg_w
             selected = i == self._value
-            fill = self.color_theme.segment_selected if selected else self.color_theme.segment
-            ink = self.color_theme.on_segment_selected if selected else self.color_theme.on_segment
-            self.display.framebuf.fill_rect(x, pa.y, seg_w, pa.h, fill)
+            fill = (
+                self.color_theme.segment_selected
+                if selected
+                else self.color_theme.segment
+            )
+            ink = (
+                self.color_theme.on_segment_selected
+                if selected
+                else self.color_theme.on_segment
+            )
+            if selected and self._style == "raised":
+                hi, lo, rim = raised_face_colors(
+                    fill, self._bg_hi, self._bg_lo, self._rim, pal=pal
+                )
+                fill_raised_round_rect(
+                    self.display.framebuf,
+                    x,
+                    pa.y,
+                    seg_w,
+                    pa.h,
+                    self.radius,
+                    hi,
+                    lo,
+                    rim,
+                    pal=pal,
+                )
+            else:
+                self.display.framebuf.fill_rect(x, pa.y, seg_w, pa.h, fill)
             tw = len(label) * TEXT_WIDTH
             tx = x + (seg_w - tw) // 2
             ty = pa.y + (pa.h - self.text_height) // 2
             self.display.framebuf.text(label, tx, ty, ink, height=self.text_height)
-        self.display.framebuf.round_rect(*pa, self.radius, self.color_theme.outline, f=False)
+        self.display.framebuf.round_rect(
+            *pa, self.radius, self.color_theme.outline, f=False
+        )

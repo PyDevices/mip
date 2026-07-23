@@ -45,6 +45,10 @@ class _Layout(Widget):
     def remove_child(self, child):
         """Remove a child widget, then re-flow the layout."""
         self.children.remove(child)
+        self.dirty_widgets.discard(child)
+        self.dirty_descendants.discard(child)
+        if child._parent is self:
+            child._parent = None
         self._layout()
         self.invalidate()
 

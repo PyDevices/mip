@@ -150,11 +150,16 @@ class Widget:
                 point = self.display.translate_point(event.pos)
             else:
                 condition = _cond_always
-        for child in self.children:
+        # Snapshot: click handlers often rebuild the tree (remove_child) mid-walk.
+        for child in list(self.children):
+            if child.parent is not self:
+                continue
             if child.visible:
                 if condition(child, event, point):
                     for callback, data in child._event_callbacks.get(event.type, {}).items():
                         callback(data, event)
+                if child.parent is not self:
+                    continue
                 child.handle_event(event, condition, point)
 
     @property
@@ -296,8 +301,15 @@ class Widget:
 
     @property
     def visible(self):
-        """Get widget visibility."""
-        return self._visible and self.parent.visible
+        """Get widget visibility.
+
+        Detached widgets (``parent is None``) are not visible. The root
+        :class:`~pdwidgets.display.Display` overrides this.
+        """
+        if not self._visible:
+            return False
+        parent = self._parent
+        return parent is not None and parent.visible
 
     @visible.setter
     def visible(self, visible):
@@ -308,7 +320,8 @@ class Widget:
                 self.invalidate()
             else:
                 self._visible = False
-                self.parent.invalidate()
+                if self._parent is not None:
+                    self._parent.invalidate()
 
     @property
     def value(self):
@@ -366,8 +379,16 @@ class Widget:
                 child.invalidate()
 
     def remove_child(self, widget):
-        """Removes a child widget from the current widget."""
+        """Removes a child widget from the current widget.
+
+        Detaches the child so it cannot paint again via leftover dirty-set
+        entries (page swaps that leave empty regions would otherwise ghost).
+        """
         self.children.remove(widget)
+        self.dirty_widgets.discard(widget)
+        self.dirty_descendants.discard(widget)
+        if widget._parent is self:
+            widget._parent = None
         self.invalidate()
 
     def set_change_cb(self, callback):

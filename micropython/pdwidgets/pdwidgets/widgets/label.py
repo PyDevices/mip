@@ -109,6 +109,43 @@ class Label(Widget):
             font_data=self._font_data,
         )
 
+    def text_width(self, text=None):
+        """Return the pixel width of ``text`` without drawing.
+
+        Uses this label's current typeface settings: proportional ``font`` when
+        set, otherwise the romfont at ``text_height`` / ``scale`` (and optional
+        ``font_data``). Defaults to measuring :attr:`value`.
+
+        Newlines are not special-cased (same contract as
+        ``graphics.Font.text_width`` / ``write_width``).
+
+        Args:
+            text (str | None): String to measure; ``None`` uses ``self.value``.
+
+        Returns:
+            int: Width in pixels.
+        """
+        s = self.value if text is None else text
+        if s is None:
+            s = ""
+        if self._font is not None:
+            from .._write_font import write_width
+
+            return int(write_width(self._font, s))
+        from graphics import Font
+
+        cached = getattr(self, "_measure_font", None)
+        if (
+            cached is None
+            or getattr(self, "_measure_font_key", None)
+            != (self._font_data, self.text_height)
+        ):
+            # ``Font(None, height)`` picks the built-in romfont for that height.
+            cached = Font(self._font_data, self.text_height)
+            self._measure_font = cached
+            self._measure_font_key = (self._font_data, self.text_height)
+        return int(cached.text_width(s, scale=self.scale))
+
     @property
     def char_width(self):
         """Rendered character width in pixels."""

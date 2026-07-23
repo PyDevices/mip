@@ -71,6 +71,10 @@ class ListView(Widget):
     def remove_child(self, child: Widget):
         """Removes a child widget from the current widget."""
         self.children.remove(child)
+        self.dirty_widgets.discard(child)
+        self.dirty_descendants.discard(child)
+        if child._parent is self:
+            child._parent = None
         self.reassign_positions()
 
     def reassign_positions(self):
