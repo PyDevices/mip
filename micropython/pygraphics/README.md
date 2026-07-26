@@ -1,12 +1,12 @@
-# graphics
+# pygraphics
 
-Native and pure-Python **graphics** for MicroPython, CircuitPython, and CPython.
-Import as `graphics`.
+Native and pure-Python **pygraphics** for MicroPython, CircuitPython, and CPython.
+Import as `pygraphics`.
 
 | Product | Pip / MIP | Role |
 |---------|-----------|------|
-| **graphics-cmod** | TestPyPI `graphics-cmod` | All-C extension (prefer on desktop/Android when available) |
-| **pydisplay-graphics** | TestPyPI `pydisplay-graphics`, MIP `graphics` | Pure-Python package (same public API) |
+| **pygraphics-cmod** | TestPyPI `pygraphics-cmod` | All-C extension (prefer on desktop/Android when available) |
+| **pygraphics** | TestPyPI `pygraphics`, MIP `pygraphics` | Pure-Python package (same public API) |
 
 One release tag `vX.Y.Z` publishes both products at that version.
 
@@ -18,7 +18,7 @@ One release tag `vX.Y.Z` publishes both products at that version.
 pip install \
   -i https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  graphics-cmod
+  pygraphics-cmod
 ```
 
 ### Pure Python (TestPyPI)
@@ -27,26 +27,26 @@ pip install \
 pip install \
   -i https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  pydisplay-graphics
+  pygraphics
 ```
 
 ### MicroPython (MIP)
 
 ```python
 import mip
-mip.install("graphics", index="https://PyDevices.github.io/micropython-lib/mip/PyDevices")
+mip.install("pygraphics", index="https://PyDevices.github.io/micropython-lib/mip/PyDevices")
 ```
 
 ### Quick start
 
 ```python
-import graphics
-from graphics import FrameBuffer, RGB565
+import pygraphics
+from pygraphics import FrameBuffer, RGB565
 
 fb = FrameBuffer(bytearray(160 * 128 * 2), 160, 128, RGB565)
 fb.fill(0)
 fb.fill_rect(10, 10, 40, 40, 0xF800)
-print(graphics.implementation())  # native_cmod or graphics_python
+print(pygraphics.implementation())  # native_cmod or pygraphics_python
 ```
 
 ## What you get
@@ -58,9 +58,10 @@ print(graphics.implementation())  # native_cmod or graphics_python
 
 ## Links
 
-- [Source-linked API reference](https://pydevices.github.io/graphics/api/)
-- [Source](https://github.com/PyDevices/graphics)
-- [Issues](https://github.com/PyDevices/graphics/issues)
+- [Documentation](https://pygraphics.readthedocs.io)
+- [Source-linked API reference](https://pydevices.github.io/pygraphics/api/)
+- [Source](https://github.com/PyDevices/pygraphics)
+- [Issues](https://github.com/PyDevices/pygraphics/issues)
 - Related: [pydisplay](https://github.com/PyDevices/pydisplay)
 
 ## License
@@ -74,12 +75,12 @@ MIT (framebuf algorithms derived from MicroPython `extmod/modframebuf.c`, Damien
 ### Layout
 
 ```
-graphics/
+pygraphics/
   micropython.mk / micropython.cmake / circuitpython.mk / setup.py
-  include/                 # C headers (gfx_*.h, font_8x*.h, qstrs)
-  src/                     # C sources (core + MP/CP/CPython bindings)
-  lib/graphics/            # pure-Python package (import graphics)
+  src/                     # C sources + headers (gfx_*.h, font_8x*.h, qstrs)
+  lib/pygraphics/            # pure-Python package (import pygraphics)
   tests/                   # native smoke / parity tests
+  tools/                   # developer benchmarks / helpers
   docs/ scripts/ web/
 ```
 
@@ -89,14 +90,14 @@ graphics/
 python3 -m venv .venv
 .venv/bin/pip install -e .
 .venv/bin/python tests/test_area.py
-.venv/bin/python tests/test_graphics.py
+.venv/bin/python tests/test_pygraphics.py
 .venv/bin/python tests/test_subclass.py
 ```
 
 ### Pure Python (no extension)
 
 ```bash
-PYTHONPATH=lib python3 -c "import graphics; print(graphics.implementation())"
+PYTHONPATH=lib python3 -c "import pygraphics; print(pygraphics.implementation())"
 ```
 
 ### MicroPython
@@ -121,6 +122,6 @@ cd ../../..
 
 ### pydisplay integration
 
-When this cmod is installed or linked, `graphics.framebuf_backend()` reports
-`native` and `graphics.implementation()` reports `native_cmod`. Otherwise the
-pure-Python package reports `graphics_python`.
+When this cmod is installed or linked, `pygraphics.framebuf_backend()` reports
+`native` and `pygraphics.implementation()` reports `native_cmod`. Otherwise the
+pure-Python package reports `pygraphics_python`.

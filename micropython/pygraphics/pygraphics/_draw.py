@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 """
-`graphics._draw`
+`pygraphics._draw`
 ====================================================
 Graphics Draw class
 """
@@ -16,7 +16,7 @@ class Draw:
     """
     Draw shapes on a canvas (display, FrameBuffer, or compatible object).
 
-    Each method delegates to ``graphics._shapes`` and returns an ``Area`` bounding box.
+    Each method delegates to ``pygraphics._shapes`` and returns an ``Area`` bounding box.
 
     Args:
         canvas: Object with framebuf-compatible drawing methods.

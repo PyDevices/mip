@@ -1,5 +1,5 @@
 """
-graphics — cross-platform 2D drawing for *Python.
+pygraphics — cross-platform 2D drawing for *Python.
 
 Extends MicroPython's ``framebuf`` with shape helpers, fonts, image loaders, and
 ``Area`` bounding boxes for partial updates.  On CPython and CircuitPython the
@@ -7,12 +7,12 @@ built-in pure-Python ``framebuf`` fallback is used automatically.
 
 Quick start::
 
-    import graphics
+    import pygraphics
 
-    fb = graphics.FrameBuffer(bytearray(16 * 16 * 2), 16, 16, graphics.RGB565)
+    fb = pygraphics.FrameBuffer(bytearray(16 * 16 * 2), 16, 16, pygraphics.RGB565)
     fb.fill(0)
     area = fb.fill_rect(1, 1, 6, 6, 0xFFFF)
-    graphics.text8(fb, "Hi", 0, 0, 0xFFFF)
+    pygraphics.text8(fb, "Hi", 0, 0, 0xFFFF)
 """
 
 from ._area import Area
@@ -62,8 +62,8 @@ from ._shapes import (
 
 
 def implementation():
-    """Return ``graphics_python`` (this package) vs ``native_cmod`` for the C module."""
-    return "graphics_python"
+    """Return ``pygraphics_python`` (this package) vs ``native_cmod`` for the C module."""
+    return "pygraphics_python"
 
 
 __all__ = [

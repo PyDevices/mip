@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 """
-`graphics._font`
+`pygraphics._font`
 ====================================================
 
 A module to draw text to a canvas using fonts from

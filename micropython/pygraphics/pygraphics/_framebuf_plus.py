@@ -593,7 +593,7 @@ class FrameBuffer(_FrameBuffer):
     def export(self, filename):
         """Export this framebuffer as an importable ``.py`` bitmap module.
 
-        See :func:`graphics._files.export_framebuffer`. Ships ``BITMAP`` as a
+        See :func:`pygraphics._files.export_framebuffer`. Ships ``BITMAP`` as a
         ``bytearray`` for zero-copy :meth:`from_bitmap` on MicroPython.
         """
         return _files.export_framebuffer(self, filename)

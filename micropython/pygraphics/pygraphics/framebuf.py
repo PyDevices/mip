@@ -14,10 +14,10 @@ This module intentionally mirrors MicroPython's C implementation
   for every drawing method; only ``pixel()`` without a color argument returns
   a value).
 - No pydisplay extensions (no ``RGB888``, no ``Area`` return values, no
-  ``arc``/``circle``/``blit_rect``/etc.) and no imports from ``graphics``.
+  ``arc``/``circle``/``blit_rect``/etc.) and no imports from ``pygraphics``.
 
 For the pydisplay-flavored subclass that adds ``Area`` bounding boxes,
-``RGB888``, extra shapes, and file I/O, see ``graphics.FrameBuffer``
+``RGB888``, extra shapes, and file I/O, see ``pygraphics.FrameBuffer``
 (``graphics/_framebuf_plus.py``), which subclasses this module.
 """
 
