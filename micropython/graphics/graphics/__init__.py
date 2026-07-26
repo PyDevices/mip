@@ -62,8 +62,8 @@ from ._shapes import (
 
 
 def implementation():
-    """Return ``pydisplay_python`` (this package) vs ``native_cmod`` on embedded builds."""
-    return "pydisplay_python"
+    """Return ``graphics_python`` (this package) vs ``native_cmod`` for the C module."""
+    return "graphics_python"
 
 
 __all__ = [
