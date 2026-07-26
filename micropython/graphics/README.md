@@ -6,7 +6,7 @@ Import as `graphics`.
 | Product | Pip / MIP | Role |
 |---------|-----------|------|
 | **graphics-cmod** | TestPyPI `graphics-cmod` | All-C extension (prefer on desktop/Android when available) |
-| **graphics-py** | TestPyPI `graphics-py`, MIP `graphics` | Pure-Python package (same public API) |
+| **pydisplay-graphics** | TestPyPI `pydisplay-graphics`, MIP `graphics` | Pure-Python package (same public API) |
 
 One release tag `vX.Y.Z` publishes both products at that version.
 
@@ -27,7 +27,7 @@ pip install \
 pip install \
   -i https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  graphics-py
+  pydisplay-graphics
 ```
 
 ### MicroPython (MIP)

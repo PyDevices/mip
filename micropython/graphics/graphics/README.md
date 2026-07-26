@@ -1,9 +1,9 @@
-# graphics-py
+# pydisplay-graphics
 
 Pure-Python `graphics` package — `FrameBuffer`, `Draw`, fonts, shapes, and image
 loaders. Import as `graphics`.
 
-> **Pip name:** `graphics-py` · **Import:** `import graphics`
+> **Pip name:** `pydisplay-graphics` · **Import:** `import graphics`
 
 On desktop/Android when a native wheel is available, prefer
 [`graphics-cmod`](https://test.pypi.org/project/graphics-cmod/) (same import
@@ -18,7 +18,7 @@ the same release tag / version.
 pip install \
   -i https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  graphics-py
+  pydisplay-graphics
 ```
 
 ### MicroPython (MIP)
