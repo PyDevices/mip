@@ -15,18 +15,69 @@ Implementation Notes
 .pixel(), .fill_rect(), .fill() and .blit_rect() will be called from the canvas object if the canvas
 object has these methods.
 
-.pixel() and .blit_rect() assume 16-bit color depth.
+``blit_rect`` / ``gradient_rect`` follow ``canvas.format``: RGB565, RGB888, and GS8
+(contiguous), plus greyscale/mono scalar gradients. Bit-packed formats have no
+raw ``blit_rect`` row path.
 
 """
-
-import math
 
 from ._area import Area
 from ._blit_hooks import (
     blit_rect_dispatch,
     canvas_accepts_blit_transparent,
+    canvas_bytes_per_pixel,
+    key_to_bytes,
     try_fast_framebuffer_blit,
 )
+from ._trig import _DEG_TO_U, rotate_q15, sin_cos_rad, sin_cos_u
+
+try:
+    import micropython as _mp
+
+    _native_deco = getattr(_mp, "native", None)
+except ImportError:  # bare CPython
+    _native_deco = None
+
+
+def _mp_native(f):
+    """Apply ``@micropython.native`` when the port provides it."""
+    return _native_deco(f) if _native_deco is not None else f
+
+
+@_mp_native
+def _set_pixel(canvas, x, y, c):
+    """Set a pixel without allocating an :class:`Area` (hot-path helper)."""
+    put = getattr(canvas, "pixel", None)
+    if put is not None:
+        put(x, y, c)
+        return
+    rgb565_color = (c & 0xFFFF).to_bytes(2, "little")
+    canvas.buffer[(y * canvas.width + x) * 2 : (y * canvas.width + x) * 2 + 2] = rgb565_color
+
+
+def _do_fill_rect(canvas, x, y, w, h, c):
+    """Fill a rectangle without allocating an :class:`Area`."""
+    fill_m = getattr(canvas, "fill_rect", None)
+    if fill_m is not None:
+        fill_m(x, y, w, h, c)
+        return
+    put = getattr(canvas, "pixel", None)
+    if put is not None:
+        for j in range(y, y + h):
+            for i in range(x, x + w):
+                put(i, j, c)
+        return
+    for j in range(y, y + h):
+        for i in range(x, x + w):
+            _set_pixel(canvas, i, j, c)
+
+
+def _do_fill(canvas, c):
+    fill_m = getattr(canvas, "fill", None)
+    if fill_m is not None:
+        fill_m(c)
+        return
+    _do_fill_rect(canvas, 0, 0, canvas.width, canvas.height, c)
 
 
 def arc(canvas, x, y, r, a0, a1, c):
@@ -45,27 +96,38 @@ def arc(canvas, x, y, r, a0, a1, c):
     Returns:
         (Area): The bounding box of the arc.
     """
-    resolution = 60
-    a0 = math.radians(a0)
-    a1 = math.radians(a1)
-    x0 = x + int(r * math.cos(a0))
-    y0 = y + int(r * math.sin(a0))
-    if a1 > a0:
-        arc_range = range(int(a0 * resolution), int(a1 * resolution))
-    else:
-        arc_range = range(int(a0 * resolution), int(a1 * resolution), -1)
-
+    # 256-unit turn (Q15 LUT); ~1.4° per step — same algorithm in C gfx_shapes_arc.
+    u0 = int(a0 * _DEG_TO_U)
+    u1 = int(a1 * _DEG_TO_U)
+    s0, c0 = sin_cos_u(u0)
+    x0 = x + ((r * c0) >> 15)
+    y0 = y + ((r * s0) >> 15)
+    step = 1 if u1 > u0 else -1
     x_min = x_max = x0
     y_min = y_max = y0
-    for a in arc_range:
-        ar = a / resolution
-        x1 = x + int(r * math.cos(ar))
-        y1 = y + int(r * math.sin(ar))
+    u = u0
+    while (step > 0 and u < u1) or (step < 0 and u > u1):
+        u += step
+        s1, c1 = sin_cos_u(u)
+        x1 = x + ((r * c1) >> 15)
+        y1 = y + ((r * s1) >> 15)
         line(canvas, x0, y0, x1, y1, c)
-        x_min = min(x0, x1, x_min)
-        x_max = max(x0, x1, x_max)
-        y_min = min(y0, y1, y_min)
-        y_max = max(y0, y1, y_max)
+        if x0 < x_min:
+            x_min = x0
+        if x1 < x_min:
+            x_min = x1
+        if x0 > x_max:
+            x_max = x0
+        if x1 > x_max:
+            x_max = x1
+        if y0 < y_min:
+            y_min = y0
+        if y1 < y_min:
+            y_min = y1
+        if y0 > y_max:
+            y_max = y0
+        if y1 > y_max:
+            y_max = y1
         x0 = x1
         y0 = y1
     return Area(x_min, y_min, x_max - x_min, y_max - y_min)
@@ -107,7 +169,7 @@ def blit(canvas, source, x, y, key=-1, palette=None):
             if palette:
                 col = palette.pixel(col, 0)
             if col != key:
-                pixel(canvas, cx0, cy0, col)
+                _set_pixel(canvas, cx0, cy0, col)
             cx1 += 1
     return Area(x0, y0, w, h)
 
@@ -149,8 +211,10 @@ def blit_transparent(canvas, buf, x, y, w, h, key):
         canvas.blit_transparent(buf, x, y, w, h, key)
         return Area(x, y, w, h)
 
-    BPP = canvas.color_depth // 8
-    key_bytes = key.to_bytes(BPP, "little")
+    BPP = canvas_bytes_per_pixel(canvas)
+    if BPP <= 0:
+        BPP = getattr(canvas, "color_depth", 16) // 8 or 2
+    key_bytes = key_to_bytes(key, BPP)
     stride = w * BPP
     for j in range(h):
         rowstart = j * stride
@@ -225,16 +289,16 @@ def _circle_helper(canvas, x0, y0, r, c, x_offset, y_offset):
         f += ddF_x
         offset_x = x + x_offset
         offset_y = y + y_offset
-        pixel(canvas, x0 + offset_x - 1, y0 - offset_y, c)  # 90 to 45
-        pixel(canvas, x0 - offset_x, y0 - offset_y, c)  # 90 to 135
-        pixel(canvas, x0 + offset_x - 1, y0 + offset_y - 1, c)  # 270 to 315
-        pixel(canvas, x0 - offset_x, y0 + offset_y - 1, c)  # 270 to 225
+        _set_pixel(canvas, x0 + offset_x - 1, y0 - offset_y, c)  # 90 to 45
+        _set_pixel(canvas, x0 - offset_x, y0 - offset_y, c)  # 90 to 135
+        _set_pixel(canvas, x0 + offset_x - 1, y0 + offset_y - 1, c)  # 270 to 315
+        _set_pixel(canvas, x0 - offset_x, y0 + offset_y - 1, c)  # 270 to 225
         offset_x = y + x_offset
         offset_y = x + y_offset
-        pixel(canvas, x0 + offset_x - 1, y0 + offset_y - 1, c)  # 0 to 315
-        pixel(canvas, x0 - offset_x, y0 + offset_y - 1, c)  # 180 to 225
-        pixel(canvas, x0 + offset_x - 1, y0 - offset_y, c)  # 0 to 45
-        pixel(canvas, x0 - offset_x, y0 - offset_y, c)  # 180 to 135
+        _set_pixel(canvas, x0 + offset_x - 1, y0 + offset_y - 1, c)  # 0 to 315
+        _set_pixel(canvas, x0 - offset_x, y0 + offset_y - 1, c)  # 180 to 225
+        _set_pixel(canvas, x0 + offset_x - 1, y0 - offset_y, c)  # 0 to 45
+        _set_pixel(canvas, x0 - offset_x, y0 - offset_y, c)  # 180 to 135
 
 
 def _fill_circle_helper(canvas, x0, y0, r, c, x_offset, y_offset):
@@ -338,13 +402,13 @@ def ellipse(canvas, x0, y0, r1, r2, c, f=False, m=0b1111, w=None, h=None):
                 hline(canvas, x0 + x_offset, y0 + y1 + y_offset, x1, c)
         else:
             if m & 0x1:
-                pixel(canvas, x0 + x1 + x_offset, y0 - y1 - y_offset, c)
+                _set_pixel(canvas, x0 + x1 + x_offset, y0 - y1 - y_offset, c)
             if m & 0x2:
-                pixel(canvas, x0 - x1 - x_offset, y0 - y1 - y_offset, c)
+                _set_pixel(canvas, x0 - x1 - x_offset, y0 - y1 - y_offset, c)
             if m & 0x4:
-                pixel(canvas, x0 - x1 - x_offset, y0 + y1 + y_offset, c)
+                _set_pixel(canvas, x0 - x1 - x_offset, y0 + y1 + y_offset, c)
             if m & 0x8:
-                pixel(canvas, x0 + x1 + x_offset, y0 + y1 + y_offset, c)
+                _set_pixel(canvas, x0 + x1 + x_offset, y0 + y1 + y_offset, c)
         if sigma >= 0:
             sigma += fb2 * (1 - x1)
             x1 -= 1
@@ -366,13 +430,13 @@ def ellipse(canvas, x0, y0, r1, r2, c, f=False, m=0b1111, w=None, h=None):
                 hline(canvas, x0 + x_offset, y0 + y1 + y_offset, x1, c)
         else:
             if m & 0x1:
-                pixel(canvas, x0 + x1 + x_offset, y0 - y1 - y_offset, c)
+                _set_pixel(canvas, x0 + x1 + x_offset, y0 - y1 - y_offset, c)
             if m & 0x2:
-                pixel(canvas, x0 - x1 - x_offset, y0 - y1 - y_offset, c)
+                _set_pixel(canvas, x0 - x1 - x_offset, y0 - y1 - y_offset, c)
             if m & 0x4:
-                pixel(canvas, x0 - x1 - x_offset, y0 + y1 + y_offset, c)
+                _set_pixel(canvas, x0 - x1 - x_offset, y0 + y1 + y_offset, c)
             if m & 0x8:
-                pixel(canvas, x0 + x1 + x_offset, y0 + y1 + y_offset, c)
+                _set_pixel(canvas, x0 + x1 + x_offset, y0 + y1 + y_offset, c)
         if sigma >= 0:
             sigma += fa2 * (1 - y1)
             y1 -= 1
@@ -392,11 +456,8 @@ def fill(canvas, c):
     Returns:
         (Area): The bounding box of the filled area.
     """
-    if hasattr(canvas, "fill"):
-        canvas.fill(c)
-        return Area(0, 0, canvas.width, canvas.height)
-    else:
-        return fill_rect(canvas, 0, 0, canvas.width, canvas.height, c)
+    _do_fill(canvas, c)
+    return Area(0, 0, canvas.width, canvas.height)
 
 
 def fill_rect(canvas, x, y, w, h, c):
@@ -417,13 +478,48 @@ def fill_rect(canvas, x, y, w, h, c):
     """
     if y < -h or y > canvas.height or x < -w or x > canvas.width:
         return
-    if hasattr(canvas, "fill_rect"):
-        canvas.fill_rect(x, y, w, h, c)
-    else:
-        for j in range(y, y + h):
-            for i in range(x, x + w):
-                pixel(canvas, i, j, c)
+    _do_fill_rect(canvas, x, y, w, h, c)
     return Area(x, y, w, h)
+
+
+def _format_grey_max(fmt):
+    from ._framebuf_plus import GS2_HMSB, GS4_HMSB, GS8, MONO_HLSB, MONO_HMSB, MONO_VLSB
+
+    if fmt in (MONO_VLSB, MONO_HLSB, MONO_HMSB):
+        return 1
+    if fmt == GS2_HMSB:
+        return 3
+    if fmt == GS4_HMSB:
+        return 15
+    if fmt == GS8:
+        return 255
+    return -1
+
+
+def _gradient_lerp_color(fmt, c1, c2, t, span):
+    grey_max = _format_grey_max(fmt)
+    if grey_max >= 0:
+        v = c1 + (c2 - c1) * t // span
+        if v < 0:
+            v = 0
+        elif v > grey_max:
+            v = grey_max
+        return v
+    from ._framebuf_plus import RGB888
+
+    if fmt == RGB888:
+        r1, g1, b1 = (c1 >> 16) & 0xFF, (c1 >> 8) & 0xFF, c1 & 0xFF
+        r2, g2, b2 = (c2 >> 16) & 0xFF, (c2 >> 8) & 0xFF, c2 & 0xFF
+        r = r1 + (r2 - r1) * t // span
+        g = g1 + (g2 - g1) * t // span
+        b = b1 + (b2 - b1) * t // span
+        return (r & 0xFF) << 16 | (g & 0xFF) << 8 | (b & 0xFF)
+    r1, g1, b1 = (c1 >> 8) & 0xF8, (c1 >> 3) & 0xFC, (c1 << 3) & 0xF8
+    r2, g2, b2 = (c2 >> 8) & 0xF8, (c2 >> 3) & 0xFC, (c2 << 3) & 0xF8
+    r = r1 + (r2 - r1) * t // span
+    g = g1 + (g2 - g1) * t // span
+    b = b1 + (b2 - b1) * t // span
+    return (r & 0xF8) << 8 | (g & 0xFC) << 3 | (b & 0xF8) >> 3
 
 
 def gradient_rect(canvas, x, y, w, h, c1, c2=None, vertical=True):
@@ -435,8 +531,8 @@ def gradient_rect(canvas, x, y, w, h, c1, c2=None, vertical=True):
         y (int): Y-coordinate of the top-left corner of the rectangle.
         w (int): Width of the rectangle.
         h (int): Height of the rectangle.
-        c1 (int): 565 encoded color for the top or left edge.
-        c2 (int): 565 encoded color for the bottom or right edge.  If None or the same as c1,
+        c1 (int): Color for the top or left edge (format-native).
+        c2 (int): Color for the bottom or right edge.  If None or the same as c1,
                     fill_rect will be called instead.
         vertical (bool): If True, the gradient will be vertical.  If False, the gradient will be horizontal.
 
@@ -445,22 +541,17 @@ def gradient_rect(canvas, x, y, w, h, c1, c2=None, vertical=True):
     """
     if c2 is None or c1 == c2:
         return fill_rect(canvas, x, y, w, h, c1)
-    r1, g1, b1 = (c1 >> 8) & 0xF8, (c1 >> 3) & 0xFC, (c1 << 3) & 0xF8
-    r2, g2, b2 = (c2 >> 8) & 0xF8, (c2 >> 3) & 0xFC, (c2 << 3) & 0xF8
+    from ._framebuf_plus import RGB565
+
+    fmt = getattr(canvas, "format", RGB565)
     if vertical:
         for j in range(h):
-            r = r1 + (r2 - r1) * j // h
-            g = g1 + (g2 - g1) * j // h
-            b = b1 + (b2 - b1) * j // h
-            c = (r & 0xF8) << 8 | (g & 0xFC) << 3 | (b & 0xF8) >> 3
-            fill_rect(canvas, x, y + j, w, 1, c)
+            c = _gradient_lerp_color(fmt, c1, c2, j, h)
+            _do_fill_rect(canvas, x, y + j, w, 1, c)
     else:
         for i in range(w):
-            r = r1 + (r2 - r1) * i // w
-            g = g1 + (g2 - g1) * i // w
-            b = b1 + (b2 - b1) * i // w
-            c = (r & 0xF8) << 8 | (g & 0xFC) << 3 | (b & 0xF8) >> 3
-            fill_rect(canvas, x + i, y, 1, h, c)
+            c = _gradient_lerp_color(fmt, c1, c2, i, w)
+            _do_fill_rect(canvas, x + i, y, 1, h, c)
     return Area(x, y, w, h)
 
 
@@ -479,7 +570,7 @@ def hline(canvas, x0, y0, w, c):
     """
     if y0 < 0 or y0 > canvas.height or x0 < -w or x0 > canvas.width:
         return
-    fill_rect(canvas, x0, y0, w, 1, c)
+    _do_fill_rect(canvas, x0, y0, w, 1, c)
     return Area(x0, y0, w, 1)
 
 
@@ -498,10 +589,13 @@ def line(canvas, x0, y0, x1, y1, c):
     Returns:
         (Area): The bounding box of the line.
     """
+    bx0, by0, bx1, by1 = x0, y0, x1, y1
     if x0 == x1:
-        return vline(canvas, x0, y0, abs(y1 - y0) + 1, c)
+        y = y0 if y0 < y1 else y1
+        return vline(canvas, x0, y, abs(y1 - y0) + 1, c)
     if y0 == y1:
-        return hline(canvas, x0, y0, abs(x1 - x0) + 1, c)
+        x = x0 if x0 < x1 else x1
+        return hline(canvas, x, y0, abs(x1 - x0) + 1, c)
 
     steep = abs(y1 - y0) > abs(x1 - x0)
     if steep:
@@ -513,19 +607,26 @@ def line(canvas, x0, y0, x1, y1, c):
     dx = x1 - x0
     dy = abs(y1 - y0)
     err = dx // 2
-    ystep = 0
     ystep = 1 if y0 < y1 else -1
+    put = getattr(canvas, "pixel", None)
     while x0 <= x1:
         if steep:
-            pixel(canvas, y0, x0, c)
+            if put is not None:
+                put(y0, x0, c)
+            else:
+                _set_pixel(canvas, y0, x0, c)
+        elif put is not None:
+            put(x0, y0, c)
         else:
-            pixel(canvas, x0, y0, c)
+            _set_pixel(canvas, x0, y0, c)
         err -= dy
         if err < 0:
             y0 += ystep
             err += dx
         x0 += 1
-    return Area(min(x0, x1), min(y0, y1), abs(x1 - x0), abs(y1 - y0))
+    left = bx0 if bx0 < bx1 else bx1
+    top = by0 if by0 < by1 else by1
+    return Area(left, top, abs(bx1 - bx0), abs(by1 - by0))
 
 
 def pixel(canvas, x, y, c):
@@ -541,12 +642,26 @@ def pixel(canvas, x, y, c):
     Returns:
         (Area): The bounding box of the pixel.
     """
-    if hasattr(canvas, "pixel"):
-        canvas.pixel(x, y, c)
-    else:
-        rgb565_color = (c & 0xFFFF).to_bytes(2, "little")
-        canvas.buffer[(y * canvas.width + x) * 2 : (y * canvas.width + x) * 2 + 2] = rgb565_color
+    _set_pixel(canvas, x, y, c)
     return Area(x, y, 1, 1)
+
+
+def _poly_xy_lists(coords):
+    """Normalize ``coords`` to parallel ``xs``/``ys`` int lists (relative verts)."""
+    if isinstance(coords, (list, tuple)) and coords and isinstance(coords[0], (list, tuple)):
+        xs = [int(p[0]) for p in coords]
+        ys = [int(p[1]) for p in coords]
+        return xs, ys
+    if len(coords) % 2 != 0:
+        raise ValueError("coords must have an even number of elements")
+    xs = [int(coords[i]) for i in range(0, len(coords), 2)]
+    ys = [int(coords[i + 1]) for i in range(0, len(coords), 2)]
+    return xs, ys
+
+
+def _div_trunc(a, b):
+    """C-like integer division (truncate toward zero)."""
+    return int(a / b) if b else 0
 
 
 def poly(canvas, x, y, coords, c, f=False):
@@ -569,73 +684,59 @@ def poly(canvas, x, y, coords, c, f=False):
     Returns:
         (Area): The bounding box of the polygon.
     """
-
-    # Convert the coords to a list of x, y tuples if it is not already
-    if isinstance(coords, list):
-        vertices = coords
-    elif isinstance(coords, tuple):
-        vertices = list(coords)
-    else:
-        # Check that the coords array has an even number of elements
-        if len(coords) % 2 != 0:
-            raise ValueError("coords must have an even number of elements")
-        vertices = [(coords[i], coords[i + 1]) for i in range(0, len(coords), 2)]
-
-    # Check that the polygon has at least 3 vertices
-    if len(vertices) < 3:
+    xs, ys = _poly_xy_lists(coords)
+    n = len(xs)
+    if n < 3:
         raise ValueError("polygon must have at least 3 vertices")
 
-    # Close the polygon if it is not already closed
-    if vertices[0] != vertices[-1]:
-        vertices.append(vertices[0])
-
-    # Offset vertices by (x, y)
-    vertices = [(x + vertex[0], y + vertex[1]) for vertex in vertices]
-
-    # Find the rectangle bounding box of the polygon
-    left = min(vertex[0] for vertex in vertices)
-    right = max(vertex[0] for vertex in vertices)
-    top = min(vertex[1] for vertex in vertices)
-    bottom = max(vertex[1] for vertex in vertices)
+    left = right = xs[0]
+    top = bottom = ys[0]
+    for i in range(1, n):
+        if xs[i] < left:
+            left = xs[i]
+        if xs[i] > right:
+            right = xs[i]
+        if ys[i] < top:
+            top = ys[i]
+        if ys[i] > bottom:
+            bottom = ys[i]
 
     if f:
-        # Fill the polygon using scanline algorithm
-        # Calculate the minimum and maximum y-coordinates in the polygon
-        y_min = min(vertex[1] for vertex in vertices)
-        y_max = max(vertex[1] for vertex in vertices)
-
-        # Iterate through each y-coordinate within the bounding box
-        for y_scan in range(y_min, y_max + 1):
-            # Determine intersections with the polygon edges
-            intersections = []
-            for i in range(len(vertices) - 1):
-                x1, y1 = vertices[i]
-                x2, y2 = vertices[i + 1]
-                # Check if the scanline intersects the edge
-                if y1 <= y_scan < y2 or y2 <= y_scan < y1:
-                    # Calculate the intersection point using linear interpolation
-                    x_intersection = x1 + ((y_scan - y1) / (y2 - y1)) * (x2 - x1)
-                    intersections.append(x_intersection)
-
-            # Sort intersections in increasing order
-            intersections.sort()
-
-            # Draw horizontal lines between pairs of intersection points
-            for i in range(0, len(intersections), 2):
-                x_start = int(intersections[i])
-                x_end = int(intersections[i + 1])
-                hline(canvas, x_start, y_scan, x_end - x_start, c)
+        # Integer scanline fill — same node formula as gfx_shapes_poly (C).
+        for row in range(top, bottom + 1):
+            nodes = []
+            for j in range(n):
+                j2 = (j + 1) % n
+                px1, py1 = xs[j], ys[j]
+                px2, py2 = xs[j2], ys[j2]
+                if py1 != py2 and ((py1 > row and py2 <= row) or (py1 <= row and py2 > row)):
+                    node = _div_trunc(
+                        32 * px1
+                        + _div_trunc(32 * (px2 - px1) * (row - py1), py2 - py1)
+                        + 16,
+                        32,
+                    )
+                    nodes.append(node)
+                elif row == (py1 if py1 > py2 else py2):
+                    if py1 < py2:
+                        _set_pixel(canvas, x + px2, y + py2, c)
+                    elif py2 < py1:
+                        _set_pixel(canvas, x + px1, y + py1, c)
+                    else:
+                        line(canvas, x + px1, y + py1, x + px2, y + py2, c)
+            if not nodes:
+                continue
+            nodes.sort()
+            for k in range(0, len(nodes) - 1, 2):
+                _do_fill_rect(
+                    canvas, x + nodes[k], y + row, (nodes[k + 1] - nodes[k]) + 1, 1, c
+                )
     else:
-        for i in range(len(vertices) - 1):
-            line(
-                canvas,
-                vertices[i][0],
-                vertices[i][1],
-                vertices[i + 1][0],
-                vertices[i + 1][1],
-                c,
-            )
-    return Area(left, top, right - left, bottom - top)
+        for i in range(n):
+            i2 = (i + 1) % n
+            line(canvas, x + xs[i], y + ys[i], x + xs[i2], y + ys[i2], c)
+
+    return Area(x + left, y + top, right - left, bottom - top)
 
 
 def polygon(canvas, points, x, y, color, angle=0, center_x=0, center_y=0):
@@ -664,27 +765,36 @@ def polygon(canvas, points, x, y, color, angle=0, center_x=0, center_y=0):
     if len(points) < 3:
         raise ValueError("Polygon must have at least 3 points.")
 
-    # fmt: off
     if angle:
-        cos_a = math.cos(angle)
-        sin_a = math.sin(angle)
-        rotated = [
-            (x + center_x + int((point[0] - center_x) * cos_a - (point[1] - center_y) * sin_a),
-                y + center_y + int((point[0] - center_x) * sin_a + (point[1] - center_y) * cos_a))
-            for point in points
-        ]
+        sin_a, cos_a = sin_cos_rad(angle)
+        rx0, ry0 = rotate_q15(points[0][0], points[0][1], center_x, center_y, sin_a, cos_a)
+        prev_x = x + rx0
+        prev_y = y + ry0
     else:
-        rotated = [(x + int((point[0])), y + int((point[1]))) for point in points]
+        prev_x = x + int(points[0][0])
+        prev_y = y + int(points[0][1])
+    left = right = prev_x
+    top = bottom = prev_y
 
-    # Find the rectangle bounding box of the polygon
-    left = min(vertex[0] for vertex in rotated)
-    right = max(vertex[0] for vertex in rotated)
-    top = min(vertex[1] for vertex in rotated)
-    bottom = max(vertex[1] for vertex in rotated)
-
-    for i in range(1, len(rotated)):
-        line(canvas, rotated[i - 1][0], rotated[i - 1][1], rotated[i][0], rotated[i][1], color)
-    # fmt: on
+    for i in range(1, len(points)):
+        if angle:
+            rx, ry = rotate_q15(points[i][0], points[i][1], center_x, center_y, sin_a, cos_a)
+            cur_x = x + rx
+            cur_y = y + ry
+        else:
+            cur_x = x + int(points[i][0])
+            cur_y = y + int(points[i][1])
+        line(canvas, prev_x, prev_y, cur_x, cur_y, color)
+        if cur_x < left:
+            left = cur_x
+        if cur_x > right:
+            right = cur_x
+        if cur_y < top:
+            top = cur_y
+        if cur_y > bottom:
+            bottom = cur_y
+        prev_x = cur_x
+        prev_y = cur_y
     return Area(left, top, right - left, bottom - top)
 
 
@@ -884,5 +994,5 @@ def vline(canvas, x0, y0, h, c):
     """
     if y0 < -h or y0 > canvas.height or x0 < 0 or x0 > canvas.width:
         return
-    fill_rect(canvas, x0, y0, 1, h, c)
+    _do_fill_rect(canvas, x0, y0, 1, h, c)
     return Area(x0, y0, 1, h)

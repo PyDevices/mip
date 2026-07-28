@@ -13,7 +13,6 @@ https://github.com/spacerace/romfont
 import os
 import struct
 
-from . import _font_8x8, _font_8x14, _font_8x16
 from ._area import Area
 
 sep = os.sep if hasattr(os, "sep") else "/"  # PyScipt doesn't have os.sep
@@ -24,14 +23,30 @@ except NameError:
     _FileNotFoundError = OSError
 
 # Default embedded romfont data (https://github.com/spacerace/romfont).
-
-_FONTS = {
-    8: _font_8x8.FONT,
-    14: _font_8x14.FONT,
-    16: _font_8x16.FONT,
+# Loaded lazily so importing text helpers does not pull all three fonts at once.
+_FONT_MODULES = {
+    8: "_font_8x8",
+    14: "_font_8x14",
+    16: "_font_8x16",
 }
+_FONTS = {}
 
-_DEFAULT_FONT = _FONTS[8]
+
+def _font_blob(height):
+    blob = _FONTS.get(height)
+    if blob is not None:
+        return blob
+    mod_name = _FONT_MODULES.get(height)
+    if mod_name is None:
+        mod_name = _FONT_MODULES[8]
+        height = 8
+    mod = __import__(__name__.rsplit(".", 1)[0] + "." + mod_name, None, None, ("FONT",))
+    blob = mod.FONT
+    _FONTS[height] = blob
+    return blob
+
+
+_DEFAULT_FONT_HEIGHT = 8
 
 
 def text(*args, height=8, **kwargs):
@@ -154,6 +169,26 @@ class Font:
     """
 
     def __init__(self, font_data=None, height=None, cached=True):
+        """Load a romfont from a path, ``memoryview``, or embedded default.
+
+        Binary font layout: 256 glyphs in ASCII order, one byte per pixel row
+        per glyph (fonts up to 8 pixels wide). If ``height`` is omitted and
+        ``font_data`` is a path like ``font_8x14.bin``, height is taken from the
+        name; for a ``memoryview``, height is ``len(data) // 256``.
+
+        Args:
+            font_data (str | memoryview): Path to a ``.bin`` font file, or a
+                ``memoryview`` of glyph bytes. Default uses the embedded font
+                for ``height`` (or 8×8).
+            height (int): Glyph height in pixels. Overrides height inferred from
+                the file name when both are set.
+            cached (bool): If True (default), read the whole file into memory.
+                If False, seek the open file for each glyph row.
+
+        Raises:
+            FileNotFoundError: If ``font_data`` is a path that cannot be opened.
+            RuntimeError: If the file size does not match the expected font size.
+        """
         # Optionally specify font_data to override the font data to use (default
         # is _font_8x8.FONT).  font_data may be a memoryview or a string path to a
         # font file.  The font format is a binary file with the following
@@ -165,7 +200,7 @@ class Font:
         # the memoryview or font file name.  For example a font file named font_8x14.bin
         # will have a height of 14 pixels.  If height is specified it will override
         # the height in the font file name.
-        self.font_data = font_data or _FONTS.get(height, _DEFAULT_FONT)
+        self.font_data = font_data or _font_blob(height if height is not None else _DEFAULT_FONT_HEIGHT)
 
         # Note that only fonts up to 8 pixels wide are currently supported.
         self._font_width = 8
@@ -243,34 +278,28 @@ class Font:
             (Area): The area that was drawn to.
         """
         scale = max(scale, 1)
-        # Don't draw the character if it will be clipped off the visible area.
-        # if x < -self.width or x >= canvas.width or \
-        #   y < -self.height or y >= canvas.height:
-        #    return
-        # Go through each row of the character.
+        # Go through each row of the character; coalesce horizontal runs of set bits.
         for char_y in range(self._font_height):
-            # Grab the byte for the current row of font data.
             if not (line := self._read_line(char, char_y)):
-                continue  # maybe character isnt there? go to next
-            # Go through each column in the row byte.
-            for char_x in range(self.width):
-                # Draw a pixel for each bit that's flipped on.
+                continue
+            char_x = 0
+            while char_x < self.width:
                 if (line >> (self.width - char_x - 1)) & 0x1:
-                    canvas.fill_rect(
-                        (
-                            x + char_x * scale
-                            if not inverted
-                            else x + (self._font_width - char_x - 1) * scale
-                        ),
-                        (
-                            y + char_y * scale
-                            if not inverted
-                            else y + (self._font_height - char_y - 1) * scale
-                        ),
-                        scale,
-                        scale,
-                        color,
-                    )
+                    run = 1
+                    while char_x + run < self.width and (
+                        (line >> (self.width - (char_x + run) - 1)) & 0x1
+                    ):
+                        run += 1
+                    if inverted:
+                        px = x + (self._font_width - char_x - run) * scale
+                        py = y + (self._font_height - char_y - 1) * scale
+                    else:
+                        px = x + char_x * scale
+                        py = y + char_y * scale
+                    canvas.fill_rect(px, py, run * scale, scale, color)
+                    char_x += run
+                else:
+                    char_x += 1
         return Area(x, y, self._font_width * scale, self._font_height * scale)
 
     def text(self, canvas, string, x, y, color, scale=1, inverted=False):
@@ -326,6 +355,9 @@ class Font:
         Args:
             text (str): The text to measure.
             scale (int): The scale factor to measure the text at.  Default is 1.
+
+        Returns:
+            int: Width in pixels.
         """
         return len(text) * self._font_width * scale
 

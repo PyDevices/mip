@@ -5,7 +5,7 @@ Import as `pygraphics`.
 
 | Product | Pip / MIP | Role |
 |---------|-----------|------|
-| **pygraphics-cmod** | TestPyPI `pygraphics-cmod` | All-C extension (prefer on desktop/Android when available) |
+| **pygraphics-cmod** | TestPyPI `pygraphics-cmod` | All-C extension (prefer on desktop/Android/Pyodide when available) |
 | **pygraphics** | TestPyPI `pygraphics`, MIP `pygraphics` | Pure-Python package (same public API) |
 
 One release tag `vX.Y.Z` publishes both products at that version.

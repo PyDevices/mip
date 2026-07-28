@@ -8,6 +8,38 @@ from ._area import Area
 _RGB565_BPP = 2
 
 
+def canvas_bytes_per_pixel(canvas):
+    """Contiguous bytes/pixel for blit_rect (0 = bit-packed / unsupported).
+
+    Uses ``canvas.format`` when present; otherwise ``color_depth // 8``, then RGB565.
+    """
+    fmt = getattr(canvas, "format", None)
+    if fmt is not None:
+        from ._framebuf_plus import GS8, RGB565, RGB888
+
+        if fmt == RGB888:
+            return 3
+        if fmt == RGB565:
+            return 2
+        if fmt == GS8:
+            return 1
+        return 0
+    depth = getattr(canvas, "color_depth", None)
+    if depth is not None and depth >= 8:
+        return depth // 8
+    return _RGB565_BPP
+
+
+def key_to_bytes(key, bpp):
+    """Pack a color key into buffer byte order for ``blit_transparent``.
+
+    RGB888 buffers store R,G,B; other contiguous formats use little-endian.
+    """
+    if bpp == 3:
+        return bytes(((key >> 16) & 0xFF, (key >> 8) & 0xFF, key & 0xFF))
+    return (key & ((1 << (bpp * 8)) - 1)).to_bytes(bpp, "little")
+
+
 def clip_blit_bounds(canvas, source, x, y):
     """Return clipped destination/source origin as ``(x0, y0, w, h, src_x, src_y)``.
 
@@ -48,13 +80,15 @@ def canvas_accepts_blit_transparent(canvas):
     return not isinstance(canvas, FrameBuffer)
 
 
-def _source_rgb565_bytes_per_pixel(source):
-    fmt = getattr(source, "format", None)
-    if fmt is None:
-        return None
-    from ._framebuf_plus import RGB565
-
-    return _RGB565_BPP if fmt == RGB565 else None
+def crop_buffer(buf, src_w, src_x, src_y, crop_w, crop_h, bpp):
+    """Extract a sub-rectangle from a top-down packed buffer."""
+    row_bytes = crop_w * bpp
+    out = bytearray(row_bytes * crop_h)
+    for row in range(crop_h):
+        src_start = ((src_y + row) * src_w + src_x) * bpp
+        dst_start = row * row_bytes
+        out[dst_start : dst_start + row_bytes] = buf[src_start : src_start + row_bytes]
+    return out
 
 
 def _framebuffer_base_blit(canvas, source, x, y, key=-1, palette=None):
@@ -63,20 +97,16 @@ def _framebuffer_base_blit(canvas, source, x, y, key=-1, palette=None):
     base.blit(canvas, source, x, y, key, palette)
 
 
-def _extract_rgb565_rows(source, src_x, src_y, w, h):
-    bpp = _RGB565_BPP
-    row_bytes = w * bpp
-    out = bytearray(row_bytes * h)
-    for row in range(h):
-        src_start = ((src_y + row) * source.width + src_x) * bpp
-        src_end = src_start + row_bytes
-        dst_start = row * row_bytes
-        out[dst_start : dst_start + row_bytes] = source.buffer[src_start:src_end]
-    return out
+def _extract_rows(source, src_x, src_y, w, h, bpp):
+    return crop_buffer(source.buffer, source.width, src_x, src_y, w, h, bpp)
 
 
-def blit_rect_to_buffer(canvas, buf, x, y, w, h, *, bpp=_RGB565_BPP):
-    """Copy an RGB565 rectangle into ``canvas.buffer``."""
+def blit_rect_to_buffer(canvas, buf, x, y, w, h, *, bpp=None):
+    """Copy a packed rectangle into ``canvas.buffer``."""
+    if bpp is None:
+        bpp = canvas_bytes_per_pixel(canvas)
+        if bpp <= 0:
+            bpp = _RGB565_BPP
     if x < 0 or y < 0 or x + w > canvas.width or y + h > canvas.height:
         raise ValueError("The provided x, y, w, h values are out of range")
 
@@ -95,7 +125,7 @@ def blit_rect_to_buffer(canvas, buf, x, y, w, h, *, bpp=_RGB565_BPP):
 
 
 def blit_rect_dispatch(canvas, buf, x, y, w, h):
-    """Blit a raw RGB565 buffer, using a canvas hook when available."""
+    """Blit a raw packed buffer, using a canvas hook when available."""
     if canvas_accepts_blit_rect(canvas):
         canvas.blit_rect(buf, x, y, w, h)
     else:
@@ -123,9 +153,14 @@ def try_fast_framebuffer_blit(canvas, source, x, y, key=-1, palette=None):
     if key != -1 or palette is not None:
         return None
 
-    if _source_rgb565_bytes_per_pixel(source) is None or not hasattr(source, "buffer"):
+    if not hasattr(source, "buffer"):
         return None
 
-    data = _extract_rgb565_rows(source, src_x, src_y, w, h)
+    src_bpp = canvas_bytes_per_pixel(source)
+    dst_bpp = canvas_bytes_per_pixel(canvas)
+    if src_bpp <= 0 or src_bpp != dst_bpp:
+        return None
+
+    data = _extract_rows(source, src_x, src_y, w, h, src_bpp)
     blit_rect_dispatch(canvas, data, x0, y0, w, h)
     return Area(x0, y0, w, h)

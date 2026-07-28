@@ -77,11 +77,30 @@ def write_bmp565_file(f, buffer, width, height):
 
 
 class BMP565:
-    """Read a 16-bit RGB565 BMP as a sliceable, optionally streamed asset."""
+    """Read a 16-bit RGB565 BMP as a sliceable, optionally streamed asset.
+
+    Provide either ``filename`` (path to a BMP file) or ``source`` (an in-memory
+    RGB565 buffer with ``width`` and ``height``).
+    """
 
     def __init__(
         self, filename=None, source=None, streamed=False, mirrored=False, width=None, height=None
     ):
+        """Load from a file path or an existing RGB565 buffer.
+
+        Args:
+            filename: Path to an RGB565 BMP file. Mutually exclusive with ``source``.
+            source: Existing RGB565 pixel buffer. Requires ``width`` and ``height``.
+            streamed: If True with ``filename``, keep the file open and read rows
+                on demand instead of loading the full image into memory.
+            mirrored: When streaming, reverse each row read (rarely needed).
+            width: Pixel width when constructing from ``source``.
+            height: Pixel height when constructing from ``source``.
+
+        Raises:
+            ValueError: If neither ``filename`` nor ``source`` is given, or the
+                file is not a valid RGB565 BMP.
+        """
         self._filename = filename
         self._streamed = streamed
         self._mirrored = mirrored
@@ -109,10 +128,24 @@ class BMP565:
             self._mv = memoryview(self._buffer)
 
     def __call__(self, x, y, w, h):
+        """Return the RGB565 bytes for the rectangle at ``(x, y)`` size ``w`` × ``h``.
+
+        Equivalent to ``self[x : x + w, y : y + h]``.
+
+        Args:
+            x: Left edge in pixels.
+            y: Top edge in pixels.
+            w: Width in pixels.
+            h: Height in pixels.
+
+        Returns:
+            Raw RGB565 bytes for the requested region.
+        """
         return self[x : x + w, y : y + h]
 
     @property
     def buffer(self):
+        """Writable ``memoryview`` of the full RGB565 pixel buffer, or ``None`` if streamed."""
         return self._mv
 
     @staticmethod
@@ -124,6 +157,17 @@ class BMP565:
             return False
 
     def save(self, filename=None):
+        """Write this image as an RGB565 BMP file.
+
+        If ``filename`` already exists, a numeric suffix is appended
+        (``image.bmp`` → ``image_1.bmp``, etc.).
+
+        Args:
+            filename: Output path. Defaults to the source filename or ``image.bmp``.
+
+        Returns:
+            The path actually written.
+        """
         if filename is None:
             filename = self._filename if self._filename is not None else "image.bmp"
         while self._exists(filename):
@@ -149,6 +193,22 @@ class BMP565:
         self._buffer = load_bmp565_buffer(f, self.width, self.height, self.data_offset)
 
     def __getitem__(self, key):
+        """Index or slice pixel data.
+
+        Args:
+            key: One of:
+
+                * ``(x, y)`` — single pixel as an ``int`` (RGB565)
+                * ``(x_slice, y_slice)`` — rectangular region as ``bytearray``
+                * ``int`` — flat pixel index as an ``int``
+                * ``slice`` — full-width row range as ``bytearray``
+
+        Returns:
+            Pixel value(s) for the requested key.
+
+        Raises:
+            ValueError: If ``key`` is not a supported index form.
+        """
         if isinstance(key, tuple):
             x, y = key
             if isinstance(x, slice) and isinstance(y, slice):
@@ -188,11 +248,13 @@ class BMP565:
         return out
 
     def deinit(self):
+        """Close the open file handle when constructed with ``streamed=True``."""
         if self._streamed and self._file is not None:
             self._file.close()
             self._file = None
 
     def __exit__(self, exception_type, exception_value, traceback):
+        """Context-manager exit: call :meth:`deinit`."""
         self.deinit()
 
     def __del__(self):

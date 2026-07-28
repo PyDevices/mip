@@ -1,4 +1,14 @@
-from . import _files, _font, _shapes
+"""Extended ``FrameBuffer`` with shape helpers, text, and image I/O.
+
+Format constants match MicroPython ``framebuf`` where applicable:
+
+* ``MONO_VLSB``, ``MONO_HLSB``, ``MONO_HMSB`` — 1-bit
+* ``GS2_HMSB``, ``GS4_HMSB``, ``GS8`` — greyscale
+* ``RGB565`` — 16-bit color
+* ``RGB888`` — 24-bit color (pygraphics extension; value ``7``)
+"""
+
+from . import _font, _shapes
 from ._area import Area
 from ._blit_hooks import clip_blit_bounds
 
@@ -97,6 +107,19 @@ class FrameBuffer(_FrameBuffer):
     """
 
     def __init__(self, buffer, width, height, format, *args, **kwargs):
+        """Create a framebuffer wrapping ``buffer``.
+
+        Args:
+            buffer (bytearray): Pixel storage (writable).
+            width (int): Width in pixels.
+            height (int): Height in pixels.
+            format (int): Pixel format constant (``RGB565``, ``RGB888``, etc.).
+            *args: Forwarded to the base ``framebuf.FrameBuffer`` (e.g. stride).
+            **kwargs: Forwarded to the base constructor (e.g. ``stride=``).
+
+        Raises:
+            ValueError: If ``format`` is not a supported constant.
+        """
         self._rgb888 = format == RGB888
         # RGB888 is a pydisplay extension; base framebuf never implements it.
         # Initialize the C extmod base as RGB565 so MicroPython does not fall back
@@ -128,22 +151,27 @@ class FrameBuffer(_FrameBuffer):
 
     @property
     def color_depth(self):
+        """Bits per pixel for the current format (1, 2, 4, 8, 16, or 24)."""
         return self._color_depth
 
     @property
     def width(self):
+        """Framebuffer width in pixels."""
         return self._width
 
     @property
     def height(self):
+        """Framebuffer height in pixels."""
         return self._height
 
     @property
     def buffer(self):
+        """Underlying pixel buffer passed to the constructor."""
         return self._buffer
 
     @property
     def format(self):
+        """Pixel format constant (``RGB565``, ``RGB888``, ``MONO_HLSB``, …)."""
         return self._fb_format
 
     def fill_rect(self, x, y, w, h, c):
@@ -588,6 +616,8 @@ class FrameBuffer(_FrameBuffer):
         Args:
             filename (str): Filename to save to
         """
+        from . import _files
+
         return _files.save_image(self, filename)
 
     def export(self, filename):
@@ -596,6 +626,8 @@ class FrameBuffer(_FrameBuffer):
         See :func:`pygraphics._files.export_framebuffer`. Ships ``BITMAP`` as a
         ``bytearray`` for zero-copy :meth:`from_bitmap` on MicroPython.
         """
+        from . import _files
+
         return _files.export_framebuffer(self, filename)
 
     @staticmethod
@@ -605,7 +637,12 @@ class FrameBuffer(_FrameBuffer):
 
         Args:
             filename (str): Filename to load from
+
+        Returns:
+            FrameBuffer: Image loaded as a framebuffer.
         """
+        from . import _files
+
         return _files.load_image(filename)
 
     @staticmethod

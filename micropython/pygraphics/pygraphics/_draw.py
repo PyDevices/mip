@@ -33,6 +33,12 @@ class Draw:
     """
 
     def __init__(self, canvas):
+        """Attach drawing helpers to ``canvas``.
+
+        Args:
+            canvas: Object with framebuf-compatible drawing methods (e.g.
+                :class:`~pygraphics.FrameBuffer` or a display driver).
+        """
         self.canvas = canvas
         self._clip_stack = []
 

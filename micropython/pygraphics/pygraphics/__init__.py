@@ -5,6 +5,13 @@ Extends MicroPython's ``framebuf`` with shape helpers, fonts, image loaders, and
 ``Area`` bounding boxes for partial updates.  On CPython and CircuitPython the
 built-in pure-Python ``framebuf`` fallback is used automatically.
 
+Framebuffer format constants (``FrameBuffer`` ``format`` argument):
+
+* ``MONO_VLSB``, ``MONO_HLSB``, ``MONO_HMSB`` — 1-bit monochrome
+* ``GS2_HMSB``, ``GS4_HMSB``, ``GS8`` — 2-, 4-, and 8-bit greyscale
+* ``RGB565`` — 16-bit color (MicroPython ``framebuf``)
+* ``RGB888`` — 24-bit color (pygraphics extension)
+
 Quick start::
 
     import pygraphics
@@ -16,17 +23,6 @@ Quick start::
 """
 
 from ._area import Area
-from ._bmp565 import BMP565
-from ._clip import ClipContext, ClippedCanvas
-from ._draw import Draw
-from ._files import (
-    bmp_to_framebuffer,
-    export_framebuffer,
-    load_image,
-    pbm_to_framebuffer,
-    pgm_to_framebuffer,
-    save_image,
-)
 from ._font import Font, text, text8, text14, text16
 from ._framebuf_plus import (
     GS2_HMSB,
@@ -60,6 +56,31 @@ from ._shapes import (
     vline,
 )
 
+# Optional / heavier helpers are loaded on first attribute access (MCU import cost).
+_LAZY = {
+    "BMP565": ("_bmp565", "BMP565"),
+    "ClipContext": ("_clip", "ClipContext"),
+    "ClippedCanvas": ("_clip", "ClippedCanvas"),
+    "Draw": ("_draw", "Draw"),
+    "bmp_to_framebuffer": ("_files", "bmp_to_framebuffer"),
+    "export_framebuffer": ("_files", "export_framebuffer"),
+    "load_image": ("_files", "load_image"),
+    "pbm_to_framebuffer": ("_files", "pbm_to_framebuffer"),
+    "pgm_to_framebuffer": ("_files", "pgm_to_framebuffer"),
+    "save_image": ("_files", "save_image"),
+}
+
+
+def __getattr__(name):
+    spec = _LAZY.get(name)
+    if spec is None:
+        raise AttributeError("module 'pygraphics' has no attribute {!r}".format(name))
+    mod_name, attr = spec
+    mod = __import__(__name__ + "." + mod_name, None, None, (attr,))
+    value = getattr(mod, attr)
+    globals()[name] = value
+    return value
+
 
 def implementation():
     """Return ``pygraphics_python`` (this package) vs ``native_cmod`` for the C module."""
@@ -75,6 +96,7 @@ __all__ = [
     "MONO_HMSB",
     "MONO_VLSB",
     "RGB565",
+    "RGB888",
     "Area",
     "ClipContext",
     "ClippedCanvas",

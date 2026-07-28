@@ -1,3 +1,5 @@
+"""Load and save ``FrameBuffer`` images (PBM, PGM, RGB565 BMP) and export modules."""
+
 from ._bmp565 import load_bmp565_buffer, read_bmp565_header, write_bmp565_file
 from ._framebuf_plus import GS2_HMSB, GS4_HMSB, GS8, MONO_HLSB, RGB565, FrameBuffer
 
@@ -112,6 +114,9 @@ def pbm_to_framebuffer(filename):
 
     Args:
         filename (str): Filename of the PBM file
+
+    Returns:
+        FrameBuffer: Loaded monochrome framebuffer.
     """
     with open(filename, "rb") as f:
         if f.read(3) != b"P4\n":
@@ -132,6 +137,9 @@ def pgm_to_framebuffer(filename):
 
     Args:
         filename (str): Filename of the PGM file
+
+    Returns:
+        FrameBuffer: Loaded greyscale framebuffer (format from max value).
     """
     with open(filename, "rb") as f:
         if f.read(3) != b"P5\n":
@@ -162,6 +170,9 @@ def bmp_to_framebuffer(filename):
 
     Args:
         filename (str): Path to the BMP file.
+
+    Returns:
+        FrameBuffer: Loaded RGB565 framebuffer.
     """
     with open(filename, "rb") as f:
         width, height, data_offset = read_bmp565_header(f)
