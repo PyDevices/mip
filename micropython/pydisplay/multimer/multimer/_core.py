@@ -16,12 +16,30 @@ from ._ticks import _sleep_ms, ticks_diff, ticks_ms
 
 
 class _TimerCore:
-    """Internal base matching MicroPython machine.Timer semantics."""
+    """Internal base matching MicroPython ``machine.Timer`` semantics.
+
+    Public ``Timer`` / ``AsyncTimer`` inherit this API. Documented members are
+    exposed on those classes via mkdocstrings ``inherited_members``.
+
+    Attributes:
+        ONE_SHOT: Mode constant — fire once then disarm (value ``0``).
+        PERIODIC: Mode constant — repeat until :meth:`deinit` (value ``1``).
+    """
 
     ONE_SHOT = const(0)
+    """Fire once then disarm."""
+
     PERIODIC = const(1)
+    """Repeat until :meth:`deinit`."""
 
     def __init__(self, id=-1, **kwargs):
+        """Create a timer, optionally calling :meth:`init` when kwargs are given.
+
+        Args:
+            id: Virtual or hardware timer id (``-1`` = auto-allocate when supported).
+            **kwargs: Forwarded to :meth:`init` when non-empty
+                (``mode``, ``freq``, ``period``, ``callback``, ``hard``).
+        """
         self.id = id
         self._mode = None
         self._period_ms = 0
@@ -47,6 +65,28 @@ class _TimerCore:
             self.init(**kwargs)
 
     def init(self, *, mode=PERIODIC, freq=-1, period=-1, callback=None, hard=True):
+        """Arm or re-arm the timer with MicroPython ``machine.Timer`` semantics.
+
+        Args:
+            mode: :attr:`ONE_SHOT` or :attr:`PERIODIC` (default ``PERIODIC``).
+            freq: Frequency in Hz. When ``freq > 0``, period is ``1000 // freq`` ms.
+            period: Period in milliseconds (used when ``freq`` is not positive).
+            callback: Callable invoked as ``callback(timer)`` on each fire.
+            hard: When ``True``, call ``callback`` directly from the backend
+                delivery path. When ``False``, deliver via :func:`schedule`.
+                Soft still applies coalesce and inter-tick gap. On signal
+                backends (``uses_signals()`` — librt, ``machine.Timer``),
+                delivery is already on the main thread, so soft invokes the
+                callback immediately there (≈ hard for *when* it runs). Soft
+                only defers to a later main-thread drain when the backend
+                delivers off-main (threading / win32 APC enqueue / polling).
+                On MicroPython, soft uses ``micropython.schedule`` (queue out
+                of a locked-heap ISR).
+
+        Raises:
+            ValueError: Invalid ``mode``, or neither ``freq`` nor ``period``
+                yields a period of at least 1 ms.
+        """
         if mode not in (self.ONE_SHOT, self.PERIODIC):
             raise ValueError("Invalid timer mode")
 
@@ -69,6 +109,11 @@ class _TimerCore:
         self._armed = True
 
     def deinit(self):
+        """Stop the timer and clear mode, period, and callback.
+
+        Waits until any in-flight callback finishes, then disarms the backend.
+        Safe to call repeatedly.
+        """
         self._wait_idle()
         if self._armed:
             self._disarm()

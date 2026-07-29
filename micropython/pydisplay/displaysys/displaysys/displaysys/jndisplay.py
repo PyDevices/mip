@@ -12,9 +12,8 @@ from IPython.display import display, update_display
 from PIL import Image, ImageDraw
 
 from displaysys import DisplayDriver, color_rgb
-from eventsys.keys import default_quit_chord
 from eventsys import events
-from eventsys.keys import Keys, key_to_keycode, mod_mask
+from eventsys.keys import Keys, default_quit_chord, key_to_keycode, mod_mask
 
 _JN_DEPS = "pip install ipywidgets ipyevents"
 
@@ -267,24 +266,25 @@ class JNDevices:
 
 
 class JNDisplay(DisplayDriver):
-    needs_refresh = True
-
-    """
-    A class to emulate a display on Jupyter Notebook.
+    """Emulate a display in a Jupyter Notebook output cell.
 
     Supports ILI9341-style vertical scroll emulation (same band compositing as
     SDL/PG/PS). Interactive output uses :class:`JNDevices`; static notebooks can
     call :meth:`show` without a device.
 
     Args:
-        width (int): The width of the display.
-        height (int): The height of the display.
+        width (int): Panel width in pixels.
+        height (int): Panel height in pixels.
+        quiet (bool): Suppress init chatter when True.
 
     Attributes:
-        color_depth (int): The color depth of the display
+        color_depth (int): Bits per pixel (16).
         touch_scale (float): Pointer scale for ``QueueDevice`` (always ``1.0``).
         quit_chord: Keyboard chord for quit (default CTRL+Q); ``None`` disables.
+        needs_refresh (bool): True — ``eventsys.Runtime`` drives periodic ``show()``.
     """
+
+    needs_refresh = True
 
     _next_display_id = 0
 
@@ -415,10 +415,12 @@ class JNDisplay(DisplayDriver):
     ############### Scrolling (ILI9341-style, like PG/PS/SDL) ################
 
     def vscrdef(self, tfa: int, vsa: int, bfa: int) -> None:
+        """Set vertical scroll bands and recompose the visible frame."""
         super().vscrdef(tfa, vsa, bfa)
         self.render()
 
     def vscsad(self, vssa=None) -> int:
+        """Get or set the vertical scroll start address and recompose when set."""
         if vssa is not None:
             super().vscsad(vssa)
             self.render()

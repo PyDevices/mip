@@ -10,9 +10,8 @@ from js import console, document
 from pyscript.ffi import create_proxy
 
 from displaysys import DisplayDriver, color_rgb
-from eventsys.keys import default_quit_chord
 from eventsys import events
-from eventsys.keys import Keys, dom_key_scrolls_page, key_to_keycode, mod_mask
+from eventsys.keys import Keys, default_quit_chord, dom_key_scrolls_page, key_to_keycode, mod_mask
 
 try:  # Gamepad polling is optional and only available in a browser.
     from js import navigator
@@ -41,9 +40,12 @@ class PSDevices:
     into ``eventsys.events`` objects (matching the desktop SDL2 / PyGame event
     stream), drained through :meth:`read`:
 
-    - **Pointer** (mouse, touch and pen via Pointer Events): ``MOUSEMOTION`` on
-      every move, ``MOUSEBUTTONDOWN`` / ``MOUSEBUTTONUP`` for any button, with
-      the ``touch`` flag set for non-mouse pointers.
+    - **Pointer** (mouse via Pointer Events): ``MOUSEMOTION`` /
+      ``MOUSEBUTTONDOWN`` / ``MOUSEBUTTONUP``.
+    - **Touch / pen** (Pointer Events with ``pointerType`` other than
+      ``mouse``): ``FINGERDOWN`` / ``FINGERUP`` / ``FINGERMOTION`` with
+      ``pointerId`` as ``finger_id``, so LVGL gesture recognizers see
+      multipoint contacts (same contract as SDL/pygame fingers).
     - **Wheel**: ``MOUSEWHEEL`` (also consumed by encoder devices).
     - **Keyboard**: ``KEYDOWN`` / ``KEYUP`` with SDL-style key codes, names and
       modifier masks (left/right modifier variants via key location).
@@ -86,6 +88,7 @@ class PSDevices:
         self._proxies = {
             "pointerdown": create_proxy(self._on_pointer_down),
             "pointerup": create_proxy(self._on_pointer_up),
+            "pointercancel": create_proxy(self._on_pointer_up),
             "pointermove": create_proxy(self._on_pointer_move),
             "wheel": create_proxy(self._on_wheel),
             "contextmenu": create_proxy(self._on_contextmenu),
@@ -140,41 +143,80 @@ class PSDevices:
         except Exception:
             return (int(float(dx)), int(float(dy)))
 
+    def _local_xy(self, e):
+        """Element-local CSS pixels (prefer ``client*`` - rect for synthetics)."""
+        try:
+            rect = self.canvas.getBoundingClientRect()
+            return float(e.clientX) - float(rect.left), float(e.clientY) - float(rect.top)
+        except Exception:
+            return float(e.offsetX), float(e.offsetY)
+
+    def _pointer_pos(self, e):
+        """Framebuffer pixels for host scaling / LVGL fingers."""
+        x, y = self._local_xy(e)
+        # Fingers must be panel-normalized (SDL contract); mouse stays CSS and
+        # HostEventsDevice applies ``touch_scale``.
+        if self._is_touch(e) and self._display is not None:
+            try:
+                return self._display.map_pointer(x, y)
+            except Exception:
+                pass
+        return self._map_pos(x, y)
+
+    def _finger_id(self, e):
+        try:
+            return int(e.pointerId)
+        except Exception:
+            return 0
+
     def _on_pointer_down(self, e):
         self._focus_canvas()
         try:
             self.canvas.setPointerCapture(e.pointerId)
         except Exception:
             pass
+        pos = self._pointer_pos(e)
+        if self._is_touch(e):
+            # Multipoint path for LVGL gestures (VirtualDevices tracks fingers).
+            self._queue.append(events.Finger(events.FINGERDOWN, pos, self._finger_id(e), None))
+            return
         self._queue.append(
             events.Button(
                 events.MOUSEBUTTONDOWN,
-                self._map_pos(e.offsetX, e.offsetY),
+                pos,
                 e.button + 1,  # DOM 0/1/2 -> SDL 1/2/3
-                self._is_touch(e),
+                False,
                 None,
             )
         )
 
     def _on_pointer_up(self, e):
+        pos = self._pointer_pos(e)
+        if self._is_touch(e):
+            self._queue.append(events.Finger(events.FINGERUP, pos, self._finger_id(e), None))
+            return
         self._queue.append(
             events.Button(
                 events.MOUSEBUTTONUP,
-                self._map_pos(e.offsetX, e.offsetY),
+                pos,
                 e.button + 1,
-                self._is_touch(e),
+                False,
                 None,
             )
         )
 
     def _on_pointer_move(self, e):
+        pos = self._pointer_pos(e)
+        if self._is_touch(e):
+            self._queue.append(events.Finger(events.FINGERMOTION, pos, self._finger_id(e), None))
+            return
         self._queue.append(
             events.Motion(
                 events.MOUSEMOTION,
-                self._map_pos(e.offsetX, e.offsetY),
+                pos,
                 self._map_rel(e.movementX, e.movementY),
                 _buttons_tuple(e.buttons),
-                self._is_touch(e),
+                False,
                 None,
             )
         )
@@ -266,16 +308,19 @@ class PSDevices:
 
 
 class PSDisplay(DisplayDriver):
-    needs_refresh = True
-
-    """
-    A class to emulate a display on PyScript.
+    """Emulate a display on a PyScript HTML canvas.
 
     Args:
-        id (str): The id of the canvas element.
-        width (int, optional): The width of the display. Defaults to None.
-        height (int, optional): The height of the display. Defaults to None.
+        id (str): DOM id of the canvas element.
+        width (int, optional): Panel width; defaults to the canvas width.
+        height (int, optional): Panel height; defaults to the canvas height.
+        quiet (bool): Suppress init chatter when True.
+
+    Attributes:
+        needs_refresh (bool): True — ``eventsys.Runtime`` drives periodic ``show()``.
     """
+
+    needs_refresh = True
 
     def __init__(self, id, width=None, height=None, *, quiet=False):
         self._canvas = document.getElementById(id)
@@ -396,10 +441,12 @@ class PSDisplay(DisplayDriver):
     ############### Scrolling (ILI9341-style, like SDLDisplay / PGDisplay) ################
 
     def vscrdef(self, tfa: int, vsa: int, bfa: int) -> None:
+        """Set vertical scroll bands and re-render the canvas."""
         super().vscrdef(tfa, vsa, bfa)
         self.render()
 
     def vscsad(self, vssa=None) -> int:
+        """Get or set the vertical scroll start address and re-render when set."""
         if vssa is not None:
             super().vscsad(vssa)
             self.render()
@@ -435,6 +482,7 @@ class PSDisplay(DisplayDriver):
             vis.drawImage(buf, 0, tfa + vsa, w, bfa, 0, tfa + vsa, w, bfa)
 
     def show(self, _timer=None) -> None:
+        """Present the offscreen canvas (alias of :meth:`render`)."""
         self.render()
 
     def _pointer_scale(self):
@@ -449,8 +497,9 @@ class PSDisplay(DisplayDriver):
         """
         Map element-local pointer coordinates to framebuffer ``(x, y)``.
 
-        ``PSDevices`` maps coordinates at capture time when constructed with a
-        ``PSDisplay``; ``QueueDevice`` forwards events unchanged.
+        ``PSDevices`` maps touch/pen to panel pixels at capture (``FINGER*``);
+        mouse coords stay CSS-local and ``HostEventsDevice`` applies
+        ``touch_scale``.
         """
         sx, sy = self._pointer_scale()
         return (int(float(local_x) * sx), int(float(local_y) * sy))

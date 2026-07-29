@@ -85,6 +85,23 @@ if sys.implementation.name in ("cpython", "circuitpython"):
             _draining = False
 
     def schedule(cb, arg):
+        """Queue ``cb(arg)`` for the main thread (``micropython.schedule`` compatible).
+
+        On CPython / CircuitPython: if called off the main thread, append to a
+        pending queue drained by the next main-thread :func:`schedule` or by
+        the timer sleep pump. On the main thread (including librt RT-signal
+        delivery), drain pending work then invoke ``cb(arg)`` immediately —
+        soft timers do not get an extra deferral hop when already on main.
+
+        On MicroPython, this is the built-in ``micropython.schedule``.
+
+        Args:
+            cb: Zero-or-one-arg callable invoked as ``cb(arg)``.
+            arg: Argument passed to ``cb`` (often the timer instance).
+
+        Raises:
+            RuntimeError: On MicroPython when the schedule queue is full.
+        """
         if not _is_main_thread():
             _queue(cb, arg)
             return

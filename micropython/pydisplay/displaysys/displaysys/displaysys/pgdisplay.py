@@ -102,11 +102,82 @@ def _pg_key_name(key):
         return str(key)
 
 
+_pg_displays = []
+
+
+def _pg_window_cls():
+    """Return public ``pygame.Window`` (pygame-ce) with software ``get_surface``/``flip``.
+
+    Does **not** use ``pygame._sdl2.*``. Raises ``ImportError`` when the
+    interpreter only has classic pygame (so ``board_config`` can fall back to SDL).
+    """
+    Window = getattr(pg, "Window", None)
+    if Window is None or not hasattr(Window, "get_surface") or not hasattr(Window, "flip"):
+        raise ImportError(
+            "PGDisplay requires pygame-ce with public pygame.Window "
+            "(get_surface/flip); classic pygame / pygame._sdl2 is not supported"
+        )
+    return Window
+
+
+# Fail at import time (not only in PGDisplay.__init__) so board_config's
+# try/except ImportError selects SDL when pygame-ce is absent.
+_pg_window_cls()
+
+
+def _window_id_of(window):
+    if window is None:
+        return None
+    return getattr(window, "id", window)
+
+
+def _display_for_window(window):
+    wid = _window_id_of(window)
+    if wid is None:
+        return None
+    for display in _pg_displays:
+        if getattr(display, "_window_id", None) == wid:
+            return display
+    return None
+
+
+def _panel_size(window=None):
+    """Logical panel size for normalizing pygame finger coords (0..1 → pixels)."""
+    d = _display_for_window(window)
+    if d is None and _pg_displays:
+        d = _pg_displays[0]
+    if d is not None:
+        return int(d.width), int(d.height)
+    return 320, 240
+
+
+def _handle_window_close(window):
+    display = _display_for_window(window)
+    if display is None or display is _pg_displays[0] or len(_pg_displays) <= 1:
+        return events.Quit(events.QUIT)
+    runtime = getattr(display, "runtime", None)
+    if runtime is not None and callable(getattr(runtime, "remove_display", None)):
+        runtime.remove_display(display)
+    else:
+        try:
+            display.quit()
+        except Exception:
+            pass
+        try:
+            _pg_displays.remove(display)
+        except ValueError:
+            pass
+    return None
+
+
 def _convert(e):
     """Convert a pygame event to an eventsys namedtuple."""
     t = e.type
     if t == pg.QUIT:
         return events.Quit(events.QUIT)
+    if t == getattr(pg, "WINDOWCLOSE", -1):
+        return _handle_window_close(getattr(e, "window", None))
+    win = _window_id_of(getattr(e, "window", None))
     if t == pg.MOUSEMOTION:
         return events.Motion(
             t,
@@ -114,7 +185,7 @@ def _convert(e):
             e.rel,
             e.buttons,
             bool(getattr(e, "touch", False)),
-            getattr(e, "window", None),
+            win,
         )
     if t in (pg.MOUSEBUTTONDOWN, pg.MOUSEBUTTONUP):
         return events.Button(
@@ -122,8 +193,16 @@ def _convert(e):
             e.pos,
             e.button,
             bool(getattr(e, "touch", False)),
-            getattr(e, "window", None),
+            win,
         )
+    if t in (pg.FINGERDOWN, pg.FINGERUP, pg.FINGERMOTION):
+        # Real OS multitouch (touchscreen). Same contract as sdldisplay SDL_FINGER*.
+        # Not mouse-chord inject — trackpad OS-pinch still will not appear here.
+        w, h = _panel_size(getattr(e, "window", None))
+        fx = float(getattr(e, "x", 0.0))
+        fy = float(getattr(e, "y", 0.0))
+        fid = int(getattr(e, "finger_id", getattr(e, "finger", 0)))
+        return events.Finger(t, (int(fx * w), int(fy * h)), fid, win)
     if t == pg.MOUSEWHEEL:
         return events.Wheel(
             t,
@@ -133,10 +212,10 @@ def _convert(e):
             getattr(e, "precise_x", getattr(e, "x", 0)),
             getattr(e, "precise_y", getattr(e, "y", 0)),
             bool(getattr(e, "touch", False)),
-            getattr(e, "window", None),
+            win,
         )
     if t in (pg.KEYDOWN, pg.KEYUP):
-        return events.Key(t, _pg_key_name(e.key), e.key, e.mod, getattr(e, "scancode", 0), None)
+        return events.Key(t, _pg_key_name(e.key), e.key, e.mod, getattr(e, "scancode", 0), win)
     if t == pg.JOYAXISMOTION:
         return events.JoyAxisMotion(t, e.instance_id, e.axis, e.value / 32767.0)
     if t == pg.JOYBALLMOTION:
@@ -150,14 +229,17 @@ def _convert(e):
     return events.Unknown(t)
 
 
-def poll_event():
-    """Non-blocking poll; return one eventsys event or ``None`` (not for QUEUE ``read``)."""
-    e = pg.event.poll()
+def _process_pg_event(e):
     if e.type == pg.NOEVENT:
         return None
-    if e.type in events.filter:
+    if e.type == getattr(pg, "WINDOWCLOSE", -1) or e.type in events.filter:
         return _convert(e)
     return None
+
+
+def poll_event():
+    """Non-blocking poll; return one eventsys event or ``None`` (not for QUEUE ``read``)."""
+    return _process_pg_event(pg.event.poll())
 
 
 def get_events():
@@ -165,7 +247,11 @@ def get_events():
     raw = pg.event.get()
     if not raw:
         return None
-    eventlist = [_convert(e) for e in raw if e.type in events.filter]
+    eventlist = []
+    for e in raw:
+        evt = _process_pg_event(e)
+        if evt is not None:
+            eventlist.append(evt)
     return eventlist if eventlist else None
 
 
@@ -196,26 +282,29 @@ def _init_joysticks() -> None:
 
 
 class PGDisplay(DisplayDriver):
-    needs_refresh = True
+    """Emulate an LCD window with pygame-ce (``pygame.Window``).
 
-    """
-    A class to emulate an LCD using pygame.
-    Provides scrolling and rotation functions similar to an LCD.  The .texture
-    object functions as the LCD's internal memory.
+    Requires pygame-ce with public ``Window.get_surface`` / ``Window.flip``
+    (no ``pygame._sdl2``). Provides scrolling and rotation similar to a panel
+    driver; scale is reduced when the window would not fit the desktop work area.
 
     Args:
-        width (int, optional): The width of the display. Defaults to 320.
-        height (int, optional): The height of the display. Defaults to 240.
-        rotation (int, optional): The rotation of the display. Defaults to 0.
-        color_depth (int, optional): The color depth of the display. Defaults to 16.
-        title (str, optional): The title of the display window. Defaults to "displaysys".
-        scale (float, optional): The scale of the display. Defaults to 1.0.
-        window_flags (int, optional): The flags for creating the display window. Defaults to pg.SHOWN
+        width (int, optional): Panel width in pixels. Defaults to 320.
+        height (int, optional): Panel height in pixels. Defaults to 240.
+        rotation (int, optional): Rotation in degrees. Defaults to 0.
+        color_depth (int, optional): Bits per pixel. Defaults to 16.
+        title (str, optional): Window title. Defaults to ``"displaysys"``.
+        scale (float, optional): Window scale factor. Defaults to 1.0.
+        window_flags (int, optional): pygame display flags. Defaults to ``pg.SHOWN``.
+        quiet (bool): Suppress init chatter when True.
 
     Attributes:
-        color_depth (int): The color depth of the display.
-        touch_scale (float): The touch scale of the display.
+        color_depth (int): Bits per pixel.
+        touch_scale (float): Scale used to map host pointer coords into panel space.
+        needs_refresh (bool): True — ``eventsys.Runtime`` drives periodic ``show()``.
     """
+
+    needs_refresh = True
 
     def __init__(
         self,
@@ -239,12 +328,19 @@ class PGDisplay(DisplayDriver):
         self.touch_scale = scale
         self.quit_chord = default_quit_chord()
         self._buffer = None
+        self._pg_window = None
+        self._window_id = None
+        self._window = None  # Window.get_surface() display surface
+        self.runtime = None
         self._render_dirty = False
         self._show_pending = False
         self._requires_byteswap = False
         self._frame_recorder = None
 
         self._bytes_per_pixel = color_depth // 8
+
+        # Fail early if this interpreter lacks pygame-ce Window (e.g. system python3).
+        _pg_window_cls()
 
         if self._scale != 1 and not hasattr(pg.transform, "scale_by"):
             if not quiet:
@@ -286,33 +382,23 @@ class PGDisplay(DisplayDriver):
         # DisplayDriver.__init__ used to reset touch_scale to 1.0; keep window scale
         # so HostEventsDevice maps pygame coords into panel space.
         self.touch_scale = self._scale
+        if self not in _pg_displays:
+            _pg_displays.append(self)
 
     ############### Required API Methods ################
 
     def _lock_window_size(self) -> None:
-        """Keep the OS window fixed to the scaled panel size (not user-resizable).
-
-        Not passing ``pg.RESIZABLE`` already prevents a resize grip, but this
-        also clamps the SDL window when a caller opts into ``pg.RESIZABLE`` or
-        the platform WM would otherwise allow resizing.
-        """
-        win = self._sdl_window()
+        """Keep the OS window fixed to the scaled panel size (not user-resizable)."""
+        win = self._pg_window
         if win is not None:
-            win.resizable = False
-
-    def _sdl_window(self):
-        try:
-            from pygame._sdl2.video import Window
-        except ImportError:
-            return None
-        try:
-            return Window.from_display_module()
-        except Exception:
-            return None
+            try:
+                win.resizable = False
+            except Exception:
+                pass
 
     def _place_window(self, win_w, win_h) -> None:
         """Center the window in the usable work area (taskbar / chrome aware)."""
-        win = self._sdl_window()
+        win = self._pg_window
         if win is None:
             return
         ux, uy, uw, uh = getattr(self, "_work_area", (0, 0, 0, 0))
@@ -331,14 +417,17 @@ class PGDisplay(DisplayDriver):
         """
         win_w = int(self.width * self._scale)
         win_h = int(self.height * self._scale)
-        self._window = pg.display.set_mode(
-            size=(win_w, win_h),
-            flags=self._window_flags,
-            depth=self.color_depth,
-            display=0,
-            vsync=0,
-        )
-        pg.display.set_caption(self._title)
+        Window = _pg_window_cls()
+        if self._pg_window is None:
+            self._pg_window = Window(title=self._title, size=(win_w, win_h))
+            self._window_id = int(self._pg_window.id)
+        else:
+            try:
+                self._pg_window.size = (win_w, win_h)
+                self._pg_window.title = self._title
+            except Exception:
+                pass
+        self._window = self._pg_window.get_surface()
         self._lock_window_size()
         self._place_window(win_w, win_h)
 
@@ -423,11 +512,13 @@ class PGDisplay(DisplayDriver):
     ############### Class Specific Methods ##############
 
     def _video_active(self) -> bool:
-        """True while pygame-ce video is initialized and this driver is live."""
+        """True while pygame is initialized and this window is live."""
         if getattr(self, "_deinitialized", False):
             return False
+        if self._pg_window is None or self._window is None:
+            return False
         try:
-            return bool(pg.get_init()) and bool(pg.display.get_init())
+            return bool(pg.get_init())
         except pg.error:
             return False
 
@@ -515,7 +606,7 @@ class PGDisplay(DisplayDriver):
         if self._frame_recorder is not None:
             self._record_frame(self._buffer_rgb())
         try:
-            pg.display.flip()
+            self._pg_window.flip()
         except pg.error:
             if getattr(self, "_deinitialized", False):
                 return
@@ -539,15 +630,33 @@ class PGDisplay(DisplayDriver):
         self.quit(code, force=True)
 
     def _deinit(self) -> None:
-        """Release pygame resources."""
+        """Release this window; quit pygame only when no PGDisplay remains."""
         self.close_frame_recorder()
+        try:
+            _pg_displays.remove(self)
+        except ValueError:
+            pass
+        window = self._pg_window
+        self._pg_window = None
+        self._window = None
+        self._window_id = None
+        self.runtime = None
+        if window is not None:
+            try:
+                window.destroy()
+            except Exception:
+                pass
+        if _pg_displays:
+            return
         global _joysticks
         try:
             pg.joystick.quit()
         except Exception:
             pass
         _joysticks = []
-        pg.display.quit()
-        pg.quit()
+        try:
+            pg.quit()
+        except Exception:
+            pass
         self._window = None
         self._buffer = None

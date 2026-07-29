@@ -161,7 +161,7 @@ class Runtime:
 
     def __init__(
         self,
-        display=None,
+        displays=None,
         host_read=None,
         touch_read=None,
         touch_rotation_table=None,
@@ -169,10 +169,39 @@ class Runtime:
         refresh_period=None,
         timer_async=False,
     ):
+        """Create a board runtime and optionally wire host/touch devices.
+
+        Args:
+            displays: Sequence of displaysys drivers. Index 0 is primary. Empty
+                or ``None`` means no display (device-only runtime).
+            host_read: Callable returning host events (mouse/keyboard); requires
+                a primary display.
+            touch_read: Callable returning touch points; binds to primary.
+            touch_rotation_table: Optional 4-item rotation mask table for touch.
+            refresh_period: Milliseconds between ``show()`` ticks. ``None`` uses
+                :data:`DEFAULT_REFRESH_MS` when any attached display
+                ``needs_refresh``. ``0`` or negative disables periodic refresh.
+            timer_async: When ``True``, use :class:`multimer.AsyncTimer` and
+                asyncio-oriented entry (:meth:`run` / :meth:`run_forever`).
+
+        Raises:
+            TypeError: ``host_read`` / ``touch_read`` not callable, or invalid
+                ``touch_rotation_table`` type.
+            ValueError: ``host_read`` / ``touch_read`` without a primary display,
+                or ``touch_rotation_table`` length not 4.
+        """
         self.devices = []
         self._event_callbacks = {}
         self._device_callbacks = {}
-        self._display = display
+        if displays is None:
+            self._displays = []
+        else:
+            self._displays = list(displays)
+        for drv in self._displays:
+            try:
+                drv.runtime = self
+            except Exception:
+                pass
         self._before_quit = None
         self._quit_requested = False
         # When set, :meth:`run_forever` / :meth:`run` exits the process with this
@@ -190,6 +219,7 @@ class Runtime:
         self._refresh_claim = None
         self._pending_async_refresh = None
         self._pending_sync_refresh = None
+        self._refresh_period = refresh_period
         # Auto-service: the shared timer tick pumps/drains events and polls
         # devices so the canonical idiom needs no user loop. Disabled the moment
         # the app calls poll() itself (legacy loops) to avoid double-pumping.
@@ -201,32 +231,33 @@ class Runtime:
         self._pending_teardown = False
         self._teardown_done = False
         self._teardown_oneshot_armed = False
+        # True while the sync ``run_forever`` keep-alive loop is on the stack.
+        # Timer-callback teardown must not ``stop_timer`` then — it leaves the
+        # blocking ``sleep_ms`` stuck after the shared timer is gone.
+        self._blocking_run_forever = False
         self.host_dev = None
         self.touch_dev = None
         self.keypad_dev = None
         self.encoder_dev = None
         self.joystick_dev = None
 
+        primary = self.primary
+
         if host_read is not None:
             _validate_callable(host_read, "host_read")
-            if display is None:
-                raise ValueError("host_read requires display=")
-            self.host_dev = HostEventsDevice(host_read=host_read, display=display)
+            if primary is None:
+                raise ValueError("host_read requires a primary display")
+            self.host_dev = HostEventsDevice(host_read=host_read, display=primary)
             self.register(self.host_dev)
 
         if touch_read is not None:
-            _validate_callable(touch_read, "touch_read")
-            if display is None:
-                raise ValueError("touch_read requires display=")
-            _validate_rotation_table(touch_rotation_table)
-            self.touch_dev = TouchDevice(
-                read=touch_read,
-                display=display,
-                rotation_table=touch_rotation_table,
+            self.add_touch(
+                touch_read,
+                display=primary,
+                touch_rotation_table=touch_rotation_table,
             )
-            self.register(self.touch_dev)
 
-        if display is not None:
+        if self._displays:
             self._wire_display_refresh(refresh_period)
             self._install_default_quit()
             self._register_atexit()
@@ -235,7 +266,107 @@ class Runtime:
 
     @property
     def timer_async(self):
+        """Whether this runtime uses async timers (``AsyncTimer`` / asyncio)."""
         return self._timer_async
+
+    @property
+    def displays(self):
+        """Tuple of attached displaysys drivers (index 0 is primary)."""
+        return tuple(self._displays)
+
+    @property
+    def primary(self):
+        """Primary display (``displays[0]``), or ``None`` if none attached."""
+        if self._displays:
+            return self._displays[0]
+        return None
+
+    def add_display(self, drv):
+        """Attach a secondary displaysys driver and re-wire refresh if needed.
+
+        Args:
+            drv: displaysys driver instance.
+
+        Returns:
+            The attached driver.
+        """
+        if drv is None:
+            raise ValueError("drv is required")
+        if drv in self._displays:
+            return drv
+        first = not self._displays
+        self._displays.append(drv)
+        try:
+            drv.runtime = self
+        except Exception:
+            pass
+        if first:
+            self._wire_display_refresh(self._refresh_period)
+            self._install_default_quit()
+            self._register_atexit()
+        elif (
+            getattr(drv, "needs_refresh", False)
+            and self._refresh_subscription is None
+            and self._pending_async_refresh is None
+            and self._pending_sync_refresh is None
+        ):
+            # Primary did not need refresh; secondary does — arm the tick.
+            self._wire_display_refresh(self._refresh_period)
+        return drv
+
+    def remove_display(self, drv):
+        """Detach a display, stop using it for refresh, and quit/deinit it.
+
+        Removing the primary or the last remaining display requests app quit.
+        """
+        if drv not in self._displays:
+            return
+        was_primary = drv is self.primary
+        self._displays.remove(drv)
+        try:
+            drv.runtime = None
+        except Exception:
+            pass
+        if callable(getattr(drv, "quit", None)):
+            try:
+                drv.quit()
+            except Exception:
+                pass
+        elif callable(getattr(drv, "deinit", None)):
+            try:
+                drv.deinit()
+            except Exception:
+                pass
+        if was_primary or not self._displays:
+            self.request_quit()
+
+    def add_touch(self, read, *, display=None, touch_rotation_table=None):
+        """Create, register, and return a :class:`TouchDevice`.
+
+        Args:
+            read: Callable returning touch points.
+            display: Panel for coordinate mapping; defaults to :attr:`primary`.
+            touch_rotation_table: Optional 4-item rotation mask table.
+
+        Returns:
+            TouchDevice: The registered device (also stored as ``touch_dev``
+            when binding to the primary).
+        """
+        _validate_callable(read, "read")
+        if display is None:
+            display = self.primary
+        if display is None:
+            raise ValueError("touch requires a display")
+        _validate_rotation_table(touch_rotation_table)
+        touch = TouchDevice(
+            read=read,
+            display=display,
+            rotation_table=touch_rotation_table,
+        )
+        self.register(touch)
+        if display is self.primary:
+            self.touch_dev = touch
+        return touch
 
     @staticmethod
     def _event_loop_running():
@@ -312,8 +443,22 @@ class Runtime:
 
         self.arm_async_refresh()
         self._arm_lvgl_event_loop()
-        while not self._quit_requested:
-            await asyncio.sleep(tick_ms / 1000)
+        self._blocking_run_forever = True
+        try:
+            while not self._quit_requested:
+                await asyncio.sleep(tick_ms / 1000)
+                # Harness deadline hooks (pydisplay_test_mode) run from
+                # multimer.sleep_ms on the sync path; async run_forever must
+                # invoke them here — LVGL claims refresh so auto-service poll
+                # does not. App code should not rely on this hook.
+                try:
+                    from multimer import run_deadline_hook
+
+                    run_deadline_hook()
+                except ImportError:
+                    pass
+        finally:
+            self._blocking_run_forever = False
         # Teardown here runs outside the service tick (this coroutine is a
         # separate task from the AsyncTimer), so stopping the timer is safe.
         self._perform_teardown()
@@ -360,10 +505,12 @@ class Runtime:
         # timer keeps the app live at the REPL; blocking here wedges the session.
         if _is_interactive_session() and multimer.uses_signals():
             return
+        self._blocking_run_forever = True
         try:
             while not self._quit_requested:
                 multimer.sleep_ms(tick_ms)
         finally:
+            self._blocking_run_forever = False
             self._perform_teardown()
         self._raise_exit_code()
 
@@ -394,6 +541,7 @@ class Runtime:
 
     @property
     def quit_requested(self):
+        """True after a QUIT event or :meth:`request_quit` (teardown pending/done)."""
         return self._quit_requested
 
     def request_quit(self, code=None):
@@ -420,6 +568,10 @@ class Runtime:
 
     @property
     def before_quit(self):
+        """Optional callable invoked once during teardown, before ``display.quit``.
+
+        Set to a zero-arg callable (e.g. ``lv.deinit``) or ``None``.
+        """
         return self._before_quit
 
     @before_quit.setter
@@ -430,6 +582,7 @@ class Runtime:
 
     @property
     def display_refresh(self):
+        """Subscription handle for the periodic ``display.show`` tick, or ``None``."""
         return self._refresh_subscription
 
     def on(self, event_type, callback):
@@ -478,6 +631,17 @@ class Runtime:
             self._event_callbacks[event_type] = callback_set
 
     def unsubscribe(self, callback, event_types=None, device_types=None):
+        """Remove ``callback`` from event-type or device-type subscriptions.
+
+        Args:
+            callback: Previously registered callable.
+            event_types: Iterable of event type constants to unsubscribe from.
+            device_types: Iterable of device type constants; mutually exclusive
+                with ``event_types``.
+
+        Raises:
+            ValueError: Both or neither of ``event_types`` / ``device_types`` set.
+        """
         if device_types is not None:
             if event_types is not None:
                 raise ValueError("set one of device_types or event_types but not both.")
@@ -502,12 +666,30 @@ class Runtime:
             dev.runtime = None
 
     def add_keypad(self, read):
+        """Create, register, and return a :class:`KeypadDevice`.
+
+        Args:
+            read: Callable returning the current pressed-key collection.
+
+        Returns:
+            KeypadDevice: The registered device (also stored as ``keypad_dev``).
+        """
         _validate_callable(read, "read")
         self.keypad_dev = KeypadDevice(read=read)
         self.register(self.keypad_dev)
         return self.keypad_dev
 
     def add_encoder(self, read, *, button_read=None, button=2):
+        """Create, register, and return an :class:`EncoderDevice`.
+
+        Args:
+            read: Callable returning encoder position / delta.
+            button_read: Optional callable for a push-button state.
+            button: Mouse button index used when synthesizing button events.
+
+        Returns:
+            EncoderDevice: The registered device (also stored as ``encoder_dev``).
+        """
         _validate_callable(read, "read")
         if button_read is not None:
             _validate_callable(button_read, "button_read")
@@ -516,6 +698,16 @@ class Runtime:
         return self.encoder_dev
 
     def add_joystick(self, *, joystick_driver=None, **kwargs):
+        """Create, register, and return a :class:`JoystickDevice`.
+
+        Args:
+            joystick_driver: Object implementing :class:`JoystickDriver`.
+            **kwargs: Extra :class:`JoystickDevice` options (e.g.
+                ``emulate_digital``, ``digital_threshold``).
+
+        Returns:
+            JoystickDevice: The registered device (also stored as ``joystick_dev``).
+        """
         self.joystick_dev = JoystickDevice(joystick_driver=joystick_driver, **kwargs)
         self.register(self.joystick_dev)
         return self.joystick_dev
@@ -657,7 +849,9 @@ class Runtime:
             entry[0](timer_obj)
         # Sync QUIT from inside a service tick sets ``_pending_teardown`` and
         # must run after all tick callbacks (including refresh) for this fire.
-        if self._pending_teardown:
+        # When ``run_forever`` is blocking, leave teardown to its ``finally`` —
+        # stopping the timer here wedges the keep-alive ``sleep_ms``.
+        if self._pending_teardown and not self._blocking_run_forever:
             self._try_perform_teardown()
 
     def on_tick(self, callback, *, period, async_=False):
@@ -722,12 +916,11 @@ class Runtime:
         return _DisplayRefreshPaused(self)
 
     def _wire_display_refresh(self, refresh_period):
-        display = self._display
-        if display is None:
+        if not self._displays:
             return
         # Auto-service the shared timer (poll/pump/drain + device dispatch) even
-        # when the display needs no periodic refresh, so input and QUIT work in
-        # the canonical no-loop idiom. Always armed — including under test mode,
+        # when no display needs periodic refresh, so input and QUIT work in the
+        # canonical no-loop idiom. Always armed — including under test mode,
         # since the harness now relies on it too; apps that poll() themselves
         # make it back off (``_app_drives_poll``) and GUI layers via
         # ``_refresh_claim``.
@@ -741,8 +934,9 @@ class Runtime:
                 return
         except ImportError:
             pass
+        needs = any(getattr(d, "needs_refresh", False) for d in self._displays)
         if refresh_period is None:
-            wire = bool(getattr(display, "needs_refresh", False))
+            wire = needs
             period = DEFAULT_REFRESH_MS
         else:
             refresh_period = int(refresh_period)
@@ -754,7 +948,11 @@ class Runtime:
         def _show(timer_obj):
             if self._refresh_paused:
                 return
-            display.show(timer_obj)
+            for display in self._displays:
+                if getattr(display, "needs_refresh", False) and callable(
+                    getattr(display, "show", None)
+                ):
+                    display.show(timer_obj)
 
         if self._timer_async and not self._event_loop_running():
             self._pending_async_refresh = (_show, period)
@@ -788,7 +986,7 @@ class Runtime:
         )
 
     def _install_default_quit(self):
-        display = self._display
+        display = self.primary
         if display is None or not callable(getattr(display, "quit", None)):
             return
         # Quit side effects run from _handle_quit when devices emit QUIT.
@@ -911,9 +1109,13 @@ class Runtime:
         # tick callback (refresh / device poll / GUI task handler) touches freed
         # display resources during teardown.
         self.stop_timer()
-        display = self._display
-        if display is not None and callable(getattr(display, "quit", None)):
-            display.quit()
+        for display in tuple(self._displays):
+            if callable(getattr(display, "quit", None)):
+                try:
+                    display.quit()
+                except Exception:
+                    pass
+        self._displays.clear()
 
     def _register_atexit(self):
         """Run a clean shutdown when the interpreter exits.

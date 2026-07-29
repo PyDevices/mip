@@ -2,7 +2,19 @@
 #
 # SPDX-License-Identifier: MIT
 """
-multimer — cross-platform machine.Timer for CPython, MicroPython, and CircuitPython.
+multimer — cross-platform ``machine.Timer`` for CPython, MicroPython, and CircuitPython.
+
+Public surface::
+
+    from multimer import Timer, AsyncTimer, schedule, sleep_ms, ticks_ms
+    from multimer import ticks_add, ticks_diff, ticks_less, monotonic, uses_signals
+
+``Timer`` selects a platform backend (librt, win32 APC, SDL2, threading, or
+``machine.Timer``). On async-only hosts (PyScript / Jupyter), ``Timer`` is an
+alias of :class:`AsyncTimer`. Soft callbacks (``hard=False``) use
+:func:`schedule`; on signal backends that already deliver on main, soft does
+not postpone the callback (coalesce/gap still apply). See also:
+https://pydisplay.readthedocs.io/en/latest/concepts/multimer/
 """
 
 from ._async_timer import AsyncTimer
