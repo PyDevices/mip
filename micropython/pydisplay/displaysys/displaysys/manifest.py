@@ -5,4 +5,5 @@ metadata(
     license="MIT",
     pypi_publish="displaysys",
 )
+require("eventsys")
 package("displaysys")
