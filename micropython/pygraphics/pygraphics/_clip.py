@@ -190,6 +190,64 @@ class ClippedCanvas:
             buf = crop_buffer(buf, w, dx, dy, hit.w, hit.h, bpp)
         return blit_transparent(self._canvas, buf, hit.x, hit.y, hit.w, hit.h, key)
 
+    def text(self, s, x, y, c=1, scale=1, inverted=False, font_data=None, height=8):
+        """Draw romfont text clipped to this region.
+
+        Glyphs are rendered via :meth:`fill_rect` on ``self``, so pixels
+        outside the clip are discarded (unlike falling through to the
+        underlying canvas ``text``, which draws unclipped).
+
+        Args:
+            s: Text to draw.
+            x: Left edge.
+            y: Top edge.
+            c: Foreground color.
+            scale: Glyph scale factor.
+            inverted: Mirror glyphs when True.
+            font_data: Optional romfont bytes / path.
+            height: Romfont height (8, 14, or 16).
+
+        Returns:
+            Unclipped text ``Area`` (same contract as ``FrameBuffer.text``).
+        """
+        from . import _font
+
+        return _font.text(
+            self,
+            s,
+            x,
+            y,
+            c,
+            scale=scale,
+            inverted=inverted,
+            font_data=font_data,
+            height=height,
+        )
+
+    def text8(self, s, x, y, c=1, scale=1, inverted=False, font_data=None):
+        """Draw 8px-high romfont text clipped to this region."""
+        from . import _font
+
+        return _font.text8(
+            self, s, x, y, c, scale=scale, inverted=inverted, font_data=font_data
+        )
+
+    def text14(self, s, x, y, c=1, scale=1, inverted=False, font_data=None):
+        """Draw 14px-high romfont text clipped to this region."""
+        from . import _font
+
+        return _font.text14(
+            self, s, x, y, c, scale=scale, inverted=inverted, font_data=font_data
+        )
+
+    def text16(self, s, x, y, c=1, scale=1, inverted=False, font_data=None):
+        """Draw 16px-high romfont text clipped to this region."""
+        from . import _font
+
+        return _font.text16(
+            self, s, x, y, c, scale=scale, inverted=inverted, font_data=font_data
+        )
+
 
 class ClipContext:
     """Context manager that pushes a clip rectangle onto a :class:`Draw` stack.

@@ -68,18 +68,22 @@ def text(*args, height=8, **kwargs):
 
 def text8(canvas, s, x, y, c=1, scale=1, inverted=False, font_data=None):
     """
-    Place text on the canvas with an 8 pixel high font.
-    Breaks on \n to next line.  Does not break on line going off canvas.
+    Draw a single line of text with the built-in 8-pixel font.
+
+    This helper is used throughout pydisplay examples for labels, status text,
+    and scrolling captions. The text is written into the given canvas at
+    ``(x, y)`` and returns the region that was updated so that it can be used
+    as a dirty rectangle.
 
     Args:
-        canvas (Canvas): The DisplayDriver, FrameBuffer, or other canvas-like object to draw on.
+        canvas (Canvas): The display driver, framebuffer, or other canvas-like object to draw on.
         s (str): The text to draw.
         x (int): The x position to start drawing the text.
         y (int): The y position to start drawing the text.
-        c (int): The color to draw the text in.  Default is 1.
-        scale (int): The scale factor to draw the text at.  Default is 1.
-        inverted (bool): If True, draw the text inverted.  Default is False.
-        font_data (str | byterray): The path to the font .bin file or memoryview.  Default is None.
+        c (int): The color to draw the text in. Default is ``1``.
+        scale (int): The scale factor to draw the text at. Default is ``1``.
+        inverted (bool): If ``True``, draw the text inverted. Default is ``False``.
+        font_data (str | byterray): Path to a font file or memoryview. Default is ``None``.
 
     Returns:
         Area: The area that was drawn to.
@@ -158,14 +162,17 @@ def text16(canvas, s, x, y, c=1, scale=1, inverted=False, font_data=None):
 
 class Font:
     """
-    A class to read binary fonts like those found at https://github.com/spacerace/romfont
-    and draw text to a canvas.
+    Load a bundled romfont and reuse it for multiple text draws.
+
+    `Font` is useful when the same UI needs to draw several labels, scores, or
+    status strings with the same glyph set. It can load either an embedded font
+    or a custom ``.bin`` file from disk or from memory.
 
     Args:
-        font_data (str | byterray): The path to the font .bin file or memoryview.  Default is None.
-        height (int): The height of the font.  Default is None.
-        cached (bool): If True, the font file will be read into memory on init.
-            If False, the font file will be read from disk each time it is needed.
+        font_data (str | byterray): Path to a font file or memoryview. Default is ``None``.
+        height (int): The height of the font. Default is ``None``.
+        cached (bool): If ``True`` (default), read the font into memory on init.
+            If ``False``, read it from disk each time it is needed.
     """
 
     def __init__(self, font_data=None, height=None, cached=True):

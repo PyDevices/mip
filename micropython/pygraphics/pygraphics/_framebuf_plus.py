@@ -79,31 +79,25 @@ class _RGB888Format:
 
 class FrameBuffer(_FrameBuffer):
     """
-    An extension of MicroPython's framebuf.FrameBuffer that adds some useful methods for drawing shapes and text.
-    Each method returns a bounding box (x, y, w, h) of the drawn shape to indicate
-    the area of the display that was modified.  This can be used to update only the
-    modified area of the display.  Exposes attributes not exposed in the base class, such
-    as color_depth, width, height, buffer, and format.  Also adds a save method to save
-    the framebuffer to a file, and a from_file method to load a framebuffer from a file.
+    Framebuffer surface for drawing either to the display itself or to an
+    off-screen buffer.
 
-    Inherits from the bundled pure-Python ``.framebuf.FrameBuffer`` (never the
-    compiled native ``framebuf`` module, to guarantee identical behavior across
-    runtimes). Methods should return an Area object, but the MicroPython
-    framebuf module returns None, so the methods inherited from
-    framebuf.FrameBuffer are overridden to return an Area object.
+    This class preserves the standard ``framebuf`` API while adding helpers for
+    shapes, text, and image I/O. Each draw operation returns an :class:`Area`
+    describing the pixels that changed, which is ideal for dirty-rectangle
+    updates and for compositing a pre-rendered scene before pushing it to the
+    display.
+
+    Typical usage is to create a ``bytearray`` large enough for the target size,
+    draw a frame with :meth:`fill`, :meth:`fill_rect`, :meth:`circle`, or
+    :func:`text8`, then copy that buffer to a display driver or use the returned
+    ``Area`` to refresh only the changed region.
 
     Args:
-        buffer (bytearray): Framebuffer buffer
-        width (int): Width in pixels
-        height (int): Height in pixels
-        format (int): Framebuffer format
-
-    Attributes:
-        buffer (bytearray): Framebuffer buffer
-        width (int): Width in pixels
-        height (int): Height in pixels
-        format (int): Framebuffer format
-        color_depth (int): Color depth
+        buffer (bytearray): Framebuffer buffer.
+        width (int): Width in pixels.
+        height (int): Height in pixels.
+        format (int): Framebuffer format constant such as ``RGB565`` or ``RGB888``.
     """
 
     def __init__(self, buffer, width, height, format, *args, **kwargs):
@@ -176,17 +170,20 @@ class FrameBuffer(_FrameBuffer):
 
     def fill_rect(self, x, y, w, h, c):
         """
-        Fill the given rectangle with the given color.
+        Fill a rectangle with a solid color.
+
+        This is the usual primitive for clearing a region, drawing panels, or
+        staging a background before more detailed shapes or text are drawn.
 
         Args:
-            x (int): x coordinate
-            y (int): y coordinate
-            w (int): Width in pixels
-            h (int): Height in pixels
-            c (int): color
+            x (int): X coordinate of the top-left corner.
+            y (int): Y coordinate of the top-left corner.
+            w (int): Width in pixels.
+            h (int): Height in pixels.
+            c (int): Color to write.
 
         Returns:
-            (Area): Bounding box of the filled rectangle
+            Area: Bounding box of the filled rectangle.
         """
         if self._rgb888:
             _RGB888Format.fill_rect(self, x, y, w, h, c)

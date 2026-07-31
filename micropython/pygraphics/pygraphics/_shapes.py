@@ -135,17 +135,22 @@ def arc(canvas, x, y, r, a0, a1, c):
 
 def blit(canvas, source, x, y, key=-1, palette=None):
     """
-    Blit a source to the canvas at the specified x, y location.
+    Copy a source buffer or sprite onto a canvas.
+
+    This is useful for compositing an off-screen frame into the live display,
+    for scrolling text and sprite animations, and for drawing pre-rendered tiles
+    or bitmaps. The returned area is the region that was written so that it can
+    be treated as a dirty rectangle.
 
     Args:
-        source (FrameBuffer): Source FrameBuffer object.
+        source (FrameBuffer): Source framebuffer or canvas-like object.
         x (int): X-coordinate to blit to.
         y (int): Y-coordinate to blit to.
         key (int): Key value for transparency (default: -1).
         palette (Palette): Palette object for color translation (default: None).
 
     Returns:
-        (Area): The bounding box of the blitted area.
+        Area: The bounding box of the blitted area.
     """
     fast = try_fast_framebuffer_blit(canvas, source, x, y, key, palette)
     if fast is not None:
@@ -248,18 +253,20 @@ def blit_transparent(canvas, buf, x, y, w, h, key):
 
 def circle(canvas, x0, y0, r, c, f=False):
     """
-    Circle drawing function.  Will draw a single pixel wide circle
-    centered at x0, y0 and the specified r.
+    Draw a circle or filled disk centered at ``(x0, y0)``.
+
+    This is a common primitive for buttons, status indicators, animated balls,
+    and other UI ornaments. Pass ``f=True`` for a filled circle.
 
     Args:
-        x0 (int): Center x coordinate
-        y0 (int): Center y coordinate
-        r (int): Radius
-        c (int): Color
-        f (bool): Fill the circle (default: False)
+        x0 (int): Center x coordinate.
+        y0 (int): Center y coordinate.
+        r (int): Radius.
+        c (int): Color.
+        f (bool): Fill the circle (default: ``False``).
 
     Returns:
-        (Area): The bounding box of the circle.
+        Area: The bounding box of the circle.
     """
     if f:
         return _fill_circle_helper(canvas, x0, y0, r, c, 0, 0)
@@ -447,14 +454,16 @@ def ellipse(canvas, x0, y0, r1, r2, c, f=False, m=0b1111, w=None, h=None):
 
 def fill(canvas, c):
     """
-    Fill the entire canvas with a color.  Uses the canvas's fill method if available,
-    otherwise calls the fill_rect function.
+    Fill the entire canvas with a solid color.
+
+    This is the typical first step for each frame: clear the previous scene,
+    then draw the next frame on top of it.
 
     Args:
-        c (int): color.
+        c (int): Color.
 
     Returns:
-        (Area): The bounding box of the filled area.
+        Area: The bounding box of the filled area.
     """
     _do_fill(canvas, c)
     return Area(0, 0, canvas.width, canvas.height)
@@ -462,19 +471,20 @@ def fill(canvas, c):
 
 def fill_rect(canvas, x, y, w, h, c):
     """
-    Filled rectangle drawing function.  Draws a filled rectangle starting at
-    x, y and extending w, h pixels.  Uses the canvas's fill_rect method if available,
-    otherwise calls the pixel function for each pixel.
+    Draw a filled rectangle.
+
+    Use this for backgrounds, panels, status bars, and other simple UI blocks.
+    It is also the workhorse for clipping and partial redraw operations.
 
     Args:
-        x (int): X-coordinate of the top-left corner of the rectangle.
-        y (int): Y-coordinate of the top-left corner of the rectangle.
+        x (int): X-coordinate of the top-left corner.
+        y (int): Y-coordinate of the top-left corner.
         w (int): Width of the rectangle.
         h (int): Height of the rectangle.
-        c (int): color
+        c (int): Color.
 
     Returns:
-        (Area): The bounding box of the filled area.
+        Area: The bounding box of the filled area.
     """
     if y < -h or y > canvas.height or x < -w or x > canvas.width:
         return
@@ -524,20 +534,24 @@ def _gradient_lerp_color(fmt, c1, c2, t, span):
 
 def gradient_rect(canvas, x, y, w, h, c1, c2=None, vertical=True):
     """
-    Fill a rectangle with a gradient.
+    Fill a rectangle with a vertical or horizontal color ramp.
+
+    This is useful for scenery, backgrounds, and other effects where a smooth
+    transition looks better than a flat fill. The pydisplay examples use it for
+    animated skies and other stylized backdrops.
 
     Args:
-        x (int): X-coordinate of the top-left corner of the rectangle.
-        y (int): Y-coordinate of the top-left corner of the rectangle.
+        x (int): X-coordinate of the top-left corner.
+        y (int): Y-coordinate of the top-left corner.
         w (int): Width of the rectangle.
         h (int): Height of the rectangle.
         c1 (int): Color for the top or left edge (format-native).
-        c2 (int): Color for the bottom or right edge.  If None or the same as c1,
-                    fill_rect will be called instead.
-        vertical (bool): If True, the gradient will be vertical.  If False, the gradient will be horizontal.
+        c2 (int): Color for the bottom or right edge. If omitted or equal to
+            ``c1``, the helper falls back to :func:`fill_rect`.
+        vertical (bool): If ``True``, draw a vertical gradient; otherwise a horizontal one.
 
     Returns:
-        (Area): The bounding box of the filled area.
+        Area: The bounding box of the filled area.
     """
     if c2 is None or c1 == c2:
         return fill_rect(canvas, x, y, w, h, c1)
@@ -576,18 +590,20 @@ def hline(canvas, x0, y0, w, c):
 
 def line(canvas, x0, y0, x1, y1, c):
     """
-    Line drawing function.  Will draw a single pixel wide line starting at
-    x0, y0 and ending at x1, y1.
+    Draw a single-pixel line from ``(x0, y0)`` to ``(x1, y1)``.
+
+    Use this for outlines, rulers, charts, and small UI connectors where a solid
+    stroke is more appropriate than a filled shape.
 
     Args:
         x0 (int): X-coordinate of the start of the line.
         y0 (int): Y-coordinate of the start of the line.
         x1 (int): X-coordinate of the end of the line.
         y1 (int): Y-coordinate of the end of the line.
-        c (int): color.
+        c (int): Color.
 
     Returns:
-        (Area): The bounding box of the line.
+        Area: The bounding box of the line.
     """
     bx0, by0, bx1, by1 = x0, y0, x1, y1
     if x0 == x1:

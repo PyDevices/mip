@@ -10,41 +10,34 @@ Area class for defining rectangular areas.
 
 class Area:
     """
-    Represents a rectangular area defined by its position and dimensions.
+    Rectangular geometry helper used for dirty-rectangle updates, hit testing,
+    and clipping.
+
+    `Area` values are commonly returned by drawing helpers such as
+    :func:`fill_rect` and :func:`circle` and can be used to refresh only the
+    pixels that changed. They are also useful for widget hit testing, button
+    bounds, and trimming a draw operation to a sub-region of the screen.
+
+    The constructor accepts either separate ``(x, y, w, h)`` values or a single
+    tuple containing those four values.
 
     Attributes:
         x (int | float): The x-coordinate of the top-left corner of the area.
         y (int | float): The y-coordinate of the top-left corner of the area.
         w (int | float): The width of the area.
         h (int | float): The height of the area.
-
-    Methods:
-        contains(x, y): Checks if the specified point is contained within the area.
-        contains_area(other): Checks if the specified area is contained within the area.
-        intersects(other): Checks if the current Area object intersects with another Area object.
-        touches_or_intersects(other): Checks if the current Area object touches or intersects with another Area object.
-        shift(dx=0, dy=0): Returns a new Area shifted by the specified amount in the x and y directions.
-        clip(other): Clips the current Area object to the specified Area object.
-
-    Special Methods:
-        __eq__(other): Checks if the current Area object is equal to another Area object.
-        __ne__(other): Checks if the current Area object is not equal to another Area object.
-        __add__(other): Computes the union of the current Area object and another Area object.
-        __iter__(): Returns an iterator over the elements of the Area object.
-        __repr__(): Returns a string representation of the Area object.
-        __str__(): Returns a string representation of the Area object.
     """
 
     __hash__ = None
 
     def __init__(self, x, y=None, w=None, h=None):
         """
-        Initializes a new instance of the Area class.
+        Create an area from explicit coordinates or from a single ``(x, y, w, h)`` tuple.
 
         Args:
-            x (int | float | tuple): The x-coordinate of the top-left corner of the area or
-                a tuple containing the x, y, w, and h coordinates of the area.
-            y (int | float): The y-coordinate of the top-left corner of the area.
+            x (int | float | tuple): The left edge, or a tuple containing
+                ``(x, y, w, h)``.
+            y (int | float): The top edge.
             w (int | float): The width of the area.
             h (int | float): The height of the area.
         """
