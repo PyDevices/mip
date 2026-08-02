@@ -6,7 +6,7 @@ metadata(
     pypi_publish="pdwidgets",
 )
 require("eventsys")
-require("graphics", pypi="pydisplay-graphics")
+require("pygraphics")
 require("multimer")
 require("palettes")
 package("pdwidgets")
