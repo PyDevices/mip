@@ -28,7 +28,7 @@ except ImportError:
     # graphics/framebuf.py is a generated packaging artifact (gitignored) not present
     # in all deploy paths (PyScript, mip-install from GitHub, bare CP/MP without wheel).
     # Fall back to the bare framebuf module: native C on MicroPython hardware,
-    # or add_ons/framebuf.py when add_ons/ is on sys.path (PyScript, CircuitPython, etc.).
+    # or utils/framebuf.py when utils/ is on sys.path (PyScript, CircuitPython, etc.).
     from framebuf import (  # type: ignore[no-redef]
         GS2_HMSB,
         GS4_HMSB,

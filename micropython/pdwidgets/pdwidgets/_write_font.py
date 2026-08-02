@@ -25,7 +25,7 @@ See also pydisplay docs:
 
 History
 -------
-Vendored from pydisplay ``add_ons/tft_write.py`` (same Russhughes
+Vendored from pydisplay ``utils/tft_write.py`` (same Russhughes
 ``st7789_mpy`` / ``st7789py_mpy`` lineage) so pdwidgets does not depend on that
 add-on at import time.
 """

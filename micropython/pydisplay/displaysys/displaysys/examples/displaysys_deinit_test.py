@@ -11,7 +11,7 @@ else:
 if _src not in sys.path:
     sys.path.insert(0, _src)
 
-import lib.path  # noqa: F401
+import utils.path  # noqa: F401
 
 from board_config import display_drv
 
