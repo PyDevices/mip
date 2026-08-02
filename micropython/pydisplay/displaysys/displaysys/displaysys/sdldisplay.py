@@ -280,11 +280,33 @@ def _convert(e):
             e.wheel.windowID,
         )
     elif e.type in (usdl2.SDL_KEYDOWN, usdl2.SDL_KEYUP):
-        name = usdl2.SDL_GetKeyName(e.key.keysym.sym)
+        # Match browser backends: ignore OS auto-repeat KEYDOWNs. Consumers that
+        # need held-key repeat (e.g. LVGL textarea) use their own long-press path.
+        if e.type == usdl2.SDL_KEYDOWN and getattr(e.key, "repeat", 0):
+            return None
+        sym = e.key.keysym.sym
+        name = usdl2.SDL_GetKeyName(sym)
+        # Some hosts (notably WSLg/RDP) report letters as
+        # SDL_SCANCODE_TO_KEYCODE(scancode) (bit 0x40000000) instead of ASCII.
+        if isinstance(sym, int) and (sym & 0x40000000) and name:
+            if len(name) == 1:
+                sym = ord(name.lower())
+            elif name == "Space":
+                sym = 32
+            elif name == "Return":
+                sym = 13
+            elif name == "Backspace":
+                sym = 8
+            elif name == "Escape":
+                sym = 27
+            elif name == "Tab":
+                sym = 9
+            elif name == "Delete":
+                sym = 127
         evt = events.Key(
             e.type,
             name,
-            e.key.keysym.sym,
+            sym,
             e.key.keysym.mod,
             e.key.keysym.scancode,
             e.key.windowID,
@@ -445,6 +467,7 @@ class SDLDisplay(DisplayDriver):
         self._render_dirty = False
         self._show_pending = False
         self._requires_byteswap = False
+        self._frame_recorder = None
 
         # Determine the pixel format
         if color_depth == 32:
@@ -672,6 +695,94 @@ class SDLDisplay(DisplayDriver):
             return False
         return self._renderer is not None and self._window is not None
 
+    @property
+    def frame_recording(self) -> bool:
+        """True while an ffmpeg frame recorder is attached."""
+        return self._frame_recorder is not None
+
+    def open_frame_recorder(self, path, *, fps=12, width=None, height=None):
+        """Attach an ffmpeg recorder that receives RGB24 frames from ``show()``."""
+        from frame_recorder import FFmpegFrameRecorder
+
+        self.close_frame_recorder()
+        w = int(self.width * self._scale) if width is None else width
+        h = int(self.height * self._scale) if height is None else height
+        self._frame_recorder = FFmpegFrameRecorder(path, w, h, fps)
+        return self._frame_recorder
+
+    def close_frame_recorder(self):
+        """Finalize and detach the active frame recorder."""
+        recorder = self._frame_recorder
+        self._frame_recorder = None
+        if recorder is not None:
+            return recorder.close()
+        return 0
+
+    def _read_texture_rgb(self):
+        """Read the logical display texture as packed RGB24."""
+        width = self.width
+        height = self.height
+        pixels = bytearray(width * height * 3)
+        retcheck(usdl2.SDL_SetRenderTarget(self._renderer, self._buffer))
+        try:
+            usdl2.SDL_RenderReadPixels(
+                self._renderer,
+                None,
+                usdl2.SDL_PIXELFORMAT_RGB24,
+                pixels,
+                width * 3,
+            )
+        finally:
+            retcheck(usdl2.SDL_SetRenderTarget(self._renderer, None))
+        return bytes(pixels)
+
+    def _visible_rgb(self):
+        """Return the scrolled and scaled visible frame as RGB24."""
+        width = self.width
+        height = self.height
+        stride = width * 3
+        source = self._read_texture_rgb()
+
+        y_start = self.vscsad()
+        if y_start:
+            rows = []
+            rows.extend(range(self._tfa))
+            rows.extend(range(y_start, self._tfa + self._vsa))
+            rows.extend(range(self._tfa, y_start))
+            rows.extend(range(self._tfa + self._vsa, height))
+            source = b"".join(source[y * stride : (y + 1) * stride] for y in rows)
+
+        out_width = int(width * self._scale)
+        out_height = int(height * self._scale)
+        if out_width == width and out_height == height:
+            return source, width, height
+
+        integer_scale = int(self._scale)
+        if (
+            integer_scale == self._scale
+            and out_width == width * integer_scale
+            and out_height == height * integer_scale
+        ):
+            scaled = bytearray()
+            for src_y in range(height):
+                row = source[src_y * stride : (src_y + 1) * stride]
+                expanded = bytearray()
+                for src_x in range(0, stride, 3):
+                    expanded.extend(row[src_x : src_x + 3] * integer_scale)
+                scaled.extend(expanded * integer_scale)
+            return bytes(scaled), out_width, out_height
+
+        scaled = bytearray(out_width * out_height * 3)
+        for out_y in range(out_height):
+            src_y = min(height - 1, int(out_y / self._scale))
+            src_row = src_y * stride
+            out_row = out_y * out_width * 3
+            for out_x in range(out_width):
+                src_x = min(width - 1, int(out_x / self._scale)) * 3
+                dst = out_row + out_x * 3
+                scaled[dst : dst + 3] = source[src_row + src_x : src_row + src_x + 3]
+        return bytes(scaled), out_width, out_height
+
     def render(self, renderRect=None):
         """
         Composite the logical framebuffer to the window.  Called from ``show()`` when draws are pending.
@@ -716,11 +827,25 @@ class SDLDisplay(DisplayDriver):
             return
         if self._render_dirty:
             self.render()
+        recorder = self._frame_recorder
+        if recorder is not None:
+            pixels, _width, _height = self._visible_rgb()
+            recorder.write(pixels)
         usdl2.SDL_RenderPresent(self._renderer)
         self._show_pending = False
 
+    def capture_rgb(self):
+        """Return the visible window as ``(RGB24 bytes, width, height)``."""
+        if not self._sdl_active():
+            raise RuntimeError("SDL display is not active")
+        read_pixels = getattr(usdl2, "SDL_RenderReadPixels", None)
+        if read_pixels is None:
+            raise RuntimeError("usdl2 does not provide SDL_RenderReadPixels")
+        return self._visible_rgb()
+
     def _deinit(self) -> None:
         """Release this window; call ``SDL_Quit`` only when no SDLDisplay remains."""
+        self.close_frame_recorder()
         try:
             _displays.remove(self)
         except ValueError:

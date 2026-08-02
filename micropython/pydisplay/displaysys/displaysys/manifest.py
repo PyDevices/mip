@@ -1,6 +1,6 @@
 metadata(
     description="Cross-platform display drivers for MicroPython, CircuitPython, and CPython",
-    version="0.0.25",
+    version="0.0.26",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="displaysys",

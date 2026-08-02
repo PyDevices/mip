@@ -27,12 +27,12 @@ def _mp_native(f):
 
 
 def _install_byteswap():
-    """Prefer GitHub ``add_ons/byteswap`` (numpy/ulab/viper); else portable Python.
+    """Prefer GitHub ``utils/byteswap`` (numpy/ulab/viper); else portable Python.
 
     No in-tree ``@viper`` here: micropython-lib MIP packaging compiles every
     ``.py`` with ``mpy-cross`` without ``-march``, so viper/native emitters in
     this package would break the index build. Fast swap on SPI boards comes
-    from installing ``add_ons`` (GitHub MIP), not from the displaysys package.
+    from installing ``utils`` (GitHub MIP), not from the displaysys package.
     """
     try:
         from byteswap import byteswap as _byteswap_native
@@ -68,6 +68,7 @@ __all__ = [
     "color_rgb",
     "desktop_work_area",
     "env_bool",
+    "env_float",
     "env_get",
     "env_int",
     "env_set",
@@ -143,6 +144,17 @@ def env_int(name, default=0):
         return int(str(raw).strip())
     except (TypeError, ValueError):
         return int(default)
+
+
+def env_float(name, default=0.0):
+    """Read a floating-point environment variable portably."""
+    raw = _env_raw(name)
+    if raw is None:
+        return float(default)
+    try:
+        return float(str(raw).strip())
+    except (TypeError, ValueError):
+        return float(default)
 
 
 def _env_raw(name):
@@ -560,7 +572,7 @@ class DisplayDriver:
                 if _BYTESWAP_BACKEND == "pure_python":
                     print(
                         f"{self.__class__.__name__}: warning: slow byteswap fallback; "
-                        "install add_ons/byteswap (GitHub MIP) for viper/numpy swap"
+                        "install utils/byteswap (GitHub MIP) for viper/numpy swap"
                     )
 
     def __del__(self):
