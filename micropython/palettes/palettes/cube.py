@@ -20,6 +20,11 @@ from . import Palette as _Palette
 class CubePalette(_Palette):
     """Evenly spaced RGB cube palette.
 
+    This palette is useful when you want a finite, evenly distributed set of
+    colors rather than a continuous ramp. It is common for simple color pickers,
+    indicator sets, or status themes where a small number of distinct colors is
+    better than a smooth gradient.
+
     Indices traverse the cube in ``x``, then ``y``, then ``z`` order. Channel
     values are spaced from ``0`` to ``255`` inclusive.
 
@@ -32,6 +37,16 @@ class CubePalette(_Palette):
     """
 
     def __init__(self, name="", color_depth=16, swapped=False, cached=True, size=5):
+        """Create an evenly spaced RGB cube palette.
+
+        Args:
+            name: Prefix for :attr:`~palettes.Palette.name` (length suffix
+                is added).
+            color_depth: Output format; see :class:`~palettes.Palette`.
+            swapped: Byte-swap 16-bit colors when ``True``.
+            cached: Memoize index lookups when ``True`` (default).
+            size: Cube edge length. Must be ``2``, ``3``, ``4``, or ``5``.
+        """
         self._size = size
         self._length = size**3
         self._values = [round(i * (255 / (size - 1)) + 0.25) for i in range(size)]

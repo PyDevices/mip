@@ -1,6 +1,6 @@
 # palettes
 
-Color palette toolkit for [pydisplay](https://github.com/PyDevices/pydisplay) — `wheel`, `cube`, `material_design`, and named Windows-16 colors on MicroPython, CircuitPython, and CPython.
+Python-only color palette toolkit for [pydisplay](https://github.com/PyDevices/pydisplay) — `wheel`, `cube`, `material_design`, and named Windows-16 colors on MicroPython, CircuitPython, and CPython. This package has no native C extension; it is published as a pure-Python package to TestPyPI and micropython-lib / MIP.
 
 ## Install
 

@@ -20,10 +20,11 @@ from . import Palette as _Palette
 class WheelPalette(_Palette):
     """Color wheel or HSV ramp palette.
 
-    With ``saturation=None`` and ``value=None`` (the default when both are
-    omitted), indices follow a classic RGB color wheel. When either
-    ``saturation`` or ``value`` is set, indices map linearly through hue at
-    fixed saturation and value.
+    This is a good fit for animated gradients, rainbow effects, and other
+    continuous color ramps. The default wheel mode produces a smooth cycling
+    palette that can be sampled across a strip or a full-screen gradient.
+    When either ``saturation`` or ``value`` is set, indices map linearly
+    through hue at a fixed saturation and brightness for more controlled ramps.
 
     Args:
         name: Prefix for :attr:`~palettes.Palette.name` (length suffix is added).
@@ -50,6 +51,24 @@ class WheelPalette(_Palette):
         saturation=1.0,
         value=None,
     ):
+        """Create a wheel or fixed-saturation HSV ramp palette.
+
+        Args:
+            name: Prefix for :attr:`~palettes.Palette.name` (length suffix
+                is added).
+            color_depth: Output format; see :class:`~palettes.Palette`.
+            swapped: Byte-swap 16-bit colors when ``True``.
+            cached: Memoize index lookups when ``True`` (default).
+            length: Number of colors in the wheel (default ``256``).
+            saturation: HSV saturation in ``0.0``–``1.0``, or ``None`` for
+                classic wheel mode.
+            value: HSV value in ``0.0``–``1.0``, or ``None`` for classic
+                wheel mode.
+
+        Raises:
+            ValueError: If ``saturation`` or ``value`` is outside ``0``–``1``
+                in HSV mode.
+        """
         self._length = length
 
         if saturation is None and value is None:
