@@ -71,14 +71,25 @@ class Card(Widget):
         """
         bg = bg if bg is not None else parent.color_theme.surface
         fg = fg if fg is not None else parent.color_theme.on_surface
-        self.radius = radius
         self.shadow = shadow
         self._style = normalize_style(style)
         self._bg_hi = bg_hi
         self._bg_lo = bg_lo
         self._rim = rim
         super().__init__(
-            parent, x, y, w, h, align, align_to, fg, bg, visible, value, padding
+            parent,
+            x,
+            y,
+            w,
+            h,
+            align,
+            align_to,
+            fg,
+            bg,
+            visible,
+            value,
+            padding,
+            radius=radius,
         )
         self.title_label = None
         if title:

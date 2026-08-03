@@ -48,17 +48,17 @@ omit them if no `IconTheme` / icon modules are used.
 | `form_row` | `.._constants`, `..widget`, `label` |
 | `gauge` | `.._constants`, `..widget` |
 | `grid` | `.._constants`, `..widget` |
-| `icon` | `.._constants`, `..widget` |
+| `icon` | `.._constants`, `.._icon_load`, `..widget` |
 | `icon_button` | `.._constants`, `..widget`, `button`, `icon` |
-| `image` | `.._constants`, `..widget` |
+| `image` | `.._constants`, `.._icon_load`, `..widget` |
 | `keyboard` | `.._constants`, `.._util`, `..widget`, `button`, `text_input` |
-| `label` | `.._constants`, `..widget` |
+| `label` | `.._constants`, `.._write_font`, `..widget` |
 | `list_view` | `.._constants`, `..widget`, `scroll_bar` |
 | `menu` | `.._constants`, `.._util`, `..widget`, `button`, `card` |
 | `navigator` | `..widget`, `page` |
 | `number_stepper` | `.._constants`, `.._themes`, `..widget`, `icon_button`, `text_box` |
 | `page` | `..widget` |
-| `password_field` | `text_input` |
+| `password_field` | `.._constants`, `..widget`, `text_input` |
 | `pin_pad` | `.._constants`, `..widget`, `button`, `grid` |
 | `progress_bar` | `.._constants`, `..widget` |
 | `radio_button` | `.._constants`, `.._themes`, `..widget`, `radio_group`, `toggle` |

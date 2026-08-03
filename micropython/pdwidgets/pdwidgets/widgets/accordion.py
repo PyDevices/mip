@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
-"""Accordion / ExpansionPanel — header + expandable body."""
+"""Accordion — header + expandable body."""
 
 from eventsys import events
 
@@ -79,6 +79,3 @@ class Accordion(Widget):
                     x=PAD, y=y, w=self.width - 2 * PAD, align=ALIGN.TOP_LEFT, align_to=self
                 )
                 y += p["body"].height + PAD
-
-
-ExpansionPanel = Accordion

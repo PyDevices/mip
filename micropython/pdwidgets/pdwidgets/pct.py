@@ -27,7 +27,7 @@ class _Percent:
     """Base for :class:`Width` / :class:`Height`: a cached percentage of a widget dimension."""
 
     # Value-like and dynamic, so it is intentionally unhashable (mirrors
-    # ``graphics.Area``); it is never used as a set/dict key.
+    # ``pygraphics.Area``); it is never used as a set/dict key.
     __hash__ = None
 
     def __init__(self, percent, widget):

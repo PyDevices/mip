@@ -82,7 +82,3 @@ class Spinner(Widget):
         # Slightly thicker appearance: second arc one pixel in.
         if r > 3:
             self.display.framebuf.arc(cx, cy, r - 1, a0, a1, self.fg)
-
-
-# Alias from the plan.
-BusyIndicator = Spinner

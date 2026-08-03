@@ -3,26 +3,34 @@
 # SPDX-License-Identifier: MIT
 """Full-screen widget container."""
 
-from graphics import Area
+from pygraphics import Area
 
 from .display import Display
 from .widget import Widget
 
 
 class Screen(Widget):
-    """Full-screen container for a page of widgets."""
+    """Full-screen page container for grouping a coherent UI view.
+
+    A :class:`Screen` is the usual root for a page or modal surface inside a
+    :class:`Display`. It fills the display area and can expose helper children
+    such as ``top``, ``main``, and ``bottom`` when the display has split
+    regions. Applications commonly create one screen per page and swap the
+    active screen to navigate between views.
+    """
     def __init__(self, parent: Display | Widget, fg=None, bg=None, visible=True):
-        """
-        Initialize a Screen object to contain widgets.
+        """Create a full-screen container for a page of widgets.
 
         Args:
-            parent (Display): The display object that contains the screen.
-            fg (int): The foreground color of the screen.
-            bg (int): The background color of the screen.
-            visible (bool): The visibility of the screen.
+            parent (Display): The display that owns this screen.
+            fg (int): Default foreground color for child widgets.
+            bg (int): Default background color for the screen itself.
+            visible (bool): Whether the page is shown immediately.
 
-        Usage:
-            screen = Screen(display)
+        Example:
+            display = Display(display_drv, runtime)
+            screen = Screen(display, bg=theme.background)
+            Label(screen, value="Home")
         """
         super().__init__(
             parent,

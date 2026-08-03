@@ -84,7 +84,6 @@ class Button(Widget):
                 role as filling a scratch buffer with the disc color before
                 blitting a circular key).
         """
-        self.radius = radius
         self.pressed_offset = pressed_offset
         self.shadow = shadow
         self._style = normalize_style(style)
@@ -100,7 +99,19 @@ class Button(Widget):
         bg = bg if bg is not None else parent.color_theme.primary_variant
         fg = fg if fg is not None else parent.color_theme.on_primary
         super().__init__(
-            parent, x, y, w, h, align, align_to, fg, bg, visible, value, padding
+            parent,
+            x,
+            y,
+            w,
+            h,
+            align,
+            align_to,
+            fg,
+            bg,
+            visible,
+            value,
+            padding,
+            radius=radius,
         )
         face_bg = parent.color_theme.transparent if self._style == "raised" else self.bg
         if icon_file:
@@ -194,6 +205,12 @@ class Button(Widget):
 
     @backdrop.setter
     def backdrop(self, value):
+        """Set the clear color under the face, or ``None`` for parent erase.
+
+        Args:
+            value: Fill color for ``area`` before the face is painted, or
+                ``None`` to call ``parent.draw(self.area)`` instead.
+        """
         self._backdrop = value
         self.invalidate()
 

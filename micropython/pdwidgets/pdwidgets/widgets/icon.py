@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Icon display widget."""
 
-from graphics import RGB565, FrameBuffer
+from pygraphics import RGB565, FrameBuffer
 
 from .._constants import DEFAULT_PADDING
 from .._icon_load import load_framebuffer

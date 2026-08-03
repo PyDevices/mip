@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
-"""Menu / ContextMenu — popup action list (labels → callbacks)."""
+"""Menu — popup action list (labels → callbacks)."""
 
 from eventsys import events
 
@@ -96,6 +96,3 @@ class Menu(Widget):
         """Fill the scrim behind the popup menu."""
         area = area or self.area
         self.display.framebuf.fill_rect(*area, self.scrim)
-
-
-ContextMenu = Menu

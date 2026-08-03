@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Load icon / image assets into ``FrameBuffer`` instances."""
 
-from graphics import FrameBuffer
+from pygraphics import FrameBuffer
 
 
 def _from_module(mod):

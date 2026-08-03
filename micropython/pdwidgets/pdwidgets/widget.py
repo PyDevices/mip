@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Base widget class and geometry/event primitives."""
 
-from graphics import Area
+from pygraphics import Area
 
 from ._constants import ALIGN, DEFAULT_PADDING, POSITION
 from ._themes import ColorTheme
@@ -11,13 +11,18 @@ from ._util import _POINTER_EVENTS, _cond_always, _cond_pointer, _log
 
 
 class Widget:
-    """Base class for all pdwidgets UI elements.
+    """Base class for pdwidgets UI elements and simple container layouts.
 
-    Subclass :class:`Widget` for custom controls, or use it as a simple
-    container. Geometry uses relative ``x``/``y`` plus an :data:`ALIGN`
-    constant; :attr:`value` changes trigger :meth:`changed` and redraw via
-    :meth:`invalidate`. Pointer events route through :meth:`handle_event`;
-    use :meth:`add_event_cb` to register handlers.
+    Subclass :class:`Widget` to build a custom control, or use it directly as a
+    lightweight layout container. Each widget has a local geometry, an optional
+    parent/child tree, a semantic value, and a small event model. The default
+    implementation draws a solid background and leaves the interesting visuals to
+    subclasses, while the base class handles hit-testing, invalidation, and
+    child propagation.
+
+    In practice, most applications compose a tree of widgets with
+    :class:`Screen` and :class:`Display`, then use alignment and padding to
+    arrange content rather than manually calculating absolute coordinates.
     """
     next_instance_id = 0
 
@@ -35,25 +40,30 @@ class Widget:
         visible=True,
         value=None,
         padding=None,
+        radius=0,
     ):
-        """
-        The base Widget class for creating widgets.  May be used as a base class for custom widgets or
-        as a container for other widgets.
+        """Create a widget in a parent tree with optional geometry and styling.
 
         Args:
-            parent (Widget): The parent widget that contains this widget.  All widgets except the Display
-                widget must have a parent.
-            x (int): The x-coordinate of the widget.
-            y (int): The y-coordinate of the widget.
-            w (int): The width of the widget.
-            h (int): The height of the widget.
-            align (int): The alignment of the widget (default is ALIGN.TOP_LEFT).
-            align_to (Widget): The widget to align to (default is the parent widget).
-            fg (int): The foreground color of the widget (default is the parent's foreground color).
-            bg (int): The background color of the widget (default is the parent's background color).
-            visible (bool): The visibility of the widget (default is True).
-            value (str): The value of the widget (e.g., text of a label, value of a slider).
-            padding (tuple): The padding on each side of the widget (default is (2, 2, 2, 2)).
+            parent (Widget): Parent widget that owns this child. The root display
+                is the only widget that may have no parent.
+            x (int): Relative x offset from the parent or alignment anchor.
+            y (int): Relative y offset from the parent or alignment anchor.
+            w (int): Width in pixels; defaults to the parent's width.
+            h (int): Height in pixels; defaults to the parent's height.
+            align (int): Alignment constant from :data:`ALIGN`.
+            align_to (Widget): Widget used as the alignment anchor.
+            fg (int): Foreground color; falls back to the parent color.
+            bg (int): Background color; falls back to the parent color.
+            visible (bool): Whether the widget is shown immediately.
+            value: Widget value such as text, numeric state, or a model object.
+            padding (tuple): Padding applied to the widget's content area.
+            radius (int): Corner radius stored on the widget; subclasses may use
+                it when drawing rounded surfaces.
+
+        Example:
+            screen = Screen(display)
+            title = Label(screen, x=8, y=8, value="Hello")
         """
         self.id = Widget.next_instance_id  # Currently only used in debugging
         Widget.next_instance_id += 1
@@ -64,6 +74,7 @@ class Widget:
         self._visible = visible
         self._value = value  # Value of the widget (e.g., text of a label)
         self.padding = padding if padding is not None else DEFAULT_PADDING
+        self.radius = radius
 
         self.children: list[Widget] = []
         self.dirty_widgets = set()
@@ -87,9 +98,15 @@ class Widget:
         self._register_callbacks()
 
     def __str__(self):
+        """Return a short ``ID <n> <ClassName>`` label for debugging."""
         return f"ID {self.id} {self.__class__.__name__}"
 
     def __format__(self, format_spec):
+        """Format like :meth:`__str__`, applying ``format_spec`` to the class name.
+
+        Args:
+            format_spec: Format specifier applied to the class name portion.
+        """
         return f"ID {self.id} {self.__class__.__name__:{format_spec}}"
 
     def _register_callbacks(self):
@@ -98,13 +115,17 @@ class Widget:
         """
 
     def add_event_cb(self, event_type, callback, data=None):
-        """
-        Register a callback for an event type on this widget.
+        """Register an event handler for this widget.
 
         Args:
-            event_type: ``eventsys.events`` constant (e.g. ``events.MOUSEBUTTONDOWN``).
-            callback: Callable invoked as ``callback(event, data)``.
-            data: User data passed to callback; defaults to this widget.
+            event_type: ``eventsys.events`` constant such as
+                ``events.MOUSEBUTTONDOWN`` or ``events.KEYDOWN``.
+            callback: Callable invoked as ``callback(data_or_sender, event)``.
+            data: User data passed as the first callback argument; defaults to
+                the widget itself.
+
+        This is the primary way to react to pointer and keyboard input without
+        overriding :meth:`handle_event` in every subclass.
         """
         # Each item's key is the callback and value is the optional data.  If the event_type is not found,
         # add it to the dictionary with the callback and data.
@@ -126,23 +147,22 @@ class Widget:
             self._event_callbacks[event_type].pop(callback, None)
 
     def handle_event(self, event, condition=None, point=None):
-        """
-        Handle an event and propagate it to child widgets.
+        """Dispatch an event through the widget tree.
 
-        Subclasses that need to handle events should override this method and
-        call it to propagate the event to children.
-
-        The default ``condition`` is a module-level function (not a per-call
-        closure), and for pointer events the pointer is translated to display
-        coordinates once per dispatch rather than once per child.
+        The default implementation walks the children in order, checks whether
+        each child should receive the event, and invokes any registered callbacks
+        for that event type. Pointer events are translated to display
+        coordinates once per dispatch so child widgets can reason about screen
+        positions consistently.
 
         Args:
             event (Event): The event to handle.
             condition (callable): ``condition(child, event, point)`` returning
-                True when the event should be delivered to ``child``. Defaults
-                to a pointer-hit test for mouse events, else always True.
-            point (tuple): Pre-translated pointer position, shared across the
-                recursion for pointer events.
+                ``True`` when the event should reach ``child``. The default
+                uses pointer hit-testing for mouse/touch events and falls back to
+                unconditional delivery for keyboard and other events.
+            point (tuple): Pre-translated pointer position shared across the
+                recursive walk.
         """
         if condition is None:
             if event.type in _POINTER_EVENTS:
@@ -378,6 +398,17 @@ class Widget:
             for child in self.children:
                 child.invalidate()
 
+    def remove(self):
+        """Detach this widget from its parent (no-op if already detached)."""
+        parent = self._parent
+        if parent is not None:
+            parent.remove_child(self)
+
+    def clear(self):
+        """Remove all child widgets via :meth:`remove_child`."""
+        for child in list(self.children):
+            self.remove_child(child)
+
     def remove_child(self, widget):
         """Removes a child widget from the current widget.
 
@@ -401,17 +432,18 @@ class Widget:
         self._change_callback = callback
 
     def set_position(self, x=None, y=None, w=None, h=None, align=None, align_to=None):
-        """
-        Update any subset of the widget's geometry and re-layout.
+        """Update a subset of the widget's geometry and relayout state.
 
-        Only the arguments that are not ``None`` are changed. Changing geometry
-        invalidates the parent so the affected area is redrawn.
+        Only the arguments that are not ``None`` are changed. Geometry changes
+        invalidate the parent so the affected area is redrawn on the next tick.
+        This is the preferred way to reposition or resize widgets after they
+        have already been created.
 
         Args:
             x (int): New relative x-coordinate.
             y (int): New relative y-coordinate.
-            w (int): New width.
-            h (int): New height.
+            w (int): New width in pixels.
+            h (int): New height in pixels.
             align (int): New ``ALIGN`` constant.
             align_to (Widget): New widget to align against.
         """

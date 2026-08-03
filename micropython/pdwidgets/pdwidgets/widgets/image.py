@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Raster image widget."""
 
-from graphics import RGB565, FrameBuffer
+from pygraphics import RGB565, FrameBuffer
 
 from .._constants import DEFAULT_PADDING
 from .._icon_load import load_framebuffer
@@ -108,7 +108,7 @@ class Image(Widget):
                 self.display.framebuf.blit(fbuf, px, py)
             return
         # Monochrome: recolor like Icon
-        from graphics import RGB565 as _RGB  # local; palette buffer
+        from pygraphics import RGB565 as _RGB  # local; palette buffer
 
         pal = FrameBuffer(memoryview(bytearray(4)), 2, 1, _RGB)
         key = -1

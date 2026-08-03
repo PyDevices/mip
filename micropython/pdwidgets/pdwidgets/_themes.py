@@ -36,19 +36,20 @@ class IconTheme:
     _menu = "menu_"
 
     def __init__(self, path=None):
-        """
-        Manage the curated icon set shipped as Python modules under
-        ``pdwidgets.icons``.
+        """Create an icon theme that resolves shipped ``pdwidgets.icons`` modules.
 
         Module stems look like ``home_filled_36dp`` (sizes from
-        :data:`ICON_SIZE`: 18, 24, 36, 48). ``path`` is accepted for
-        compatibility and ignored — icons are always loaded by module name.
+        :data:`~pdwidgets.ICON_SIZE`: 18, 24, 36, 48). Access icons via
+        attribute callables such as ``icon_theme.home(ICON_SIZE.LARGE)``.
 
-        Usage::
+        Args:
+            path: Accepted for call-site compatibility and ignored; icons are
+                always loaded by module name.
 
-            from pdwidgets import IconTheme, ICON_SIZE, IconButton
-            icon_theme = IconTheme()
-            IconButton(screen, icon_file=icon_theme.home(ICON_SIZE.LARGE))
+        Example:
+            >>> from pdwidgets import IconTheme, ICON_SIZE, IconButton
+            >>> icon_theme = IconTheme()
+            >>> IconButton(screen, icon_file=icon_theme.home(ICON_SIZE.LARGE))
         """
         del path  # retained for call-site compatibility
 
@@ -59,6 +60,19 @@ class IconTheme:
         return f"{self._pkg}.{stem}"
 
     def __getattr__(self, name):
+        """Return a ``(size) -> module_path`` callable for a named icon.
+
+        Args:
+            name: Icon stem without size or ``dp`` suffix (for example
+                ``"home"``, ``"menu"``, ``"close"``).
+
+        Returns:
+            A callable that takes an :data:`~pdwidgets.ICON_SIZE` value and
+            returns the fully qualified icon module path.
+
+        Raises:
+            AttributeError: If ``name`` is private (starts with ``_``).
+        """
         if name.startswith("_"):
             raise AttributeError(name)
         return lambda size: self._icon(name, size)
@@ -87,6 +101,12 @@ class ColorTheme:
     """
 
     def __init__(self, pal):
+        """Build semantic color slots from a palette's ``color565`` converter.
+
+        Args:
+            pal: A :class:`~palettes.Palette` (or compatible) object used only
+                for ``color565`` conversion and byteswap handling.
+        """
         c = pal.color565
         # Neutrals
         self.background = c(0xF2EEE3)  # warm cream page
@@ -113,7 +133,7 @@ class ColorTheme:
         self.on_success = c(0xFFFFFF)
         self.transparent = False
         # Priority B controls (map widgets to these; no hard-coded RGB)
-        # Chip / Tag compact filters
+        # Chip compact filters
         self.chip = self.surface_variant
         self.chip_selected = self.primary
         self.on_chip = self.on_surface

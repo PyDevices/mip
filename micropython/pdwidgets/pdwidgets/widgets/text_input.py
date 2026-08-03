@@ -50,10 +50,23 @@ class TextInput(Widget):
         h = h or text_height + 3 * PAD
         self.hint = hint
         self.text_height = text_height
-        self.radius = radius
         self.max_length = max_length
         self.focused = False
-        super().__init__(parent, x, y, w, h, align, align_to, fg, bg, visible, value, padding)
+        super().__init__(
+            parent,
+            x,
+            y,
+            w,
+            h,
+            align,
+            align_to,
+            fg,
+            bg,
+            visible,
+            value,
+            padding,
+            radius=radius,
+        )
         self.display.focus_manager.register(self)
 
     def _register_callbacks(self):

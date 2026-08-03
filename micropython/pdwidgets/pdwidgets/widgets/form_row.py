@@ -36,8 +36,6 @@ class FormRow(Widget):
 
             row = FormRow(card, label="Wi-Fi", y=y)
             Switch(row, align=ALIGN.RIGHT, value=True)
-
-        ``ListTile`` is an alias of this class.
         """
         w = w or parent.width
         h = h or ICON_SIZE.LARGE + PAD
@@ -66,6 +64,3 @@ class FormRow(Widget):
         if self._layout_ready and child is not self.label_widget:
             self.trailing = child
             child.set_position(align=ALIGN.RIGHT, x=-PAD, align_to=self)
-
-
-ListTile = FormRow

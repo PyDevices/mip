@@ -33,7 +33,7 @@ Timer architecture:
 """
 
 from eventsys import events
-from graphics import Area
+from pygraphics import Area
 
 from . import pct
 from ._constants import (
@@ -54,14 +54,12 @@ from .widget import Widget
 DEBUG = False  #: When ``True``, enable extra debug logging in pdwidgets.
 MARK_UPDATES = False  #: When ``True``, draw a colored border around flushed areas.
 
-# Widget / alias name -> (import path, attribute). Core names live above.
+# Widget name -> (import path, attribute). Core names live above.
 _LAZY = {
     "Accordion": ("pdwidgets.widgets.accordion", "Accordion"),
     "AppBar": ("pdwidgets.widgets.app_bar", "AppBar"),
-    "Arc": ("pdwidgets.widgets.gauge", "Arc"),
     "Badge": ("pdwidgets.widgets.badge", "Badge"),
     "BottomSheet": ("pdwidgets.widgets.bottom_sheet", "BottomSheet"),
-    "BusyIndicator": ("pdwidgets.widgets.spinner", "BusyIndicator"),
     "Button": ("pdwidgets.widgets.button", "Button"),
     "Card": ("pdwidgets.widgets.card", "Card"),
     "Chart": ("pdwidgets.widgets.chart", "Chart"),
@@ -69,14 +67,12 @@ _LAZY = {
     "Chip": ("pdwidgets.widgets.chip", "Chip"),
     "ColorPicker": ("pdwidgets.widgets.color_picker", "ColorPicker"),
     "Column": ("pdwidgets.widgets.column", "Column"),
-    "ContextMenu": ("pdwidgets.widgets.menu", "ContextMenu"),
     "DatePicker": ("pdwidgets.widgets.date_picker", "DatePicker"),
     "Dialog": ("pdwidgets.widgets.dialog", "Dialog"),
     "DigitalClock": ("pdwidgets.widgets.digital_clock", "DigitalClock"),
     "Divider": ("pdwidgets.widgets.divider", "Divider"),
     "Drawer": ("pdwidgets.widgets.drawer", "Drawer"),
     "Dropdown": ("pdwidgets.widgets.dropdown", "Dropdown"),
-    "ExpansionPanel": ("pdwidgets.widgets.accordion", "ExpansionPanel"),
     "Form": ("pdwidgets.widgets.form", "Form"),
     "FormRow": ("pdwidgets.widgets.form_row", "FormRow"),
     "Gauge": ("pdwidgets.widgets.gauge", "Gauge"),
@@ -86,7 +82,6 @@ _LAZY = {
     "Image": ("pdwidgets.widgets.image", "Image"),
     "Keyboard": ("pdwidgets.widgets.keyboard", "Keyboard"),
     "Label": ("pdwidgets.widgets.label", "Label"),
-    "ListTile": ("pdwidgets.widgets.form_row", "ListTile"),
     "ListView": ("pdwidgets.widgets.list_view", "ListView"),
     "Menu": ("pdwidgets.widgets.menu", "Menu"),
     "Navigator": ("pdwidgets.widgets.navigator", "Navigator"),
@@ -104,9 +99,7 @@ _LAZY = {
     "Slider": ("pdwidgets.widgets.slider", "Slider"),
     "Spinner": ("pdwidgets.widgets.spinner", "Spinner"),
     "Switch": ("pdwidgets.widgets.switch", "Switch"),
-    "TabBar": ("pdwidgets.widgets.tab_view", "TabBar"),
     "TabView": ("pdwidgets.widgets.tab_view", "TabView"),
-    "Tag": ("pdwidgets.widgets.chip", "Tag"),
     "TextBox": ("pdwidgets.widgets.text_box", "TextBox"),
     "TextInput": ("pdwidgets.widgets.text_input", "TextInput"),
     "Toast": ("pdwidgets.widgets.toast", "Toast"),
@@ -141,6 +134,17 @@ __all__ += list(_LAZY.keys())
 
 
 def __getattr__(name):
+    """Lazily import a widget class listed in ``_LAZY``.
+
+    Args:
+        name: Public widget name (for example ``"Button"``).
+
+    Returns:
+        The resolved class or object.
+
+    Raises:
+        AttributeError: If ``name`` is not a known lazy export.
+    """
     spec = _LAZY.get(name)
     if spec is None:
         raise AttributeError(f"module 'pdwidgets' has no attribute {name!r}")
@@ -152,4 +156,5 @@ def __getattr__(name):
 
 
 def __dir__():
+    """Return sorted public names including lazy widget exports."""
     return sorted(set(__all__) | set(globals().keys()))

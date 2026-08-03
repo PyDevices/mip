@@ -38,7 +38,6 @@ class SegmentedControl(Widget):
         """Exclusive segments; ``value`` is the selected index."""
         self.labels = list(labels or ["A", "B"])
         self.text_height = text_height
-        self.radius = radius
         self._style = normalize_style(style)
         self._bg_hi = bg_hi
         self._bg_lo = bg_lo
@@ -49,7 +48,19 @@ class SegmentedControl(Widget):
         bg = bg if bg is not None else parent.color_theme.segment
         fg = fg if fg is not None else parent.color_theme.on_segment
         super().__init__(
-            parent, x, y, w, h, align, align_to, fg, bg, visible, value, padding
+            parent,
+            x,
+            y,
+            w,
+            h,
+            align,
+            align_to,
+            fg,
+            bg,
+            visible,
+            value,
+            padding,
+            radius=radius,
         )
 
     @property

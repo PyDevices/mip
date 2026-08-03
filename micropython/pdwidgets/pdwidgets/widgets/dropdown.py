@@ -68,10 +68,23 @@ class Dropdown(Widget):
         fg = fg if fg is not None else parent.color_theme.on_surface
         w = w or ICON_SIZE.LARGE * 4
         h = h or ICON_SIZE.LARGE
-        self.radius = radius
         if value is None and self.options:
             value = self.options[0]
-        super().__init__(parent, x, y, w, h, align, align_to, fg, bg, visible, value, padding)
+        super().__init__(
+            parent,
+            x,
+            y,
+            w,
+            h,
+            align,
+            align_to,
+            fg,
+            bg,
+            visible,
+            value,
+            padding,
+            radius=radius,
+        )
         self._open = False
         self._open_event = None
         self._arrow = Icon(

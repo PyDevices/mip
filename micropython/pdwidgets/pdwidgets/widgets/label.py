@@ -117,7 +117,7 @@ class Label(Widget):
         ``font_data``). Defaults to measuring :attr:`value`.
 
         Newlines are not special-cased (same contract as
-        ``graphics.Font.text_width`` / ``write_width``).
+        ``pygraphics.Font.text_width`` / ``write_width``).
 
         Args:
             text (str | None): String to measure; ``None`` uses ``self.value``.
@@ -132,7 +132,7 @@ class Label(Widget):
             from .._write_font import write_width
 
             return int(write_width(self._font, s))
-        from graphics import Font
+        from pygraphics import Font
 
         cached = getattr(self, "_measure_font", None)
         if (

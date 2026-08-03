@@ -47,7 +47,6 @@ class Toast(Widget):
         bg = bg if bg is not None else theme.on_surface
         fg = fg if fg is not None else theme.surface
         self.duration_ms = duration_ms
-        self.radius = radius
         self._task = None
         self._hide_at = 0
         super().__init__(
@@ -63,6 +62,7 @@ class Toast(Widget):
             visible,
             value,
             padding,
+            radius=radius,
         )
         self.set_position(y=-PAD * 3)
         self.message = Label(

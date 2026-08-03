@@ -173,7 +173,3 @@ class TabView(Widget):
     def pages(self):
         """List of :class:`Page` widgets, one per tab."""
         return list(self._pages)
-
-
-# Alias used in the plan / docs.
-TabBar = TabView

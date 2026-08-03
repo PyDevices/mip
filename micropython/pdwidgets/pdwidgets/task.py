@@ -28,6 +28,12 @@ class Task:
     """
 
     def __init__(self, callback, delay):
+        """Schedule the first run ``delay`` ms from now.
+
+        Args:
+            callback: Zero-argument callable to invoke on each run.
+            delay: Interval between runs, in milliseconds.
+        """
         self.callback = callback
         self.delay = delay
         self.next_run = ticks_add(ticks_ms(), delay)

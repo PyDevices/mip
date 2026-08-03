@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
-"""Arc gauge widget."""
+"""Gauge widget (arc / dial)."""
 
 from .._constants import ICON_SIZE, TEXT_SIZE
 from ..widget import Widget
@@ -33,8 +33,6 @@ class Gauge(Widget):
 
         Draws a background track arc and a value arc. Optional center ``label``
         (string) is drawn with the romfont when set.
-
-        ``Arc`` is an alias of this class.
         """
         size = w or h or ICON_SIZE.XLARGE * 2
         w = w or size
@@ -79,6 +77,3 @@ class Gauge(Widget):
         self.display.framebuf.text(
             text, cx - tw // 2, cy - th // 2, self.color_theme.on_surface, height=th
         )
-
-
-Arc = Gauge

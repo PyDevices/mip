@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
-"""Chip / Tag — compact selectable filter chip (Badge stays status-only)."""
+"""Chip — compact selectable filter chip (Badge stays status-only)."""
 
 from eventsys import events
 
@@ -38,7 +38,6 @@ class Chip(Widget):
         """Selectable filter chip; ``value`` is selected bool."""
         self.label = label
         self.text_height = text_height
-        self.radius = radius
         self._style = normalize_style(style)
         self._bg_hi = bg_hi
         self._bg_lo = bg_lo
@@ -48,7 +47,19 @@ class Chip(Widget):
         bg = bg if bg is not None else parent.color_theme.chip
         fg = fg if fg is not None else parent.color_theme.on_chip
         super().__init__(
-            parent, x, y, w, h, align, align_to, fg, bg, visible, value, padding
+            parent,
+            x,
+            y,
+            w,
+            h,
+            align,
+            align_to,
+            fg,
+            bg,
+            visible,
+            value,
+            padding,
+            radius=radius,
         )
 
     @property
@@ -93,6 +104,3 @@ class Chip(Widget):
         tx = pa.x + (pa.w - tw) // 2
         ty = pa.y + (pa.h - self.text_height) // 2
         self.display.framebuf.text(self.label, tx, ty, ink, height=self.text_height)
-
-
-Tag = Chip
