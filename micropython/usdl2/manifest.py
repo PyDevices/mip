@@ -1,8 +1,8 @@
 metadata(
     description="Pure-Python SDL2 subset for MicroPython/CircuitPython/CPython; import as usdl2",
-    version="0.0.12",
+    version="0.0.14",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
-    pypi_publish="usdl2-py",
+    pypi_publish="usdl2",
 )
 module("usdl2.py")

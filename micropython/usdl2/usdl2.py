@@ -5,7 +5,7 @@
 Pure-Python ``usdl2`` fallback: an **SDL2 subset for Python**.
 
 Used when the native C ``usdl2`` module is unavailable. Must stay in lockstep
-with the C sources in this repo (see ``include/usdl2_module_globals.inc`` and
+with the C sources in this repo (see ``src/usdl2_module_globals.inc`` and
 ``src/usdl2_cpy.c`` / ``src/usdl2_mp.c``).
 
 Hard rule — **SDL2 symbols only**:
@@ -87,6 +87,28 @@ SDL_INIT_EVENTS = const(0x00004000)
 SDL_INIT_EVERYTHING = const(0x0000000F)
 SDL_INIT_NOPARACHUTE = const(0x00100000)
 
+# SDL_AudioFormat values
+AUDIO_U8 = const(0x0008)
+AUDIO_S8 = const(0x8008)
+AUDIO_U16LSB = const(0x0010)
+AUDIO_S16LSB = const(0x8010)
+AUDIO_U16MSB = const(0x1010)
+AUDIO_S16MSB = const(0x9010)
+AUDIO_S32LSB = const(0x8020)
+AUDIO_S32MSB = const(0x9020)
+AUDIO_F32LSB = const(0x8120)
+AUDIO_F32MSB = const(0x9120)
+if sys.byteorder == "little":
+    AUDIO_U16SYS = AUDIO_U16LSB
+    AUDIO_S16SYS = AUDIO_S16LSB
+    AUDIO_S32SYS = AUDIO_S32LSB
+    AUDIO_F32SYS = AUDIO_F32LSB
+else:
+    AUDIO_U16SYS = AUDIO_U16MSB
+    AUDIO_S16SYS = AUDIO_S16MSB
+    AUDIO_S32SYS = AUDIO_S32MSB
+    AUDIO_F32SYS = AUDIO_F32MSB
+
 # SDL_Texture values
 SDL_TEXTUREACCESS_STATIC = const(0)
 SDL_TEXTUREACCESS_STREAMING = const(1)
@@ -100,7 +122,9 @@ SDL_BLENDMODE_MOD = const(4)
 SDL_BLENDMODE_MUL = const(5)
 
 # SDL_Event types (not complete)
-SDL_QUIT = const(0x100)  # User clicked the window close button
+SDL_QUIT = const(0x100)  # User-requested quit
+SDL_WINDOWEVENT = const(0x200)  # Window state change
+SDL_WINDOWEVENT_CLOSE = const(0xE)  # Window close requested
 SDL_KEYDOWN = const(0x300)  # Key pressed
 SDL_KEYUP = const(0x301)  # Key released
 SDL_MOUSEMOTION = const(0x400)  # Mouse moved
@@ -315,6 +339,24 @@ def SDL_Point(x=0, y=0):
     return struct.pack("<ii", x, y)
 
 
+def SDL_AudioSpec(freq=0, format=0, channels=0, samples=0):
+    """Return a packed SDL_AudioSpec with a NULL callback for queued audio."""
+    return bytearray(
+        struct.pack(
+            "@iHBBHHIPP",
+            freq,
+            format,
+            channels,
+            0,
+            samples,
+            0,
+            0,
+            0,
+            0,
+        )
+    )
+
+
 ###############################################################################
 #                          SDL_Event / subviews                               #
 ###############################################################################
@@ -503,6 +545,11 @@ class _SubView:
     def hat(self):
         return self._event._data[self._base + 4]
 
+    @property
+    def event(self):
+        """SDL_WindowEvent.event (Uint8) at union+4."""
+        return self._event._data[self._base + 4]
+
 
 class SDL_Event:
     """
@@ -553,6 +600,7 @@ class SDL_Event:
     jhat = motion
     jbutton = motion
     tfinger = motion
+    window = motion
 
 
 ###############################################################################
@@ -570,10 +618,10 @@ if sys.implementation.name == "micropython" and sys.platform != "win32":
 
 # (name, return type, arg types) using modffi's struct-like type codes; see
 # cmods/micropython/ports/unix/modffi.c. Buffer-taking functions (SDL_PollEvent,
-# SDL_UpdateTexture, SDL_GetDisplayUsableBounds, SDL_GetDesktopDisplayMode) are
-# bound under a private name and wrapped below so callers can pass an SDL_Event
-# or any bytes-like object directly, matching usdl2_cpy.c's PyObject_GetBuffer()
-# flexibility.
+# SDL_UpdateTexture, SDL_RenderReadPixels, SDL_GetDisplayUsableBounds,
+# SDL_GetDesktopDisplayMode) are bound under a private name and wrapped below
+# so callers can pass an SDL_Event or any bytes-like object directly, matching
+# usdl2_cpy.c's PyObject_GetBuffer() flexibility.
 _FFI_FUNCS = (
     ("SDL_Init", "i", "I"),
     ("SDL_InitSubSystem", "i", "I"),
@@ -582,6 +630,7 @@ _FFI_FUNCS = (
     ("_raw_SDL_GetError", "s", ""),
     ("SDL_CreateWindow", "P", "siiiii"),
     ("SDL_DestroyWindow", "v", "P"),
+    ("SDL_GetWindowID", "I", "P"),
     ("SDL_SetWindowSize", "v", "Pii"),
     ("SDL_SetWindowResizable", "v", "Pi"),
     ("SDL_SetWindowMinimumSize", "v", "Pii"),
@@ -593,6 +642,7 @@ _FFI_FUNCS = (
     ("SDL_RenderClear", "v", "P"),
     ("SDL_RenderCopy", "v", "PPPP"),
     ("SDL_RenderCopyEx", "v", "PPPPdPi"),
+    ("_lib_SDL_RenderReadPixels", "i", "PPIPi"),
     ("SDL_RenderPresent", "v", "P"),
     ("SDL_RenderFillRect", "i", "PP"),
     ("SDL_RenderSetLogicalSize", "i", "Pii"),
@@ -609,6 +659,17 @@ _FFI_FUNCS = (
     ("_lib_SDL_UpdateTexture", "i", "PPPi"),
     ("_lib_SDL_GetDisplayUsableBounds", "i", "iP"),
     ("_lib_SDL_GetDesktopDisplayMode", "i", "iP"),
+    ("SDL_GetNumAudioDevices", "i", "i"),
+    ("_raw_SDL_GetAudioDeviceName", "s", "ii"),
+    ("_lib_SDL_OpenAudioDevice", "I", "siPPi"),
+    ("SDL_CloseAudioDevice", "v", "I"),
+    ("SDL_PauseAudioDevice", "v", "Ii"),
+    ("_lib_SDL_QueueAudio", "i", "IPI"),
+    ("_lib_SDL_DequeueAudio", "I", "IPI"),
+    ("SDL_GetQueuedAudioSize", "I", "I"),
+    ("SDL_ClearQueuedAudio", "v", "I"),
+    ("SDL_LockAudioDevice", "v", "I"),
+    ("SDL_UnlockAudioDevice", "v", "I"),
     # No real SDL_AddTimer/SDL_RemoveTimer binding here -- see the "Timer API"
     # section: SDL's timer thread is never registered with the MicroPython
     # runtime (mp_thread_init()), and calling back into the interpreter from
@@ -684,6 +745,7 @@ else:
         ("_raw_SDL_GetError", _c.c_char_p, ()),
         ("_raw_SDL_CreateWindow", _v, (_c.c_char_p, _i, _i, _i, _i, _u)),
         ("SDL_DestroyWindow", None, (_v,)),
+        ("SDL_GetWindowID", _u, (_v,)),
         ("SDL_SetWindowSize", None, (_v, _i, _i)),
         ("SDL_SetWindowResizable", None, (_v, _i)),
         ("SDL_SetWindowMinimumSize", None, (_v, _i, _i)),
@@ -695,6 +757,7 @@ else:
         ("SDL_RenderClear", _i, (_v,)),
         ("SDL_RenderCopy", _i, (_v, _v, _v, _v)),
         ("SDL_RenderCopyEx", _i, (_v, _v, _v, _v, _d, _v, _i)),
+        ("_lib_SDL_RenderReadPixels", _i, (_v, _v, _u, _v, _i)),
         ("SDL_RenderPresent", None, (_v,)),
         ("SDL_RenderFillRect", _i, (_v, _v)),
         ("SDL_RenderSetLogicalSize", _i, (_v, _i, _i)),
@@ -711,6 +774,17 @@ else:
         ("_lib_SDL_UpdateTexture", _i, (_v, _v, _v, _i)),
         ("_lib_SDL_GetDisplayUsableBounds", _i, (_i, _v)),
         ("_lib_SDL_GetDesktopDisplayMode", _i, (_i, _v)),
+        ("SDL_GetNumAudioDevices", _i, (_i,)),
+        ("_raw_SDL_GetAudioDeviceName", _c.c_char_p, (_i, _i)),
+        ("_lib_SDL_OpenAudioDevice", _u, (_c.c_char_p, _i, _v, _v, _i)),
+        ("SDL_CloseAudioDevice", None, (_u,)),
+        ("SDL_PauseAudioDevice", None, (_u, _i)),
+        ("_lib_SDL_QueueAudio", _i, (_u, _v, _u)),
+        ("_lib_SDL_DequeueAudio", _u, (_u, _v, _u)),
+        ("SDL_GetQueuedAudioSize", _u, (_u,)),
+        ("SDL_ClearQueuedAudio", None, (_u,)),
+        ("SDL_LockAudioDevice", None, (_u,)),
+        ("SDL_UnlockAudioDevice", None, (_u,)),
         # SDL_AddTimer/SDL_RemoveTimer are bound separately below (need the
         # timer trampoline's CFUNCTYPE to exist first).
     )
@@ -754,8 +828,42 @@ else:
 _lib_SDL_PumpEvents = globals()["_lib_SDL_PumpEvents"]
 _lib_SDL_PollEvent = globals()["_lib_SDL_PollEvent"]
 _lib_SDL_UpdateTexture = globals()["_lib_SDL_UpdateTexture"]
+_lib_SDL_RenderReadPixels = globals()["_lib_SDL_RenderReadPixels"]
 _lib_SDL_GetDisplayUsableBounds = globals()["_lib_SDL_GetDisplayUsableBounds"]
 _lib_SDL_GetDesktopDisplayMode = globals()["_lib_SDL_GetDesktopDisplayMode"]
+_raw_SDL_GetAudioDeviceName = globals()["_raw_SDL_GetAudioDeviceName"]
+_lib_SDL_OpenAudioDevice = globals()["_lib_SDL_OpenAudioDevice"]
+_lib_SDL_QueueAudio = globals()["_lib_SDL_QueueAudio"]
+_lib_SDL_DequeueAudio = globals()["_lib_SDL_DequeueAudio"]
+
+
+def SDL_GetAudioDeviceName(index, iscapture):
+    name = _raw_SDL_GetAudioDeviceName(index, iscapture)
+    if name is None:
+        return None
+    if isinstance(name, bytes):
+        return name.decode("utf-8")
+    return name
+
+
+def SDL_OpenAudioDevice(device, iscapture, desired, obtained, allowed_changes):
+    if isinstance(device, str):
+        device = device.encode("utf-8")
+    return _lib_SDL_OpenAudioDevice(
+        device,
+        iscapture,
+        _wrap_buf(desired),
+        _wrap_buf(obtained),
+        allowed_changes,
+    )
+
+
+def SDL_QueueAudio(device, data, length):
+    return _lib_SDL_QueueAudio(device, _wrap_buf(data), length)
+
+
+def SDL_DequeueAudio(device, data, length):
+    return _lib_SDL_DequeueAudio(device, _wrap_buf(data), length)
 
 
 ###############################################################################
@@ -916,6 +1024,14 @@ def SDL_PollEvent(event):
 
 def SDL_UpdateTexture(texture, rect, pixels, pitch):
     return _lib_SDL_UpdateTexture(texture, _wrap_buf(rect), _wrap_buf(pixels), pitch)
+
+
+def SDL_RenderReadPixels(renderer, rect, format, pixels, pitch):
+    rc = _lib_SDL_RenderReadPixels(
+        renderer, _wrap_buf(rect), format, _wrap_buf(pixels), pitch
+    )
+    if rc != 0:
+        raise RuntimeError(SDL_GetError())
 
 
 def SDL_GetDisplayUsableBounds(display_index, rect=None):
