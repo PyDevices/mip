@@ -5,10 +5,9 @@ loaders. Import as `pygraphics`.
 
 > **Pip name:** `pygraphics` · **Import:** `import pygraphics`
 
-On desktop/Android when a native wheel is available, prefer
-[`pygraphics-cmod`](https://test.pypi.org/project/pygraphics-cmod/) (same import
-name, C implementation). Both products are published from this repo and share
-the same release tag / version.
+On desktop/Android when a native wheel is available, prefer the
+TestPyPI `pygraphics` wheel (same import name, C implementation). The
+pure-Python package remains published to micropython-lib / MIP.
 
 ## Install
 
@@ -45,7 +44,7 @@ print(pygraphics.implementation())  # pygraphics_python
 
 - [API reference (native)](https://pydevices.github.io/pygraphics/api/)
 - [Source](https://github.com/PyDevices/pygraphics)
-- Related: [pygraphics-cmod](https://test.pypi.org/project/pygraphics-cmod/), [pydisplay](https://github.com/PyDevices/pydisplay)
+- Related: [pydisplay](https://github.com/PyDevices/pydisplay)
 
 ## License
 

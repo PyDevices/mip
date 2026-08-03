@@ -1,12 +1,14 @@
 # pygraphics
 
 Native and pure-Python **pygraphics** for MicroPython, CircuitPython, and CPython.
+The C module can be built into MicroPython or CircuitPython, while the pure-Python
+package is available for users who prefer not to compile their own build.
 Import as `pygraphics`.
 
 | Product | Pip / MIP | Role |
 |---------|-----------|------|
-| **pygraphics-cmod** | TestPyPI `pygraphics-cmod` | All-C extension (prefer on desktop/Android/Pyodide when available) |
-| **pygraphics** | TestPyPI `pygraphics`, MIP `pygraphics` | Pure-Python package (same public API) |
+| **pygraphics** | TestPyPI `pygraphics` | Native/C-extension wheel for CPython and for embedded builds that include the module (prefer on desktop/Android/Pyodide when available) |
+| **pygraphics** | MIP `pygraphics` | Pure-Python package for users who do not want to compile their own build (same public API) |
 
 One release tag `vX.Y.Z` publishes both products at that version.
 
@@ -18,7 +20,7 @@ One release tag `vX.Y.Z` publishes both products at that version.
 pip install \
   -i https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  pygraphics-cmod
+  pygraphics
 ```
 
 ### Pure Python (TestPyPI)
