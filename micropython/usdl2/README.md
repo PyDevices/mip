@@ -28,7 +28,7 @@ pip install \
   usdl2
 ```
 
-Requires a system or bundled **SDL2** shared library at runtime (`libSDL2.so` / `SDL2.dll`). Android APKs use wheels tagged `android_21_*` with the APK’s p4a SDL2 bootstrap — see [pydisplay_android](https://github.com/PyDevices/pydisplay_android).
+Requires a system-installed **SDL2** shared library at runtime (`libSDL2.so` / `SDL2.dll`). usdl2 wheels do not bundle SDL2. Android APKs use wheels tagged `android_21_*` with the APK’s p4a SDL2 bootstrap — see [pydisplay_android](https://github.com/PyDevices/pydisplay_android).
 
 ### Pure Python (MIP / micropython-lib)
 
@@ -105,6 +105,13 @@ Do **not** vendor SDL2 in this repo. Download official devel ZIPs from [libsdl.o
 | `python.exe` (MSVC) | `SDL2-devel-*-VC.zip` | `C:\SDL2-2.30.10-VC` (`include/` + `lib/x64/`) | that path |
 
 `micropython.mk` links MinGW SDL2 **statically**. CPython wheels/extensions need `SDL2.dll` on `PATH` at runtime (from `lib/x64` of the VC tree).
+
+If you need `SDL2.dll` for Windows runtime, use the official SDL release page:
+[SDL 2.32.4 release](https://github.com/libsdl-org/SDL/releases?page=3#release-release-2.32.4)
+
+`SDL2.dll` can be provided either by:
+- placing it on `PATH`, or
+- placing it in the current working directory of the process.
 
 From WSL, set a Windows-visible path before `pip.exe`:
 
