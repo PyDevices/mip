@@ -13,7 +13,10 @@ pip install \
   pdwidgets displaysys pygraphics eventsys multimer palettes
 ```
 
-Requires a pydisplay `board_config` and display stack.
+Requires a pydisplay-compatible `board_config` and display stack. You can use
+your own `board_config.py`, or optionally install a prebuilt one from
+micropython-hardware:
+[install-workflows](https://pydevices.github.io/micropython-hardware/install-workflows.html).
 
 ### MicroPython (MIP)
 
