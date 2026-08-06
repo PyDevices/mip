@@ -145,9 +145,11 @@ Or from [cmods](https://github.com/PyDevices/cmods): `./build_mp.sh --port unix|
 
 ```bash
 ./apply_cp_unix_usdl_patches.sh --apply
-../lv_circuitpython_mod/build_cp.sh --port unix --variant coverage
+cd ../circuitpython/ports/unix && make -j VARIANT=coverage
 ../circuitpython/ports/unix/build-coverage/micropython tools/test_usdl2.py
 ```
+
+Or from [cmods](https://github.com/PyDevices/cmods): `./build_cp.sh --port unix --variant coverage` (also applies LVGL + pygraphics).
 
 ### CPython (editable)
 
