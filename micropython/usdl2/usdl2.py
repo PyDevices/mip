@@ -606,7 +606,7 @@ if sys.implementation.name == "micropython" and sys.platform != "win32":
         pass
 
 # (name, return type, arg types) using modffi's struct-like type codes; see
-# cmods/micropython/ports/unix/modffi.c. Buffer-taking functions (SDL_PollEvent,
+# MicroPython ports/unix/modffi.c. Buffer-taking functions (SDL_PollEvent,
 # SDL_UpdateTexture, SDL_RenderReadPixels, SDL_GetDisplayUsableBounds,
 # SDL_GetDesktopDisplayMode) are bound under a private name and wrapped below
 # so callers can pass an SDL_Event or any bytes-like object directly, matching
@@ -694,7 +694,7 @@ if _use_ffi:
     _raw_SDL_GetError = globals()["_raw_SDL_GetError"]
     _raw_SDL_GetKeyName = globals()["_raw_SDL_GetKeyName"]
 
-    def _wrap_buf(buf):
+    def _wrap_buf(buf, writable=False):
         return buf
 
     # modffi's "s" return type yields None for a NULL C string; SDL never
@@ -724,9 +724,9 @@ else:
 
     # Rect/Point/Event/DisplayMode arguments are all c_void_p: SDL_Rect()/
     # SDL_Point() return plain bytes (accepted directly by ctypes for a
-    # c_void_p argument), and _wrap_buf() below adapts writable bytearrays
-    # (SDL_Event, out-params) the same way usdl2_cpy.c's PyObject_GetBuffer()
-    # accepts any bytes-like object.
+    # c_void_p argument), and _wrap_buf() below adapts other buffer-protocol
+    # objects the same way usdl2_cpy.c's PyObject_GetBuffer() does
+    # (PyBUF_SIMPLE vs PyBUF_WRITABLE via the writable= flag).
     _CTYPES_FUNCS = (
         ("SDL_Init", _i, (_u,)),
         ("SDL_InitSubSystem", _i, (_u,)),
@@ -782,18 +782,32 @@ else:
     _raw_SDL_GetKeyName = globals()["_raw_SDL_GetKeyName"]
     _raw_SDL_CreateWindow = globals()["_raw_SDL_CreateWindow"]
 
-    def _wrap_buf(buf):
+    def _wrap_buf(buf, writable=False):
         """Adapt a bytes-like object for a ctypes c_void_p argument.
 
-        Immutable ``bytes`` (e.g. from SDL_Rect()) already convert directly;
-        anything else supporting the buffer protocol (bytearray, memoryview,
-        array.array, ...) is wrapped with from_buffer() so the callee can
-        read/write through the same memory in place, matching usdl2_cpy.c's
-        PyObject_GetBuffer() flexibility.
+        Mirrors usdl2_cpy.c: ``writable=False`` is PyBUF_SIMPLE (QueueAudio,
+        UpdateTexture pixels, …); ``writable=True`` is PyBUF_WRITABLE
+        (DequeueAudio, PollEvent, out-params, …).
+
+        Immutable ``bytes`` convert directly for read-only use. Writable
+        buffers use ``from_buffer`` so the callee can mutate in place.
+        Readonly memoryviews (e.g. ``memoryview(b\"...\")`` from audiodev)
+        use ``from_buffer_copy`` under PyBUF_SIMPLE — ``from_buffer`` rejects
+        them with TypeError.
         """
-        if buf is None or isinstance(buf, (bytes, int, ctypes.Array)):
+        if buf is None or isinstance(buf, (int, ctypes.Array)):
             return buf
-        return (ctypes.c_char * len(buf)).from_buffer(buf)
+        if isinstance(buf, bytes):
+            if writable:
+                raise TypeError("underlying buffer is not writable")
+            return buf
+        arr_type = ctypes.c_char * len(buf)
+        if writable:
+            return arr_type.from_buffer(buf)
+        try:
+            return arr_type.from_buffer(buf)
+        except TypeError:
+            return arr_type.from_buffer_copy(buf)
 
     # SDL_GetError()/SDL_GetKeyName() use c_char_p (not modelled as "P" in the
     # ffi table above) so ctypes decodes the returned C string for us; wrap
@@ -842,7 +856,7 @@ def SDL_OpenAudioDevice(device, iscapture, desired, obtained, allowed_changes):
         device,
         iscapture,
         _wrap_buf(desired),
-        _wrap_buf(obtained),
+        _wrap_buf(obtained, writable=True),
         allowed_changes,
     )
 
@@ -852,7 +866,7 @@ def SDL_QueueAudio(device, data, length):
 
 
 def SDL_DequeueAudio(device, data, length):
-    return _lib_SDL_DequeueAudio(device, _wrap_buf(data), length)
+    return _lib_SDL_DequeueAudio(device, _wrap_buf(data, writable=True), length)
 
 
 ###############################################################################
@@ -1008,7 +1022,7 @@ def SDL_PumpEvents():
 def SDL_PollEvent(event):
     _sw_timers_poll()
     data = event._data if isinstance(event, SDL_Event) else event
-    return bool(_lib_SDL_PollEvent(_wrap_buf(data)))
+    return bool(_lib_SDL_PollEvent(_wrap_buf(data, writable=True)))
 
 
 def SDL_UpdateTexture(texture, rect, pixels, pitch):
@@ -1017,15 +1031,19 @@ def SDL_UpdateTexture(texture, rect, pixels, pitch):
 
 def SDL_RenderReadPixels(renderer, rect, format, pixels, pitch):
     rc = _lib_SDL_RenderReadPixels(
-        renderer, _wrap_buf(rect), format, _wrap_buf(pixels), pitch
+        renderer, _wrap_buf(rect), format, _wrap_buf(pixels, writable=True), pitch
     )
     if rc != 0:
         raise RuntimeError(SDL_GetError())
 
 
 def SDL_GetDisplayUsableBounds(display_index, rect=None):
-    return _lib_SDL_GetDisplayUsableBounds(display_index, _wrap_buf(rect))
+    return _lib_SDL_GetDisplayUsableBounds(
+        display_index, _wrap_buf(rect, writable=True)
+    )
 
 
 def SDL_GetDesktopDisplayMode(display_index, mode=None):
-    return _lib_SDL_GetDesktopDisplayMode(display_index, _wrap_buf(mode))
+    return _lib_SDL_GetDesktopDisplayMode(
+        display_index, _wrap_buf(mode, writable=True)
+    )
