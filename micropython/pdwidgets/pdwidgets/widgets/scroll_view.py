@@ -125,4 +125,4 @@ class ScrollView(Widget):
     def draw(self, area=None):
         """Draw the viewport background."""
         if self.bg is not None:
-            self.display.framebuf.fill_rect(*(area or self.area), self.bg)
+            self.display.framebuf.fill_rect(*(self.area if area is None else area), self.bg)

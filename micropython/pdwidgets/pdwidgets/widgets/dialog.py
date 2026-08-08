@@ -129,5 +129,5 @@ class Dialog(Widget):
         request fills just that sub-region with the scrim so the card's children
         are not erased.
         """
-        area = area or self.area
+        area = self.area if area is None else area
         self.display.framebuf.fill_rect(*area, self.scrim)

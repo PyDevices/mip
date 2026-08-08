@@ -74,5 +74,5 @@ class Drawer(Widget):
 
     def draw(self, area=None):
         """Fill the scrim behind the side panel."""
-        area = area or self.area
+        area = self.area if area is None else area
         self.display.framebuf.fill_rect(*area, self.scrim)

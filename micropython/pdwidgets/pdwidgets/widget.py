@@ -377,7 +377,7 @@ class Widget:
         background of the widget before drawing other elements.
         """
         if self.bg is not None:
-            area = area or self.area
+            area = self.area if area is None else area
             self.display.framebuf.fill_rect(*area, self.bg)
 
     def hide(self, hide=True):
