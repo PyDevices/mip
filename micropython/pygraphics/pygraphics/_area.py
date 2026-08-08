@@ -235,6 +235,10 @@ class Area:
             max(self.y + self.h, other.y + other.h) - min(self.y, other.y),
         )
 
+    def __bool__(self):
+        """True when the area has positive width and height."""
+        return self.w > 0 and self.h > 0
+
     def __iter__(self):
         """
         Returns an iterator over the elements of the Area object.
