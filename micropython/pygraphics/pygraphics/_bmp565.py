@@ -29,6 +29,9 @@ def read_bmp565_header(f):
     bpp = struct.unpack("<H", f.read(2))[0]
     if bpp != BMP565_BPP:
         raise ValueError("Invalid color depth")
+    compression = struct.unpack("<I", f.read(4))[0]
+    if compression not in (0, 3):  # BI_RGB or BI_BITFIELDS
+        raise ValueError("Unsupported BMP compression")
     return width, height, data_offset
 
 
@@ -46,19 +49,29 @@ def load_bmp565_buffer(f, width, height, data_offset):
     return buffer
 
 
+_BMP565_R_MASK = 0xF800
+_BMP565_G_MASK = 0x07E0
+_BMP565_B_MASK = 0x001F
+
+# BITMAPFILEHEADER (14) + BITMAPINFOHEADER (40) + three BI_BITFIELDS masks (12)
+_BMP565_DATA_OFFSET = 14 + 40 + 12
+
+
 def write_bmp565_header(f, width, height, data_size):
-    """Write the Windows BITMAPINFOHEADER for an RGB565 image."""
+    """Write the Windows BITMAPINFOHEADER for an RGB565 image using BI_BITFIELDS."""
     f.write(b"BM")
-    f.write(struct.pack("<I", 14 + 40 + data_size))
+    f.write(struct.pack("<I", _BMP565_DATA_OFFSET + data_size))
     f.write(b"\x00\x00\x00\x00")
-    f.write(struct.pack("<I", 14 + 40))
+    f.write(struct.pack("<I", _BMP565_DATA_OFFSET))
     f.write(struct.pack("<I", 40))
     f.write(struct.pack("<II", width, height))
     f.write(struct.pack("<H", 1))
     f.write(struct.pack("<H", BMP565_BPP))
-    f.write(b"\x00\x00\x00\x00")
+    f.write(struct.pack("<I", 3))  # BI_BITFIELDS
     f.write(struct.pack("<I", data_size))
     f.write(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+    # RGB565 channel masks
+    f.write(struct.pack("<III", _BMP565_R_MASK, _BMP565_G_MASK, _BMP565_B_MASK))
 
 
 def write_bmp565_rows(f, buffer, width, height):

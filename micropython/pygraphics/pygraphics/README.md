@@ -7,7 +7,7 @@ loaders. Import as `pygraphics`.
 
 On desktop/Android when a native wheel is available, prefer the
 TestPyPI `pygraphics` wheel (same import name, C implementation). The
-pure-Python package remains published to micropython-lib / MIP.
+pure-Python package is published through micropython-lib / MIP.
 
 ## Install
 
