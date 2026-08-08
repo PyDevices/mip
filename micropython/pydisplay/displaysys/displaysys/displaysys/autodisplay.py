@@ -82,6 +82,7 @@ def AutoDisplay(
 
     if host == "android":
         import usdl2
+
         from displaysys.sdldisplay import SDLDisplay
 
         return SDLDisplay(
@@ -91,9 +92,7 @@ def AutoDisplay(
             title=title,
             scale=scale,
             quiet=quiet,
-            window_flags=(
-                usdl2.SDL_WINDOW_FULLSCREEN_DESKTOP | usdl2.SDL_WINDOW_ALLOW_HIGHDPI
-            ),
+            window_flags=(usdl2.SDL_WINDOW_FULLSCREEN_DESKTOP | usdl2.SDL_WINDOW_ALLOW_HIGHDPI),
         )
 
     try:

@@ -1,6 +1,6 @@
 metadata(
     description="Cross-platform input events (PyGame/SDL2-style) with Runtime and device adapters",
-    version="0.0.34",
+    version="0.0.35",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="eventsys",
