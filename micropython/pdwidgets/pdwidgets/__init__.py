@@ -19,7 +19,7 @@ Convenience::
     import pdwidgets as pd
     pd.Button(...)  # imports widgets.button on first access
 
-See ``WIDGET_DEPS.md`` for the peer import graph.
+See ``widget-dependencies.md`` for the peer import graph.
 
 Proportional fonts:
     ``Label`` (and widgets built on it) gains proportional-font rendering when a
