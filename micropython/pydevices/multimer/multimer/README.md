@@ -2,7 +2,7 @@
 
 Cross-platform periodic timers with a `machine.Timer`-style API — sync timers, `AsyncTimer`, millisecond ticks, and sleep helpers on MicroPython, CircuitPython, and CPython.
 
-Canonical source: [micropython-hardware/lib/multimer](https://github.com/PyDevices/micropython-hardware/tree/main/lib/multimer).
+Canonical source: [pydevices/lib/multimer](https://github.com/PyDevices/pydevices/tree/main/lib/multimer).
 
 ## Install
 
@@ -97,10 +97,10 @@ Optional app keep-alive loops are available from `pydevices-eventsys`
 ## Links
 
 - [Documentation — multimer](https://pydisplay.readthedocs.io/en/latest/concepts/multimer/)
-- [Source](https://github.com/PyDevices/micropython-hardware/tree/main/lib/multimer)
-- [Issues](https://github.com/PyDevices/micropython-hardware/issues)
+- [Source](https://github.com/PyDevices/pydevices/tree/main/lib/multimer)
+- [Issues](https://github.com/PyDevices/pydevices/issues)
 - Related: `pydevices-eventsys`
 
 ## License
 
-MIT — see [LICENSE](https://github.com/PyDevices/micropython-hardware/blob/main/LICENSE).
+MIT — see [LICENSE](https://github.com/PyDevices/pydevices/blob/main/LICENSE).

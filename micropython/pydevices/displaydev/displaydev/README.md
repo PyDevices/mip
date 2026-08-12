@@ -2,7 +2,7 @@
 
 Cross-platform display drivers for MicroPython, CircuitPython, and CPython — `BusDisplay`, `SDLDisplay`, `PGDisplay`, `WinDisplay`, `PSDisplay`, `JNDisplay`, `FBDisplay`, and more behind one drawing API.
 
-Canonical source: [micropython-hardware/drivers/display/displaydev](https://github.com/PyDevices/micropython-hardware/tree/main/drivers/display/displaydev).
+Canonical source: [pydevices/drivers/display/displaydev](https://github.com/PyDevices/pydevices/tree/main/drivers/display/displaydev).
 
 ## Install
 
@@ -31,7 +31,7 @@ mip.install("displaydev", index="https://PyDevices.github.io/micropython-lib/mip
 
 ## Quick start
 
-Apps normally import a hardware-only `board_config` (from micropython-hardware / `pydevices-desktop`):
+Apps normally import a hardware-only `board_config` (from pydevices / `pydevices-desktop`):
 
 ```python
 from board_config import display_drv
@@ -59,8 +59,8 @@ runtime = eventsys.Runtime(
 `WinDisplay`→`PGDisplay`→`SDLDisplay` (desktop; Win32 first on Windows
 CPython). Explicit boards import a backend directly. Install a board package
 for MCU pins, or
-use the desktop bundle from micropython-hardware
-([install workflows](https://pydevices.github.io/micropython-hardware/install-workflows.html)).
+use the desktop bundle from pydevices
+([install workflows](https://pydevices.github.io/pydevices/install-workflows.html)).
 
 ## What you get
 
@@ -75,11 +75,11 @@ separately when the application chooses that traffic controller.
 ## Links
 
 - [Documentation — Displays](https://pydisplay.readthedocs.io/en/latest/concepts/displays/)
-- [Source](https://github.com/PyDevices/micropython-hardware/tree/main/drivers/display/displaydev)
-- [Issues](https://github.com/PyDevices/micropython-hardware/issues)
+- [Source](https://github.com/PyDevices/pydevices/tree/main/drivers/display/displaydev)
+- [Issues](https://github.com/PyDevices/pydevices/issues)
 - Related: `pydevices-events`, `pydevices-keys`, `pydevices-eventsys`,
   `pydevices-multimer`, `pydevices-pygraphics`, `pydevices-desktop`
 
 ## License
 
-MIT — see [LICENSE](https://github.com/PyDevices/micropython-hardware/blob/main/LICENSE).
+MIT — see [LICENSE](https://github.com/PyDevices/pydevices/blob/main/LICENSE).

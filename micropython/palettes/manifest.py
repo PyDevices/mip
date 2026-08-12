@@ -1,5 +1,5 @@
 metadata(
-    description="Color palette toolkit for pydisplay (wheel, cube, material_design)",
+    description="Color palette toolkit for PyDevices (wheel, cube, material_design)",
     version="0.0.8",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",

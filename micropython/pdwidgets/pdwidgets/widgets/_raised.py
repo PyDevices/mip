@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Shared top-lit raised (gradient + rim) face drawing for pdwidgets.
 
-Opt-in visual language matching pydisplay ``roku_graphics._draw_button``:
+Opt-in visual language matching pydevices-examples ``roku_graphics._draw_button``:
 vertical hi→lo gradient, soft darker rim, pressed lighting invert.
 
 Row recipes (inset + color per scanline) are cached so repeated draws of the

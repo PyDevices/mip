@@ -1,6 +1,6 @@
 # Audio drivers
 
-PCM playback and capture for [micropython-hardware](https://github.com/PyDevices/micropython-hardware)
+PCM playback and capture for [pydevices](https://github.com/PyDevices/pydevices)
 board configs. The `audiodev` package owns the portable bases; each backend is a
 standalone submodule that subclasses them. `audiodev.auto` is an optional
 selector only — backends never import it.
@@ -133,7 +133,7 @@ Verify with the real interpreters rather than by inspection — CPython accepts
 everything above:
 
 ```bash
-cd pydisplay/src
+cd pydevices-examples/src
 for rt in micropython micropython.exe circuitpython; do $rt examples/audio_out_test.py; done
 ```
 
@@ -367,7 +367,7 @@ share one session — focus and the service stay up while any owner is open.
 
 Needs pyjnius and a python-for-android service named `mediaplayback` declared
 with `:foreground:foregroundServiceType=mediaPlayback` — see
-[pydisplay_android](https://github.com/PyDevices/pydisplay_android). Off Android
+[pydevices-android-template](https://github.com/PyDevices/pydevices-android-template). Off Android
 the import is a no-op.
 
 ## Tests

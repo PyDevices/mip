@@ -7,7 +7,7 @@ displaydev.pixeldisplay — addressable LED grids (NeoPixel, DotStar, etc.).
 
 MicroPython: ``PixelFramebuffer`` (RGB888 grid + strip map) and ``PixelDisplay``
 live here.  CircuitPython board configs use
-``adafruit_pixel_framebuf.PixelFramebuffer`` with pydisplay ``PixelDisplay``.
+``adafruit_pixel_framebuf.PixelFramebuffer`` with PyDevices ``PixelDisplay``.
 """
 
 try:

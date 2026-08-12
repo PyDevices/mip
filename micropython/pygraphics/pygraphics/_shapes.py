@@ -537,7 +537,7 @@ def gradient_rect(canvas, x, y, w, h, c1, c2=None, vertical=True):
     Fill a rectangle with a vertical or horizontal color ramp.
 
     This is useful for scenery, backgrounds, and other effects where a smooth
-    transition looks better than a flat fill. The pydisplay examples use it for
+    transition looks better than a flat fill. The pydevices-examples applications use it for
     animated skies and other stylized backdrops.
 
     Args:

@@ -34,7 +34,7 @@ def _install_byteswap():
     No in-tree ``@viper`` here: micropython-lib MIP packaging compiles every
     ``.py`` with ``mpy-cross`` without ``-march``, so viper/native emitters in
     this package would break the index build. Fast swap on SPI boards comes
-    from installing micropython-hardware ``utils`` (GitHub MIP), not from the
+    from installing pydevices ``utils`` (GitHub MIP), not from the
     displaydev package.
     """
     try:

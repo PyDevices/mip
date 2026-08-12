@@ -15,17 +15,17 @@ Font modules
 Generate glyph modules with Russ Hughes's
 `write_font_converter.py <https://github.com/russhughes/st7789py_mpy/blob/master/utils/write_font_converter.py>`_
 (expects ``MAP``, ``HEIGHT``, ``MAX_WIDTH``, ``WIDTHS``, ``OFFSETS``,
-``OFFSET_WIDTH``, ``BITMAPS``). Example output lives in pydisplay's
+``OFFSET_WIDTH``, ``BITMAPS``). Example output lives in pydevices-examples's
 ``src/examples/chango/`` (``chango_16.py``, etc.).
 
-See also pydisplay docs:
+See also pydevices-examples docs:
 
-- `Drawing and fonts <https://pydevices.github.io/pydisplay/concepts/drawing-and-fonts/>`_
-- `TFT GUI / font tools <https://pydevices.github.io/pydisplay/guis/tft-gui/>`_
+- `Drawing and fonts <https://pydevices.github.io/pydevices-examples/concepts/drawing-and-fonts/>`_
+- `TFT GUI / font tools <https://pydevices.github.io/pydevices-examples/guis/tft-gui/>`_
 
 History
 -------
-Vendored from pydisplay ``utils/tft_write.py`` (same Russhughes
+Vendored from pydevices-examples ``utils/tft_write.py`` (same Russhughes
 ``st7789_mpy`` / ``st7789py_mpy`` lineage) so pdwidgets does not depend on that
 add-on at import time.
 """

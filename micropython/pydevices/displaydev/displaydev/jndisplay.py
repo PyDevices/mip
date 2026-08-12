@@ -18,7 +18,7 @@ import keys
 
 _JN_DEPS = "pip install ipywidgets ipyevents"
 
-_CSS_DISPLAY_ID = "pydisplay_jn_styles"
+_CSS_DISPLAY_ID = "pydevices_examples_jn_styles"
 
 
 def _inject_notebook_css(width, height, first_time):
@@ -33,7 +33,7 @@ def _inject_notebook_css(width, height, first_time):
     max-width: fit-content !important;
     display: inline-block !important;
 }}
-.pydisplay-jn-image {{
+.pydevices-jn-image {{
     width: {width}px !important;
     height: {height}px !important;
     max-width: {width}px !important;
@@ -44,7 +44,7 @@ def _inject_notebook_css(width, height, first_time):
     overflow: hidden !important;
     line-height: 0 !important;
 }}
-.pydisplay-jn-image img {{
+.pydevices-jn-image img {{
     width: {width}px !important;
     height: {height}px !important;
     object-fit: fill !important;
@@ -118,7 +118,7 @@ class JNDevices:
         self._pressed = set()
 
         self.image = Image(format="png")
-        self.image.add_class("pydisplay-jn-image")
+        self.image.add_class("pydevices-jn-image")
 
         self._events = Event(
             source=self.image,

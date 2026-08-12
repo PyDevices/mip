@@ -70,7 +70,7 @@ def text8(canvas, s, x, y, c=1, scale=1, inverted=False, font_data=None):
     """
     Draw a single line of text with the built-in 8-pixel font.
 
-    This helper is used throughout pydisplay examples for labels, status text,
+    This helper is used throughout pydevices-examples for labels, status text,
     and scrolling captions. The text is written into the given canvas at
     ``(x, y)`` and returns the region that was updated so that it can be used
     as a dirty rectangle.

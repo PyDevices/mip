@@ -44,7 +44,7 @@ print(pygraphics.implementation())  # pygraphics_python
 
 - [API reference (native)](https://pydevices.github.io/pygraphics/api/)
 - [Source](https://github.com/PyDevices/pygraphics)
-- Related: [pydisplay](https://github.com/PyDevices/pydisplay)
+- Related: [pydevices-examples](https://github.com/PyDevices/pydevices-examples)
 
 ## License
 

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024 Brad Barnett
 #
 # SPDX-License-Identifier: MIT
-"""Color palette toolkit for pydisplay.
+"""Color palette toolkit for PyDevices.
 
 Use this package when a UI or graphics routine needs a predictable set of
 colors rather than hard-coded values. The public API is small: call

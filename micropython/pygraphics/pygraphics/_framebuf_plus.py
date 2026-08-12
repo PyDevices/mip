@@ -40,7 +40,7 @@ except ImportError:
     )
     from framebuf import FrameBuffer as _FrameBuffer  # type: ignore[no-redef]
 
-# pydisplay extension — not in MicroPython framebuf
+# PyDevices extension — not in MicroPython framebuf
 RGB888 = 7
 
 
@@ -115,7 +115,7 @@ class FrameBuffer(_FrameBuffer):
             ValueError: If ``format`` is not a supported constant.
         """
         self._rgb888 = format == RGB888
-        # RGB888 is a pydisplay extension; base framebuf never implements it.
+        # RGB888 is a PyDevices extension; base framebuf never implements it.
         # Initialize the C extmod base as RGB565 so MicroPython does not fall back
         # to make_new with an invalid format.  Pixel ops use _RGB888Format below.
         if self._rgb888:
