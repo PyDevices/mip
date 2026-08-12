@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """PinPad — numeric button grid emitting digits into a field / callback."""
 
-from eventsys import events
+import events
 
 from .._constants import ALIGN, PAD, TEXT_SIZE
 from ..widget import Widget

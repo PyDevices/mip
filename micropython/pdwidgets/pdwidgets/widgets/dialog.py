@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Modal dialog widget."""
 
-from eventsys import events
+import events
 
 from .._constants import ALIGN, ICON_SIZE, PAD
 from .._util import _root_screen

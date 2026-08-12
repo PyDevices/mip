@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """On/off switch widget."""
 
-from eventsys import events
+import events
 
 from .._constants import ICON_SIZE
 from ..widget import Widget

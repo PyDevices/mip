@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Tab bar with per-tab content pages."""
 
-from eventsys import events
+import events
 
 from .._constants import ALIGN, ICON_SIZE, PAD, TEXT_SIZE, TEXT_WIDTH
 from ..widget import Widget

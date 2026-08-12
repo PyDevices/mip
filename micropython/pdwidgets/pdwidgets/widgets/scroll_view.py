@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """ScrollView — generic scroll container with clip + drag/wheel."""
 
-from eventsys import events
+import events
 
 from .._constants import ALIGN
 from ..widget import Widget

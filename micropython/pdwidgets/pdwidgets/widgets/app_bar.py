@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Application title bar."""
 
-from eventsys import events
+import events
 
 from .._constants import ALIGN, ICON_SIZE, PAD, TEXT_SIZE
 from .._themes import icon_theme

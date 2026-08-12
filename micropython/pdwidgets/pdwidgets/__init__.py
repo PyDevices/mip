@@ -32,7 +32,7 @@ Timer architecture:
     then ``runtime.run_forever()``.
 """
 
-from eventsys import events
+import events
 from pygraphics import Area
 
 from . import pct

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Chip — compact selectable filter chip (Badge stays status-only)."""
 
-from eventsys import events
+import events
 
 from .._constants import PAD, TEXT_SIZE, TEXT_WIDTH
 from ..widget import Widget

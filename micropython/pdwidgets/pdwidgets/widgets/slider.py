@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Slider widget."""
 
-from eventsys import events
+import events
 
 from .._constants import ALIGN, ICON_SIZE
 from ..widget import Widget

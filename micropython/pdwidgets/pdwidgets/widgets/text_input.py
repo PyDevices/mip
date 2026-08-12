@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: MIT
 """Single-line text input field."""
 
-from eventsys import events
-from eventsys.keys import Keys
+import events
+import keys
 
 from .._constants import PAD, TEXT_SIZE, TEXT_WIDTH
 from ..widget import Widget
@@ -84,10 +84,10 @@ class TextInput(Widget):
         if not self.focused or fm.focused is not self:
             return
         key = event.key
-        if key == Keys.K_BACKSPACE:
+        if key == keys.K_BACKSPACE:
             if self._value:
                 self.value = self._value[:-1]
-        elif key == Keys.K_RETURN:
+        elif key == keys.K_RETURN:
             self.display.focus_manager.blur()
             TextInput._focused = None
             self.invalidate()

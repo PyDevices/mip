@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """On-screen keyboard widget."""
 
-from eventsys import events
+import events
 
 from .._constants import ALIGN, PAD, TEXT_SIZE
 from .._util import _root_screen

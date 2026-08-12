@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Icon toggle base class."""
 
-from eventsys import events
+import events
 
 from ..widget import Widget
 from .icon_button import IconButton

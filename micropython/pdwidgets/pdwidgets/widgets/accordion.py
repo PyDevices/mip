@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Accordion — header + expandable body."""
 
-from eventsys import events
+import events
 
 from .._constants import ALIGN, PAD, TEXT_SIZE, TEXT_WIDTH
 from ..widget import Widget

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Button widget with optional icon and label."""
 
-from eventsys import events
+import events
 
 from .._constants import ALIGN, ICON_SIZE, PAD, TEXT_SIZE, TEXT_WIDTH
 from ..widget import Widget

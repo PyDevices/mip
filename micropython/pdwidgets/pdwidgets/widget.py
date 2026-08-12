@@ -118,7 +118,7 @@ class Widget:
         """Register an event handler for this widget.
 
         Args:
-            event_type: ``eventsys.events`` constant such as
+            event_type: ``events`` constant such as
                 ``events.MOUSEBUTTONDOWN`` or ``events.KEYDOWN``.
             callback: Callable invoked as ``callback(data_or_sender, event)``.
             data: User data passed as the first callback argument; defaults to
@@ -139,7 +139,7 @@ class Widget:
         Remove a previously registered event callback.
 
         Args:
-            event_type (int): ``eventsys.events`` constant the callback was
+            event_type (int): ``events`` constant the callback was
                 registered for.
             callback (callable): The callback to remove. No error if absent.
         """

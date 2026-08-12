@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Numeric stepper widget."""
 
-from eventsys import events
+import events
 
 from .._constants import ALIGN, ICON_SIZE, PAD
 from .._themes import icon_theme

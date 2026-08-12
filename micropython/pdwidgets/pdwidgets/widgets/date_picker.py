@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """DatePicker — month calendar grid; value is (y, m, d) or ISO string."""
 
-from eventsys import events
+import events
 
 from .._constants import PAD, TEXT_SIZE, TEXT_WIDTH
 from ..widget import Widget

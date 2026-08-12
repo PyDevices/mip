@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Drawer — side panel + scrim."""
 
-from eventsys import events
+import events
 
 from .._constants import ALIGN
 from .._util import _root_screen

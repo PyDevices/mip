@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """ColorPicker — compact RGB565 hue + SV picker."""
 
-from eventsys import events
+import events
 
 from .._constants import PAD
 from ..widget import Widget

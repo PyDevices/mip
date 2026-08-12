@@ -1,0 +1,85 @@
+# displaydev
+
+Cross-platform display drivers for MicroPython, CircuitPython, and CPython — `BusDisplay`, `SDLDisplay`, `PGDisplay`, `WinDisplay`, `PSDisplay`, `JNDisplay`, `FBDisplay`, and more behind one drawing API.
+
+Canonical source: [micropython-hardware/drivers/display/displaydev](https://github.com/PyDevices/micropython-hardware/tree/main/drivers/display/displaydev).
+
+## Install
+
+### CPython (TestPyPI)
+
+This package is published as a pure-Python wheel to TestPyPI.
+
+```bash
+pip install \
+  -i https://test.pypi.org/simple/ \
+  --extra-index-url https://pypi.org/simple/ \
+  pydevices-displaydev
+```
+
+Why both indexes: [two-index pip install](https://pydisplay.readthedocs.io/en/latest/publishing-micropython-lib/#two-index-pip-install-required).
+
+For desktop SDL, also install [`pydevices-desktop`](https://test.pypi.org/project/pydevices-desktop/) with the same two-index pattern (bundles `usdl2` and the desktop `board_config`). For PyGame, install `pygame-ce` from PyPI (`import pygame`).
+
+### MicroPython (MIP)
+
+```python
+import mip
+
+mip.install("displaydev", index="https://PyDevices.github.io/micropython-lib/mip/PyDevices")
+```
+
+## Quick start
+
+Apps normally import a hardware-only `board_config` (from micropython-hardware / `pydevices-desktop`):
+
+```python
+from board_config import display_drv
+
+display_drv.fill(0)
+display_drv.fill_rect(10, 10, 40, 40, 0xF800)
+display_drv.show()
+```
+
+Optional host auto-selection lives in `displaydev.auto` (never imported from the package root):
+
+```python
+from displaydev.auto import AutoDisplay
+import eventsys
+
+display_drv = AutoDisplay(width=320, height=480, scale=2.0)
+runtime = eventsys.Runtime(
+    displays=[display_drv],
+    host_read=display_drv.get_events,
+    timer_async=display_drv.requires_async_timer,
+)
+```
+
+`AutoDisplay` picks `PSDisplay` (PyScript), `JNDisplay` (Jupyter), or
+`WinDisplay`→`PGDisplay`→`SDLDisplay` (desktop; Win32 first on Windows
+CPython). Explicit boards import a backend directly. Install a board package
+for MCU pins, or
+use the desktop bundle from micropython-hardware
+([install workflows](https://pydevices.github.io/micropython-hardware/install-workflows.html)).
+
+## What you get
+
+- Unified `framebuf`-style drawing surface (`fill`, `fill_rect`, `blit_rect`, `show`, …)
+- MCU (`BusDisplay`, `FBDisplay`) and host backends (SDL, PyGame, Jupyter, PyScript)
+- `displaydev.auto.AutoDisplay` / `host_kind` for desktop-like host selection (board_config remains the app import surface)
+
+Host backends use `pydevices-events` and `pydevices-keys` for event records and
+key codes (`import events` / `import keys`). Install `pydevices-eventsys`
+separately when the application chooses that traffic controller.
+
+## Links
+
+- [Documentation — Displays](https://pydisplay.readthedocs.io/en/latest/concepts/displays/)
+- [Source](https://github.com/PyDevices/micropython-hardware/tree/main/drivers/display/displaydev)
+- [Issues](https://github.com/PyDevices/micropython-hardware/issues)
+- Related: `pydevices-events`, `pydevices-keys`, `pydevices-eventsys`,
+  `pydevices-multimer`, `pydevices-pygraphics`, `pydevices-desktop`
+
+## License
+
+MIT — see [LICENSE](https://github.com/PyDevices/micropython-hardware/blob/main/LICENSE).

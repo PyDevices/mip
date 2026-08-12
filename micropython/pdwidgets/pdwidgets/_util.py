@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """Internal helpers for pdwidgets."""
 
-from eventsys import events
+import events
 
 
 def _log(*args, **kwargs):

@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: MIT
 """Keyboard focus ring for pdwidgets (Tab / Shift-Tab / arrows)."""
 
-from eventsys import events
-from eventsys.keys import Keys
+import events
+import keys
 
 
 class FocusManager:
@@ -109,14 +109,14 @@ class FocusManager:
             return False
         key = event.key
         mod = getattr(event, "mod", 0) or 0
-        shift = bool(mod & Keys.KMOD_SHIFT)
-        if key == Keys.K_TAB:
+        shift = bool(mod & keys.KMOD_SHIFT)
+        if key == keys.K_TAB:
             self.focus_next(reverse=shift)
             return True
-        if key in (Keys.K_DOWN, Keys.K_RIGHT):
+        if key in (keys.K_DOWN, keys.K_RIGHT):
             self.focus_next(reverse=False)
             return True
-        if key in (Keys.K_UP, Keys.K_LEFT):
+        if key in (keys.K_UP, keys.K_LEFT):
             self.focus_next(reverse=True)
             return True
         return False

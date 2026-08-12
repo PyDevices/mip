@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """BottomSheet — modal slide-up panel + scrim."""
 
-from eventsys import events
+import events
 
 from .._constants import ALIGN, PAD
 from .._util import _root_screen

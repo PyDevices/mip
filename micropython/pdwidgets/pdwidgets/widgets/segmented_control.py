@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """SegmentedControl — exclusive pill buttons."""
 
-from eventsys import events
+import events
 
 from .._constants import PAD, TEXT_SIZE, TEXT_WIDTH
 from ..widget import Widget
