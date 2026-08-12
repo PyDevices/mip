@@ -10,7 +10,12 @@ import gc
 import struct
 import sys
 
-from micropython import const
+try:
+    from micropython import const
+except ImportError:
+
+    def const(value):
+        return value
 
 from displaydev import DisplayDriver
 
