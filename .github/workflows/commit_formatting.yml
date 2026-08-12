@@ -8,6 +8,9 @@ concurrency:
 
 jobs:
   build:
+    # The PyDevices fork is a long-lived generated package branch with its own
+    # historical commit convention; canonical source repos validate commits.
+    if: github.repository == 'micropython/micropython-lib'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4

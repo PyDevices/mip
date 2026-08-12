@@ -3,6 +3,8 @@ name: Python code lint and formatting with ruff
 on: [push, pull_request]
 jobs:
   ruff:
+    # Synced PyDevices packages are linted in their canonical source repos.
+    if: github.repository == 'micropython/micropython-lib'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
