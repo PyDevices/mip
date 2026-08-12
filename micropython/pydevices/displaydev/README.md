@@ -2,7 +2,7 @@
 
 Cross-platform display drivers for MicroPython, CircuitPython, and CPython — `BusDisplay`, `SDLDisplay`, `PGDisplay`, `WinDisplay`, `PSDisplay`, `JNDisplay`, `FBDisplay`, and more behind one drawing API.
 
-Canonical source: [pydevices/drivers/display/displaydev](https://github.com/PyDevices/pydevices/tree/main/drivers/display/displaydev).
+Canonical source: [pydevices/lib/displaydev](https://github.com/PyDevices/pydevices/tree/main/lib/displaydev).
 
 ## Install
 
@@ -75,7 +75,7 @@ separately when the application chooses that traffic controller.
 ## Links
 
 - [Documentation — Displays](https://pydisplay.readthedocs.io/en/latest/concepts/displays/)
-- [Source](https://github.com/PyDevices/pydevices/tree/main/drivers/display/displaydev)
+- [Source](https://github.com/PyDevices/pydevices/tree/main/lib/displaydev)
 - [Issues](https://github.com/PyDevices/pydevices/issues)
 - Related: `pydevices-events`, `pydevices-keys`, `pydevices-eventsys`,
   `pydevices-multimer`, `pydevices-pygraphics`, `pydevices-desktop`
