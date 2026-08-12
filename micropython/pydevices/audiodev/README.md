@@ -133,7 +133,7 @@ Verify with the real interpreters rather than by inspection — CPython accepts
 everything above:
 
 ```bash
-cd pydevices-examples/src
+cd pydevices-examples/lib
 for rt in micropython micropython.exe circuitpython; do $rt examples/audio_out_test.py; done
 ```
 
