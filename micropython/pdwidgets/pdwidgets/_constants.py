@@ -5,7 +5,7 @@
 Constants used by the pdwidgets library.
 """
 
-from micropython import const
+from ._compat import const
 
 PAD = const(2)
 DEFAULT_PADDING = (PAD, PAD, PAD, PAD)

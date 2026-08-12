@@ -30,8 +30,9 @@ Vendored from pydisplay ``utils/tft_write.py`` (same Russhughes
 add-on at import time.
 """
 
-from micropython import const
 from pygraphics import Area
+
+from ._compat import const
 
 WHITE = const(0xFFFF)
 BLACK = const(0x0000)
