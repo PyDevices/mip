@@ -3,7 +3,7 @@
 Pure-Python `pygraphics` package — `FrameBuffer`, `Draw`, fonts, shapes, and image
 loaders. Import as `pygraphics`.
 
-> **Pip name:** `pygraphics` · **Import:** `import pygraphics`
+> **Pip name:** `pydevices-pygraphics` · **Import:** `import pygraphics`
 
 On desktop/Android when a native wheel is available, prefer the
 TestPyPI `pydevices-pygraphics` wheel (import name `pygraphics`, C implementation). The
