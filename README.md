@@ -1,36 +1,55 @@
 # micropython-lib
 
-This is a repository of packages designed to be useful for writing MicroPython
-applications.
+This repository houses standard library and ecosystem packages for MicroPython, and serves as the **PyDevices MIP Package Index**. 
 
-The packages here fall into categories corresponding to the four top-level
-directories:
+CI/CD workflows automatically build both precompiled **`.mpy`** bytecode (using `mpy-cross`) and raw **`.py`** source packages, publishing the index metadata to:
+**`https://PyDevices.github.io/micropython-lib/mip/PyDevices`**
 
-* **python-stdlib**: Compatible versions of modules from [The Python Standard
-    Library](https://docs.python.org/3/library/). These should be drop-in
-    replacements for the corresponding Python modules, although many have
-    reduced functionality or missing methods or classes (which may not be an
-    issue for most cases).
+---
 
- * **python-ecosys**: Compatible, but reduced-functionality versions of
-     packages from the wider Python ecosystem. For example, a package that
-     might be found in the [Python Package Index](https://pypi.org/).
+## Installing PyDevices Packages
 
- * **micropython**: MicroPython-specific packages that do not have equivalents
-     in other Python environments. This includes drivers for hardware
-     (e.g. sensors, peripherals, or displays), libraries to work with
-     embedded functionality (e.g. bluetooth), or MicroPython-specific
-     packages that do not have equivalents in CPython.
+PyDevices packages (`pydevices`, `palettes`, `pdwidgets`, `pygraphics`) and their dependencies can be installed using MicroPython's native package manager (`mip`) or `mpremote` with our custom index URL.
 
-* **unix-ffi**: These packages are specifically for the MicroPython Unix port
-    and provide access to operating-system and third-party libraries via FFI,
-    or functionality that is not useful for non-Unix ports.
+### 1. Onto a Local Desktop Filesystem (Preferred for CPython/Simulation)
+To quickly set up a local desktop simulation and development workspace, download `micropython` or `micropython.exe` to your machine and run the following three commands to generate a ready-to-use workspace:
 
-## Usage
+```bash
+# On Linux / macOS
+mkdir -p ~/.micropython && cd ~/.micropython
+micropython -m mip install --target lib --index https://PyDevices.github.io/micropython-lib/mip/PyDevices github:PyDevices/pydevices/board_configs/desktop
 
-To install a micropython-lib package, there are four main options. For more
-information see the [Package management documentation](https://docs.micropython.org/en/latest/reference/packages.html)
-documentation.
+# On Windows (cmd.exe)
+mkdir "%USERPROFILE%\.micropython" && cd "%USERPROFILE%\.micropython"
+micropython.exe -m mip install --target lib --index https://PyDevices.github.io/micropython-lib/mip/PyDevices github:PyDevices/pydevices/board_configs/desktop
+```
+
+#### Preferred Path Configuration
+For details on the preferred `PYTHONPATH` and `MICROPYPATH` environment variables and the rationale behind their layout, see [Preferred Path Configuration in the flagship pydevices README](https://github.com/PyDevices/pydevices#preferred-path-configuration).
+
+
+
+### 2. Onto a Connected Hardware Board (via PC)
+To flash packages directly onto a board connected via USB serial, use the official `mpremote` CLI tool:
+
+```bash
+mpremote mip install --index https://PyDevices.github.io/micropython-lib/mip/PyDevices pdwidgets
+```
+
+### 3. On a Network-Enabled Board (WiFi / Ethernet)
+Run the built-in `mip` package manager directly from the microcontroller's REPL prompt:
+
+```python
+import mip
+mip.install("pdwidgets", index="https://PyDevices.github.io/micropython-lib/mip/PyDevices")
+```
+
+---
+
+## Usage (Standard Upstream Packages)
+
+To install standard, upstream `micropython-lib` standard library or ecosystem packages, there are four main options. For more information see the [Package management documentation](https://docs.micropython.org/en/latest/reference/packages.html) documentation.
+
 
 ### On a network-enabled device
 
