@@ -1,8 +1,6 @@
 # micropython-lib
 
-This repository houses standard library and ecosystem packages for MicroPython, and serves as the **PyDevices MIP Package Index**. 
-
-CI/CD workflows automatically build both precompiled **`.mpy`** bytecode (using `mpy-cross`) and raw **`.py`** source packages, publishing the index metadata to:
+This repository houses standard library and ecosystem packages for MicroPython, and serves as the **PyDevices MIP Package Index**, serving both precompiled **`.mpy`** bytecode and raw **`.py`** source packages from:
 **`https://PyDevices.github.io/micropython-lib/mip/PyDevices`**
 
 ---
@@ -25,7 +23,7 @@ micropython.exe -m mip install --target lib --index https://PyDevices.github.io/
 ```
 
 #### Preferred Path Configuration
-For details on the preferred `PYTHONPATH` and `MICROPYPATH` environment variables and the rationale behind their layout, see [Preferred Path Configuration in the flagship pydevices README](https://github.com/PyDevices/pydevices#preferred-path-configuration).
+For details on the preferred `PYTHONPATH` and `MICROPYPATH` environment variables and the rationale behind their layout, see [Preferred Path Configuration in the pydevices README](https://github.com/PyDevices/pydevices#preferred-path-configuration).
 
 
 
