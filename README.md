@@ -1,7 +1,7 @@
 # micropython-lib
 
 This repository houses standard library and ecosystem packages for MicroPython, and serves as the **PyDevices MIP Package Index**, serving both precompiled **`.mpy`** bytecode and raw **`.py`** source packages from:
-**`https://PyDevices.github.io/micropython-lib/mip/PyDevices`**
+**`https://PyDevices.github.io/mip`**
 
 ---
 
@@ -15,11 +15,11 @@ To quickly set up a local desktop simulation and development workspace, download
 ```bash
 # On Linux / macOS
 mkdir -p ~/.micropython && cd ~/.micropython
-micropython -m mip install --target lib --index https://PyDevices.github.io/micropython-lib/mip/PyDevices github:PyDevices/pydevices/board_configs/desktop
+micropython -m mip install --target lib --index https://PyDevices.github.io/mip github:PyDevices/pydevices/board_configs/desktop
 
 # On Windows (cmd.exe)
 mkdir "%USERPROFILE%\.micropython" && cd "%USERPROFILE%\.micropython"
-micropython.exe -m mip install --target lib --index https://PyDevices.github.io/micropython-lib/mip/PyDevices github:PyDevices/pydevices/board_configs/desktop
+micropython.exe -m mip install --target lib --index https://PyDevices.github.io/mip github:PyDevices/pydevices/board_configs/desktop
 ```
 
 #### Preferred Path Configuration
@@ -31,7 +31,7 @@ For details on the preferred `PYTHONPATH` and `MICROPYPATH` environment variable
 To flash packages directly onto a board connected via USB serial, use the official `mpremote` CLI tool:
 
 ```bash
-mpremote mip install --index https://PyDevices.github.io/micropython-lib/mip/PyDevices pdwidgets
+mpremote mip install --index https://PyDevices.github.io/mip pdwidgets
 ```
 
 ### 3. On a Network-Enabled Board (WiFi / Ethernet)
@@ -39,7 +39,7 @@ Run the built-in `mip` package manager directly from the microcontroller's REPL 
 
 ```python
 import mip
-mip.install("pdwidgets", index="https://PyDevices.github.io/micropython-lib/mip/PyDevices")
+mip.install("pdwidgets", index="https://PyDevices.github.io/mip")
 ```
 
 ---

@@ -24,7 +24,7 @@ pip install \
 
 ```python
 import mip
-mip.install("pygraphics", index="https://PyDevices.github.io/micropython-lib/mip/PyDevices")
+mip.install("pygraphics", index="https://PyDevices.github.io/mip")
 ```
 
 ## Quick start

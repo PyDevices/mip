@@ -26,7 +26,7 @@ For desktop SDL, also install [`pydevices-desktop`](https://test.pypi.org/projec
 ```python
 import mip
 
-mip.install("displaydev", index="https://PyDevices.github.io/micropython-lib/mip/PyDevices")
+mip.install("displaydev", index="https://PyDevices.github.io/mip")
 ```
 
 ## Quick start
