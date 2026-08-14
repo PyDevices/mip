@@ -8,7 +8,10 @@ and is never imported from here.
 try:
     import asyncio
 except ImportError:  # pragma: no cover - uasyncio name on older firmware
-    import uasyncio as asyncio
+    try:
+        import uasyncio as asyncio
+    except ImportError:
+        asyncio = None
 
 # Latency profiles, shared vocabulary for every backend's ``audio_out`` /
 # ``audio_in``. Backends translate a profile into their own block and queue

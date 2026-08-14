@@ -109,6 +109,15 @@ def _mouse_buttons(wparam):
     return (l, m, r)
 
 
+def _map_coords(display, x, y):
+    if display is not None:
+        scale = getattr(display, "_scale", 1.0)
+        if scale and scale != 1.0:
+            x = int(x / scale)
+            y = int(y / scale)
+    return x, y
+
+
 def _queue(evt):
     if evt is not None:
         _pending.append(evt)
@@ -132,6 +141,7 @@ def _wndproc(hwnd, msg, wparam, lparam):
         return 0
     if msg == win.WM_MOUSEMOVE:
         x, y = win.GET_X_LPARAM(lparam), win.GET_Y_LPARAM(lparam)
+        x, y = _map_coords(display, x, y)
         rel = (0, 0)
         if display is not None:
             px, py = getattr(display, "_last_mouse", (x, y))
@@ -142,11 +152,13 @@ def _wndproc(hwnd, msg, wparam, lparam):
     if msg in (win.WM_LBUTTONDOWN, win.WM_MBUTTONDOWN, win.WM_RBUTTONDOWN):
         button = {win.WM_LBUTTONDOWN: 1, win.WM_MBUTTONDOWN: 2, win.WM_RBUTTONDOWN: 3}[msg]
         x, y = win.GET_X_LPARAM(lparam), win.GET_Y_LPARAM(lparam)
+        x, y = _map_coords(display, x, y)
         _queue(events.Button(events.MOUSEBUTTONDOWN, (x, y), button, False, wid))
         return 0
     if msg in (win.WM_LBUTTONUP, win.WM_MBUTTONUP, win.WM_RBUTTONUP):
         button = {win.WM_LBUTTONUP: 1, win.WM_MBUTTONUP: 2, win.WM_RBUTTONUP: 3}[msg]
         x, y = win.GET_X_LPARAM(lparam), win.GET_Y_LPARAM(lparam)
+        x, y = _map_coords(display, x, y)
         _queue(events.Button(events.MOUSEBUTTONUP, (x, y), button, False, wid))
         return 0
     if msg in (win.WM_MOUSEWHEEL, win.WM_MOUSEHWHEEL):

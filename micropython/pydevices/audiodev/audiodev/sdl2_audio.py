@@ -56,7 +56,10 @@ running ``examples/audio_out_test.py`` under all three interpreters.
 try:
     import asyncio
 except ImportError:  # pragma: no cover
-    import uasyncio as asyncio
+    try:
+        import uasyncio as asyncio
+    except ImportError:
+        asyncio = None
 
 import sys
 import time

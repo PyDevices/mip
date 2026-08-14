@@ -1,6 +1,6 @@
 metadata(
     description="SDL2/PyGame-style event types and namedtuple event classes",
-    version="0.1.0",
+    version="0.1.1",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="pydevices-events",

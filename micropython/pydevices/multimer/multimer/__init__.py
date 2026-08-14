@@ -200,11 +200,5 @@ def __getattr__(name):
     if name == "asyncio":
         from ._asyncio_loader import load_asyncio
 
-        mod = load_asyncio()
-        if mod is None:
-            raise ImportError(
-                "multimer: asyncio not available — freeze extmod/asyncio in the "
-                "firmware manifest (see docs/platforms/micropython.md)"
-            )
-        return mod
+        return load_asyncio()
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

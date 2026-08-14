@@ -1,6 +1,6 @@
 metadata(
     description="Cross-platform machine.Timer-style and asyncio timers",
-    version="0.1.0",
+    version="0.1.1",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="pydevices-multimer",
