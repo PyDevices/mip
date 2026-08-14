@@ -163,14 +163,9 @@ function ci_push_package_index {
         NEW_BRANCH=1
     fi
 
-    DEST_PATH=${PAGES_PATH}/mip/${GITHUB_REF_NAME}
-    if [ -d ${DEST_PATH} ]; then
-        git rm -r ${DEST_PATH}
-    fi
-    mkdir -p ${DEST_PATH}
-    cd ${DEST_PATH}
-
-    cp -r ${PACKAGE_INDEX_PATH}/* .
+    # Deploy packages directly to root alongside landing page
+    cp -r ${PACKAGE_INDEX_PATH}/* ${PAGES_PATH}/
+    cd ${PAGES_PATH}
 
     git add .
     git_bot_commit "Add CI built packages from commit ${GITHUB_SHA} of ${GITHUB_REF_NAME}"
@@ -183,7 +178,7 @@ function ci_push_package_index {
     fi
     git push origin gh-pages
 
-    INDEX_URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f2-)/mip/${GITHUB_REF_NAME}"
+    INDEX_URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f2-)"
 
     echo ""
     echo "--------------------------------------------------"
