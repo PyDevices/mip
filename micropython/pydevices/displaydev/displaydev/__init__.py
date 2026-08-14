@@ -31,7 +31,7 @@ def _mp_native(f):
 def _install_byteswap():
     """Prefer GitHub ``utils/byteswap`` (numpy/ulab/viper); else portable Python.
 
-    No in-tree ``@viper`` here: micropython-lib MIP packaging compiles every
+    No in-tree ``@viper`` here: PyDevices MIP packaging compiles every
     ``.py`` with ``mpy-cross`` without ``-march``, so viper/native emitters in
     this package would break the index build. Fast swap on SPI boards comes
     from installing pydevices ``utils`` (GitHub MIP), not from the
