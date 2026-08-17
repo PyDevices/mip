@@ -29,19 +29,20 @@ def _mp_native(f):
 
 
 def _install_byteswap():
-    """Prefer GitHub ``utils/byteswap`` (numpy/ulab/viper); else portable Python.
-
-    No in-tree ``@viper`` here: PyDevices MIP packaging compiles every
-    ``.py`` with ``mpy-cross`` without ``-march``, so viper/native emitters in
-    this package would break the index build. Fast swap on SPI boards comes
-    from installing pydevices ``utils`` (GitHub MIP), not from the
-    displaydev package.
-    """
+    """Select a fast array implementation when available, else portable Python."""
     try:
-        from byteswap import byteswap as _byteswap_native
+        try:
+            import numpy as np
+        except ImportError:
+            from ulab import numpy as np
 
-        return _byteswap_native, "native"
-    except ImportError:
+        def byteswap(buf):
+            """Swap a 16-bit pixel buffer in place using numpy or ulab."""
+            npbuf = np.frombuffer(buf, dtype=np.uint16)
+            npbuf.byteswap(inplace=True)
+
+        return byteswap, "array"
+    except Exception:
         pass
 
     @_mp_native
@@ -55,7 +56,7 @@ def _install_byteswap():
             buf[i] = buf[i + 1]
             buf[i + 1] = b0
 
-    return byteswap, "pure_python"
+    return byteswap, "native" if getattr(_mp, "native", None) else "pure_python"
 
 
 byteswap, _BYTESWAP_BACKEND = _install_byteswap()

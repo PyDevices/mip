@@ -1,155 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-                                                <!-- PYDEVICES-HEAD-TAGS: START -->
+  <!-- PYDEVICES-HEAD-TAGS: START -->
   <title>PyDevices - mip</title>
-  <meta name="description" content="Single source of truth (SoT) for precompiled MicroPython .mpy bytecode packages and pure-Python library distributions across the PyDevices ecosystem.">
+  <meta name="description" content="A latest-only MicroPython MIP package index with precompiled bytecode and portable Python source.">
   <link rel="icon" type="image/svg+xml" href="img/logo.svg">
   <!-- PYDEVICES-HEAD-TAGS: END -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  
   <link rel="stylesheet" href="vendor/pydevices-chrome/site.css">
 </head>
 <body>
-                                                      <!-- PYDEVICES-ABOVE-THE-FOLD: START -->
+  <!-- PYDEVICES-ABOVE-THE-FOLD: START -->
   <div id="pydevices-site-header"></div>
-
-  <!-- Hero Banner -->
   <section class="hero wrap">
     <div class="hero-lead">
       <div class="hero-brand">
         <div class="logo-badge product-mark" style="background: linear-gradient(135deg, var(--tier-5-steel), #0284c7);"><img src="img/logo.svg" alt="mip" width="112" height="112"></div>
         <span class="eyebrow" style="color: var(--tier-5-steel);">mip</span>
       </div>
-      <h1>mip — PyDevices MIP package index & distribution.</h1>
+      <h1>mip — a MicroPython package index.</h1>
     </div>
-    <p><code>mip</code> Single source of truth (SoT) for precompiled MicroPython .mpy bytecode packages and pure-Python library distributions across the PyDevices ecosystem.</p>
+    <p>Install current packages as precompiled MicroPython bytecode or portable Python source.</p>
     <div class="cta">
-      <a class="btn primary" style="background: #24292e; color: #fff; border-color: #24292e;" href="https://github.com/PyDevices/mip">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-1-2.6c3-.3 6-1.5 6-6.5a5 5 0 0 0-1.4-3.5 4.6 4.6 0 0 0-.1-3.5s-1.1-.3-3.5 1.3a12 12 0 0 0-6 0C6.6 1.7 5.5 2 5.5 2a4.6 4.6 0 0 0-.1 3.5A5 5 0 0 0 4 9c0 5 3 6.2 6 6.5a3.4 3.4 0 0 0-1 2.6V22"/></svg>
-        GitHub Repo
-      </a>
-      <a class="btn" style="border-color: var(--tier-5-steel); color: var(--tier-5-steel);" href="https://pydevices.github.io/cmods/">cmods Workspace</a>
-      <a class="btn" style="border-color: var(--tier-5-steel); color: var(--tier-5-steel);" href="https://pydevices.github.io/mpftp/">mpftp Workbench</a>
-      <a class="btn" style="border-color: var(--tier-5-steel); color: var(--tier-5-steel);" href="https://pydevices.github.io/pydevices/">pydevices Core</a>
+      <a class="btn primary" style="background: #24292e; color: #fff; border-color: #24292e;" href="https://github.com/PyDevices/mip">GitHub Repo</a>
     </div>
   </section>
   <!-- PYDEVICES-ABOVE-THE-FOLD: END -->
-  <div id="pydevices-site-header"></div>
-
-  <!-- Hero Banner -->
-  
 
   <main class="wrap" style="padding-bottom: 60px;">
-    <!-- MIP Index Installation Guide -->
     <div class="section-head">
-      <h2>Installing Packages via PyDevices MIP Index</h2>
-      <span class="hint">Use INDEX="https://PyDevices.github.io/mip" in Python, CLI, or mpremote.</span>
+      <h2>Installing packages from this index</h2>
+      <span class="hint">Index URL: https://PyDevices.github.io/mip</span>
     </div>
 
     <div class="spec-block">
-      <h3>1. MicroPython REPL or Python Script</h3>
+      <h3>MicroPython REPL or script</h3>
       <pre><code>import mip
 
-# Define the PyDevices MIP Index URL:
-INDEX = "https://PyDevices.github.io/mip"
-
-# Install pure-Python UI widgets and 2D FrameBuffer graphics:
-mip.install("pdwidgets", index=INDEX)
-mip.install("pygraphics", index=INDEX)
-mip.install("palettes", index=INDEX)</code></pre>
+mip.install(
+    "package-name",
+    index="https://PyDevices.github.io/mip",
+)</code></pre>
     </div>
 
     <div class="spec-block" style="margin-top: 24px;">
-      <h3>2. Terminal Command Line (Host Python / Desktop MicroPython)</h3>
-      <pre><code># Linux / macOS:
-micropython -m mip install --target lib --index https://PyDevices.github.io/mip pdwidgets
+      <h3>Hosted MicroPython command line</h3>
+      <pre><code>micropython -m mip install \
+  --index https://PyDevices.github.io/mip \
+  package-name
 
-# Windows Command Prompt / PowerShell:
-micropython.exe -m mip install --target lib --index https://PyDevices.github.io/mip pdwidgets</code></pre>
+# Add --target lib for an explicit workspace destination.
+# Add --no-mpy when portable .py source is required.</code></pre>
     </div>
 
     <div class="spec-block" style="margin-top: 24px;">
-      <h3>3. mpremote (Connected Microcontroller Hardware over Serial)</h3>
-      <pre><code># Install directly onto attached microcontroller flash storage:
-mpremote mip install --index https://PyDevices.github.io/mip pdwidgets
-mpremote mip install --index https://PyDevices.github.io/mip displaydev</code></pre>
+      <h3>mpremote and a connected device</h3>
+      <pre><code>mpremote connect /dev/ttyUSB0 mip install \
+  --index https://PyDevices.github.io/mip \
+  package-name</code></pre>
     </div>
 
-    <!-- Available Packages Matrix -->
     <div class="section-head" style="margin-top: 40px;">
-      <h2>Published Ecosystem Packages</h2>
-      <span class="hint">Precompiled .mpy bytecodes and source packages hosted on PyDevices mip.</span>
+      <h2>Index behavior</h2>
+      <span class="hint">The public index follows the current source release.</span>
     </div>
-
-    <div class="spec-block" style="overflow-x: auto;">
-      <table class="matrix-table">
-        <thead>
-          <tr>
-            <th>Package Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Target Tier</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong><code>pydevices</code></strong></td>
-            <td>Core Engine</td>
-            <td>Board contract definitions, canonical board_config.py files, display/touch drivers.</td>
-            <td>1: Core Platform</td>
-          </tr>
-          <tr>
-            <td><strong><code>pygraphics</code></strong></td>
-            <td>2D FrameBuffer</td>
-            <td>Extended 2D FrameBuffer graphics engine with exposed properties and Area tracking.</td>
-            <td>2: Toolkits</td>
-          </tr>
-          <tr>
-            <td><strong><code>pdwidgets</code></strong></td>
-            <td>Pure-Python UI</td>
-            <td>Lightweight widget toolkit — buttons, sliders, forms, navigation, and custom themes.</td>
-            <td>2: Toolkits</td>
-          </tr>
-          <tr>
-            <td><strong><code>palettes</code></strong></td>
-            <td>Color Engine</td>
-            <td>Standalone color toolkit — Wheel, Cube, Material Design, and Windows-16 named colors.</td>
-            <td>2: Toolkits</td>
-          </tr>
-          <tr>
-            <td><strong><code>displaydev</code></strong></td>
-            <td>Hardware Bus Abstraction</td>
-            <td>Cross-runtime display device interface layer for MicroPython &amp; CircuitPython.</td>
-            <td>1: Core Platform</td>
-          </tr>
-          <tr>
-            <td><strong><code>audiodev</code></strong></td>
-            <td>Audio Abstraction</td>
-            <td>Hardware I2S/PWM audio device interface layer.</td>
-            <td>1: Core Platform</td>
-          </tr>
-          <tr>
-            <td><strong><code>eventsys</code></strong></td>
-            <td>Event Dispatcher</td>
-            <td>Lightweight pub/sub event bus and input event handler.</td>
-            <td>1: Core Platform</td>
-          </tr>
-          <tr>
-            <td><strong><code>multimer</code></strong></td>
-            <td>Soft Timers</td>
-            <td>Microsecond software timer and periodic task scheduler.</td>
-            <td>1: Core Platform</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="spec-block">
+      <p>MicroPython targets receive architecture-neutral <code>.mpy</code>
+      files by default. Source installs receive <code>.py</code> files. Named
+      dependencies resolve from the same index.</p>
+      <p>Only <code>latest.json</code> package manifests are public. Historical
+      version aliases are intentionally not retained.</p>
     </div>
   </main>
 
   <div id="pydevices-site-footer"></div>
-
   <script src="vendor/pydevices-chrome/site-chrome.js"></script>
   <script src="vendor/pydevices-chrome/theme-toggle.js"></script>
   <script src="vendor/pydevices-chrome/tree-nav.js"></script>

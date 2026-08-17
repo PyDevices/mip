@@ -1,9 +1,8 @@
 metadata(
-    description="Cross-platform machine.Timer-style and asyncio timers",
+    description="PyDevices multimer",
     version="0.1.2",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="pydevices-multimer",
 )
-
 package("multimer")

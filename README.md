@@ -1,48 +1,75 @@
-# micropython-lib
+# PyDevices MIP package index
 
-This repository houses standard library and ecosystem packages for MicroPython, and serves as the **PyDevices MIP Package Index**, serving both precompiled **`.mpy`** bytecode and raw **`.py`** source packages from:
-**`https://PyDevices.github.io/mip`**
+This micropython-lib fork builds an installable package index containing both
+precompiled `.mpy` bytecode and raw `.py` source at:
 
----
-
-## Installing PyDevices Packages
-
-PyDevices packages (`pydevices`, `palettes`, `pdwidgets`, `pygraphics`) and their dependencies can be installed using MicroPython's native package manager (`mip`) or `mpremote` with our custom index URL.
-
-### 1. Onto a Local Desktop Filesystem (Preferred for CPython/Simulation)
-To quickly set up a local desktop simulation and development workspace, download `micropython` or `micropython.exe` to your machine and run the following three commands to generate a ready-to-use workspace:
-
-```bash
-# On Linux / macOS
-mkdir -p ~/.micropython && cd ~/.micropython
-micropython -m mip install --target lib --index https://PyDevices.github.io/mip github:PyDevices/pydevices/board_configs/desktop
-
-# On Windows (cmd.exe)
-mkdir "%USERPROFILE%\.micropython" && cd "%USERPROFILE%\.micropython"
-micropython.exe -m mip install --target lib --index https://PyDevices.github.io/mip github:PyDevices/pydevices/board_configs/desktop
+```text
+https://PyDevices.github.io/mip
 ```
 
-#### Preferred Path Configuration
-For details on the preferred `PYTHONPATH` and `MICROPYPATH` environment variables and the rationale behind their layout, see [Preferred Path Configuration in the pydevices README](https://github.com/PyDevices/pydevices#preferred-path-configuration).
+This repository documents the package manager itself. Product repositories
+document which product or board package to choose.
 
-
-
-### 2. Onto a Connected Hardware Board (via PC)
-To flash packages directly onto a board connected via USB serial, use the official `mpremote` CLI tool:
-
-```bash
-mpremote mip install --index https://PyDevices.github.io/mip pdwidgets
-```
-
-### 3. On a Network-Enabled Board (WiFi / Ethernet)
-Run the built-in `mip` package manager directly from the microcontroller's REPL prompt:
+## Install from a network-enabled MicroPython device
 
 ```python
 import mip
-mip.install("pdwidgets", index="https://PyDevices.github.io/mip")
+
+mip.install("package-name", index="https://PyDevices.github.io/mip")
 ```
 
----
+`mip` installs into the runtime's default library destination unless `target`
+is supplied. Use `mpy=False` to request portable `.py` source instead of
+MicroPython bytecode.
+
+```python
+mip.install(
+    "package-name",
+    index="https://PyDevices.github.io/mip",
+    target="lib",
+    mpy=False,
+)
+```
+
+## Install with the MicroPython command line
+
+Hosted MicroPython ports can run the package manager as a module:
+
+```bash
+micropython -m mip install \
+  --index https://PyDevices.github.io/mip \
+  package-name
+```
+
+Use `--target lib` for an explicit workspace destination and `--no-mpy` for a
+source-only tree.
+
+## Install onto a connected device with mpremote
+
+```bash
+mpremote connect /dev/ttyUSB0 mip install \
+  --index https://PyDevices.github.io/mip \
+  package-name
+```
+
+`mpremote mip` resolves and transfers the package from the host, so the board
+does not need its own network connection.
+
+## Install a raw GitHub package
+
+`mip` also accepts GitHub files and directories. Pass the index when a raw
+package has named dependencies that should resolve here:
+
+```python
+mip.install(
+    "github:OWNER/REPOSITORY/path/to/package",
+    index="https://PyDevices.github.io/mip",
+)
+```
+
+The live index intentionally exposes only each package's current `latest`
+manifest. Releases replace the current entry rather than accumulating a public
+history of versioned manifests.
 
 ## Usage (Standard Upstream Packages)
 
@@ -101,37 +128,6 @@ Note that unlike the other three approaches based on `mip` or `manifest.py`,
 you will need to manually resolve dependencies. You can inspect the relevant
 `manifest.py` file to view the list of dependencies for a given package.
 
-## Installing packages from forks
-
-It is possible to use the `mpremote mip install` or `mip.install()` methods to
-install packages built from a
-[fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/about-forks)
-of micropython-lib, if the fork's owner has opted in.
-
-This can be useful to install packages from a pending Pull Request, for example.
-
-First, the owner of the fork must opt-in as described under
-[Publishing packages from forks](CONTRIBUTING.md#publishing-packages-from-forks).
-
-After this has happened, each time someone pushes to a branch in that fork then
-GitHub Actions will automatically publish the packages to a GitHub Pages site.
-
-To install these packages, use commands such as:
-
-```bash
-$ mpremote connect /dev/ttyUSB0 mip install --index https://USERNAME.github.io/micropython-lib/mip/BRANCH_NAME PACKAGE_NAME
-```
-
-Or from a networked device:
-
-```py
-import mip
-mip.install(PACKAGE_NAME, index="https://USERNAME.github.io/micropython-lib/mip/BRANCH_NAME")
-```
-
-(Where `USERNAME`, `BRANCH_NAME` and `PACKAGE_NAME` are replaced with the owner
-of the fork, the branch the packages were built from, and the package name.)
-
 ## Contributing
 
 We use [GitHub Discussions](https://github.com/micropython/micropython/discussions)
@@ -186,4 +182,3 @@ adding additional files to the same package directory. These packages have
 hyphenated names. For example, the `collections-defaultdict` package extends
 the `collections` package to add the `defaultdict` class to the `collections`
 module.
-

@@ -1,5 +1,5 @@
 metadata(
-    description="Cross-platform display drivers for MicroPython, CircuitPython, and CPython",
+    description="PyDevices displaydev",
     version="0.1.2",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",

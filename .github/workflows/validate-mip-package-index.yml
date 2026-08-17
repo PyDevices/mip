@@ -1,6 +1,10 @@
-name: Build all packages
+name: Validate MIP package index
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - PyDevices
+  pull_request:
 
 env:
   PACKAGE_INDEX_PATH: /tmp/micropython-lib-deploy
@@ -9,8 +13,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
     - name: Setup environment
       run: source tools/ci.sh && ci_build_packages_setup
     - name: Check manifest files
@@ -19,10 +25,7 @@ jobs:
       run: source tools/ci.sh && ci_build_packages_compile_index
     - name: Compile package examples
       run: source tools/ci.sh && ci_build_packages_examples
-    - name: Publish packages for branch
-      if: vars.MICROPY_PUBLISH_MIP_INDEX && github.event_name == 'push' && ! github.event.deleted
-      run: source tools/ci.sh && ci_push_package_index
-    - name: Upload packages as artifact
+    - name: Upload validated latest-only index
       uses: actions/upload-artifact@v4
       with:
         name: packages-${{ github.sha }}

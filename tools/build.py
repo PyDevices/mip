@@ -270,14 +270,18 @@ def _copy_as_py(
 
 # Update to the latest metadata, and add any new versions to the package in
 # the index json.
-def _update_index_package_metadata(index_package_json, metadata, mpy_version, package_path):
+def _update_index_package_metadata(
+    index_package_json, metadata, mpy_version, package_path, latest_only
+):
     index_package_json["version"] = metadata.version or ""
     index_package_json["author"] = ""  # TODO: Make manifestfile.py capture this.
     index_package_json["description"] = metadata.description or ""
     index_package_json["license"] = metadata.license or "MIT"
-    if "versions" not in index_package_json:
+    if latest_only:
         index_package_json["versions"] = {}
-    if metadata.version:
+    elif "versions" not in index_package_json:
+        index_package_json["versions"] = {}
+    if metadata.version and not latest_only:
         for v in ("py", mpy_version):
             if v not in index_package_json["versions"]:
                 index_package_json["versions"][v] = []
@@ -289,7 +293,7 @@ def _update_index_package_metadata(index_package_json, metadata, mpy_version, pa
     index_package_json["path"] = package_path
 
 
-def build(output_path, hash_prefix_len, mpy_cross_path):
+def build(output_path, hash_prefix_len, mpy_cross_path, latest_only=False):
     import manifestfile
     import mpy_cross
 
@@ -349,7 +353,11 @@ def build(output_path, hash_prefix_len, mpy_cross_path):
                 index_json["packages"].append(index_package_json)
 
             _update_index_package_metadata(
-                index_package_json, manifest.metadata(), mpy_version, package_path
+                index_package_json,
+                manifest.metadata(),
+                mpy_version,
+                package_path,
+                latest_only,
             )
 
             # This is the package json that mip/mpremote downloads.
@@ -418,7 +426,7 @@ def build(output_path, hash_prefix_len, mpy_cross_path):
             # Write {package}/{version}.json, but only if it doesn't already
             # exist. A package version is "locked" the first time it's seen
             # by this script.
-            if manifest.metadata().version:
+            if manifest.metadata().version and not latest_only:
                 _write_package_json(
                     mpy_package_json,
                     out_package_dir,
@@ -449,13 +457,23 @@ def main():
     cmd_parser.add_argument("--hash-prefix", default=8, type=int, help="hash prefix length")
     cmd_parser.add_argument("--mpy-cross", default=None, help="optional path to mpy-cross binary")
     cmd_parser.add_argument("--micropython", default=None, help="path to micropython repo")
+    cmd_parser.add_argument(
+        "--latest-only",
+        action="store_true",
+        help="write only latest.json package entries and omit historical versions",
+    )
     args = cmd_parser.parse_args()
 
     if args.micropython:
         sys.path.append(os.path.join(args.micropython, "tools"))  # for manifestfile
         sys.path.append(os.path.join(args.micropython, "mpy-cross"))  # for mpy_cross
 
-    build(args.output, hash_prefix_len=max(4, args.hash_prefix), mpy_cross_path=args.mpy_cross)
+    build(
+        args.output,
+        hash_prefix_len=max(4, args.hash_prefix),
+        mpy_cross_path=args.mpy_cross,
+        latest_only=args.latest_only,
+    )
 
 
 if __name__ == "__main__":

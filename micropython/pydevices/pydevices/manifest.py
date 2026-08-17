@@ -1,10 +1,13 @@
 metadata(
-    description="Portable display, audio, event, and timing foundations for PyDevices",
+    description="PyDevices pydevices",
     version="0.1.2",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="pydevices",
 )
-require("displaydev")
 require("audiodev")
+require("displaydev")
+require("events")
+require("eventsys")
+require("keys")
 require("multimer")

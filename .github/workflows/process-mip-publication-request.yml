@@ -1,0 +1,60 @@
+name: Process serialized MIP publication request
+
+on:
+  repository_dispatch:
+    types:
+      - publish-package-release
+  workflow_dispatch:
+    inputs:
+      source-repository:
+        description: GitHub OWNER/REPOSITORY to publish
+        required: true
+        type: string
+      source-ref:
+        description: Exact release tag or commit
+        required: true
+        type: string
+      version:
+        description: Normalized X.Y.Z release version
+        required: true
+        type: string
+      profile:
+        description: Shared synchronization profile
+        required: true
+        type: choice
+        options:
+          - palettes
+          - pdwidgets
+          - pygraphics
+          - pydevices
+
+concurrency:
+  group: pydevices-mip-publication-queue
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  synchronize-build-and-stage:
+    uses: PyDevices/.github/.github/workflows/reusable-synchronize-mip-package.yml@publishing-v1
+    with:
+      source-repository: ${{ github.event.client_payload.source_repository || inputs.source-repository }}
+      source-ref: ${{ github.event.client_payload.source_ref || inputs.source-ref }}
+      version: ${{ github.event.client_payload.version || inputs.version }}
+      profile: ${{ github.event.client_payload.profile || inputs.profile }}
+    secrets:
+      mip-publication-token: ${{ secrets.MICROPYTHON_LIB_DEPLOY_TOKEN }}
+
+  deploy-complete-mip-index:
+    needs: synchronize-build-and-stage
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy the complete MIP index to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

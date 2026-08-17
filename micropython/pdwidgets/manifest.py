@@ -1,5 +1,5 @@
 metadata(
-    description="Cross-platform widget toolkit for PyDevices",
+    description='Cross-platform widget toolkit for PyDevices',
     version="0.0.16",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",

@@ -1,0 +1,60 @@
+name: Deploy MIP index documentation to Pages
+
+on:
+  push:
+    branches:
+      - PyDevices
+    paths:
+      - .site/**
+      - .github/workflows/deploy-mip-index-to-pages.yml
+  workflow_dispatch:
+
+concurrency:
+  group: pydevices-mip-publication-queue
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+env:
+  PACKAGE_INDEX_PATH: /tmp/pydevices-mip-site
+
+jobs:
+  build-complete-mip-pages-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out MIP source
+        uses: actions/checkout@v4
+
+      - name: Set up MIP build environment
+        run: source tools/ci.sh && ci_build_packages_setup
+
+      - name: Build latest-only package index
+        run: |
+          rm -rf "$PACKAGE_INDEX_PATH"
+          source tools/ci.sh
+          ci_build_packages_check_manifest
+          ci_build_packages_compile_index
+          cp -R .site/. "$PACKAGE_INDEX_PATH/"
+          touch "$PACKAGE_INDEX_PATH/.nojekyll"
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload complete Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.PACKAGE_INDEX_PATH }}
+
+  deploy-complete-mip-index:
+    needs: build-complete-mip-pages-artifact
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy MIP index documentation
+        id: deployment
+        uses: actions/deploy-pages@v4
