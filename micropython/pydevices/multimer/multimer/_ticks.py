@@ -21,14 +21,12 @@ _TICKS_HALFPERIOD = const(_TICKS_PERIOD // 2)
 # Python ``def`` with a real docstring (never a host-function alias).
 _impl_ticks_ms = None
 _impl_monotonic = None
-_impl_ticks_add = None
-_impl_ticks_diff = None
 
 try:
     from supervisor import ticks_ms as _supervisor_ticks_ms
 
     def _cp_ticks_ms():
-        return _supervisor_ticks_ms()
+        return _supervisor_ticks_ms() & _TICKS_MAX
 
     def _cp_monotonic():
         return _supervisor_ticks_ms() / 1000
@@ -49,16 +47,11 @@ except (ImportError, NameError):
         _impl_monotonic = _monotonic_from_ns
 
     if _time_ticks_ms := getattr(time, "ticks_ms", None):
-        if getattr(time, "ticks_add", None) and getattr(time, "ticks_diff", None):
-            _impl_ticks_ms = _time_ticks_ms
-            _impl_ticks_add = time.ticks_add
-            _impl_ticks_diff = time.ticks_diff
-        else:
 
-            def _masked_host_ticks_ms():
-                return _time_ticks_ms() & _TICKS_MAX
+        def _masked_host_ticks_ms():
+            return _time_ticks_ms() & _TICKS_MAX
 
-            _impl_ticks_ms = _masked_host_ticks_ms
+        _impl_ticks_ms = _masked_host_ticks_ms
     else:
         try:
             from time import monotonic_ns as _monotonic_ns
@@ -91,22 +84,6 @@ except (ImportError, NameError):
             return _time_ticks_ms() / 1000
 
         _impl_monotonic = _monotonic_from_ticks_ms
-
-
-if _impl_ticks_add is None:
-
-    def _software_ticks_add(ticks, delta):
-        if -_TICKS_HALFPERIOD < delta < _TICKS_HALFPERIOD:
-            return (ticks + delta) % _TICKS_PERIOD
-        raise OverflowError("ticks interval overflow")
-
-    def _software_ticks_diff(ticks1, ticks2):
-        diff = (ticks1 - ticks2) & _TICKS_MAX
-        diff = ((diff + _TICKS_HALFPERIOD) & _TICKS_MAX) - _TICKS_HALFPERIOD
-        return diff
-
-    _impl_ticks_add = _software_ticks_add
-    _impl_ticks_diff = _software_ticks_diff
 
 
 def ticks_ms():
@@ -146,7 +123,9 @@ def ticks_add(ticks, delta):
     Raises:
         OverflowError: When ``delta`` is outside ``(-2**28, 2**28)``.
     """
-    return _impl_ticks_add(ticks, delta)
+    if -_TICKS_HALFPERIOD < delta < _TICKS_HALFPERIOD:
+        return (ticks + delta) % _TICKS_PERIOD
+    raise OverflowError("ticks interval overflow")
 
 
 def ticks_diff(ticks1, ticks2):
@@ -159,7 +138,9 @@ def ticks_diff(ticks1, ticks2):
     Returns:
         int: Signed ``ticks1 - ticks2`` in milliseconds, handling wraparound.
     """
-    return _impl_ticks_diff(ticks1, ticks2)
+    diff = (ticks1 - ticks2) & _TICKS_MAX
+    diff = ((diff + _TICKS_HALFPERIOD) & _TICKS_MAX) - _TICKS_HALFPERIOD
+    return diff
 
 
 def ticks_less(ticks1, ticks2):
@@ -223,67 +204,3 @@ def run_deadline_hook():
     if hook is None:
         return False
     return hook()
-
-
-def _sleep_ms_signal(ms):
-    """Sleep for signal-based backends (librt, win32; ``uses_signals``).
-
-    The periodic timer fires on the main thread during the sleep (POSIX RT
-    signal, or a Win32 APC during ``SleepEx``), so the scheduler/event queue
-    does not need pumping here.
-    """
-    run_deadline_hook()
-    from ._select import _sleep_ms as _backend_sleep_ms
-
-    if _backend_sleep_ms is not None:
-        _backend_sleep_ms(ms)
-    else:
-        _raw_sleep_ms(ms)
-    run_deadline_hook()
-
-
-def _sleep_ms_pump(ms):
-    """Sleep for pump-based backends (SDL2, threading, polling).
-
-    These deliver timer callbacks only while the main thread pumps, so drain
-    the cooperative scheduler and the backend event queue around the wait.
-    """
-    run_deadline_hook()
-    from ._schedule import _run_pending
-    from ._select import _drain as _backend_drain
-    from ._select import _sleep_ms as _backend_sleep_ms
-
-    _run_pending()
-    if _backend_drain is not None:
-        _backend_drain()
-    if _backend_sleep_ms is not None:
-        _backend_sleep_ms(ms)
-    else:
-        _raw_sleep_ms(ms)
-    run_deadline_hook()
-    _run_pending()
-    if _backend_drain is not None:
-        _backend_drain()
-
-
-async def _sleep_ms_async(ms):
-    """Awaitable sleep for async-only runtimes (PyScript/Jupyter host loop).
-
-    Yields to the event loop so the async timer tasks run. ``asyncio.sleep_ms``
-    exists only on uasyncio; fall back to ``asyncio.sleep`` (CPython/PyScript).
-    """
-    from ._asyncio_loader import load_asyncio
-
-    aio = load_asyncio()
-    _sleep = getattr(aio, "sleep_ms", None)
-    if _sleep is not None:
-        await _sleep(ms)
-    else:
-        await aio.sleep(ms / 1000)
-    run_deadline_hook()
-
-
-# Default binding = the pumping variant (safe everywhere). ``multimer/__init__``
-# rebinds the public ``sleep_ms`` per active backend (signal / pump / async).
-sleep_ms = _sleep_ms_pump
-_sleep_ms = _sleep_ms_pump

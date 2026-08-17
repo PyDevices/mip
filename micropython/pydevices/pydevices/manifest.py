@@ -1,6 +1,6 @@
 metadata(
     description="Portable display, audio, event, and timing foundations for PyDevices",
-    version="0.1.1",
+    version="0.1.2",
     author="Brad Barnett <contact@pydevices.com>",
     license="MIT",
     pypi_publish="pydevices",

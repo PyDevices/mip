@@ -2080,4 +2080,3 @@ def IAudioCaptureClient_ReleaseBuffer(capture, frames):
         _vcall(capture, 4, HRESULT, (UINT32,), UINT32(int(frames))),
         "IAudioCaptureClient.ReleaseBuffer",
     )
-

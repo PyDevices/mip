@@ -493,7 +493,7 @@ class Runtime:
             while not self._quit_requested:
                 await asyncio.sleep(tick_ms / 1000)
                 # Harness deadline hooks (pydevices_test_mode) run from
-                # multimer.sleep_ms on the sync path; async run_forever must
+                # timer.sleep_ms on the sync path; async run_forever must
                 # invoke them here — LVGL claims refresh so auto-service poll
                 # does not. App code should not rely on this hook.
                 try:
@@ -518,7 +518,7 @@ class Runtime:
         * async, a loop already running (PyScript/Jupyter): arm the auto-service
           on that loop and return — the host loop keeps the app alive.
         * async, no running loop (desktop ``timer_async``): ``asyncio.run(self.run())``.
-        * sync, signal-style backend (``multimer.uses_signals()`` — librt or
+        * sync, interrupt-style backend (``timer.uses_interrupts`` — librt or
           ``machine.Timer``), interactive session (``-i`` or bare REPL then
           ``import``): return immediately — the REPL stays alive and the timer
           drives the auto-service, so a keep-alive loop is optional here.
@@ -529,7 +529,7 @@ class Runtime:
         The coroutine :meth:`run` stays public for ``await`` composition inside an
         existing async app or PyScript top-level await.
         """
-        import multimer
+        from multimer import auto as timer
 
         if self._timer_async:
             if self._event_loop_running():
@@ -543,12 +543,12 @@ class Runtime:
 
         # Interactive + self-driving timer (librt signals / machine.Timer):
         # timer keeps the app live at the REPL; blocking here wedges the session.
-        if _is_interactive_session() and multimer.uses_signals():
+        if _is_interactive_session() and timer.uses_interrupts:
             return
         self._blocking_run_forever = True
         try:
             while not self._quit_requested:
-                multimer.sleep_ms(tick_ms)
+                timer.sleep_ms(tick_ms)
         finally:
             self._blocking_run_forever = False
             self._perform_teardown()
@@ -756,9 +756,9 @@ class Runtime:
     def _sync_refresh_needs_deferred_arm():
         """True when sync timers need a poll/sleep drain loop (SDL2, threading)."""
         try:
-            from multimer._select import _drain
+            from multimer import auto as timer
 
-            return _drain is not None
+            return timer._defer_sync_arm
         except ImportError:
             return False
 
@@ -777,12 +777,9 @@ class Runtime:
     @staticmethod
     def _drain_timers():
         try:
-            from multimer._schedule import _run_pending
-            from multimer._select import _drain
+            from multimer import auto as timer
 
-            _run_pending()
-            if _drain is not None:
-                _drain()
+            timer.pump()
         except ImportError:
             pass
 
@@ -852,11 +849,12 @@ class Runtime:
         """Create the shared periodic timer. Returns the underlying timer."""
         if self._timer is not None:
             return self._timer
-        from multimer import AsyncTimer, Timer
+        from multimer import AsyncTimer
+        from multimer import auto as timer
 
         self._ensure_ticks()
         self._pending_timer_async = False
-        timer_class = AsyncTimer if async_ else Timer
+        timer_class = AsyncTimer if async_ else timer.Timer
         # Prefer virtual id -1 (auto-allocate). Some ports (e.g. ESP32-P4) only
         # accept concrete hardware timer numbers — fall back to 0..3.
         timer = None
@@ -1109,7 +1107,9 @@ class Runtime:
             return
         self._teardown_oneshot_armed = True
         self._pending_teardown = True
-        from multimer import Timer
+        from multimer import auto as timer
+
+        Timer = timer.Timer
 
         helper = None
         last_err = None

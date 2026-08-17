@@ -12,7 +12,8 @@ except ImportError:
 
 
 from ._schedule import schedule
-from ._ticks import _sleep_ms, ticks_diff, ticks_ms
+from ._ticks import _raw_sleep_ms as _sleep_ms
+from ._ticks import ticks_diff, ticks_ms
 
 
 class _TimerCore:
@@ -82,7 +83,7 @@ class _TimerCore:
             hard: When ``True``, call ``callback`` directly from the backend
                 delivery path. When ``False``, deliver via :func:`schedule`.
                 Soft still applies coalesce and inter-tick gap. On signal
-                backends (``uses_signals()`` — librt, ``machine.Timer``),
+                providers (``uses_interrupts`` — librt, ``machine.Timer``),
                 delivery is already on the main thread, so soft invokes the
                 callback immediately there (≈ hard for *when* it runs). Soft
                 only defers to a later main-thread drain when the backend

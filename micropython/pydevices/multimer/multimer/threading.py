@@ -5,9 +5,27 @@
 
 import sys
 
-from .._core import _TimerCore
-from .._schedule import schedule
-from .._ticks import _sleep_ms, ticks_add, ticks_diff, ticks_ms
+from . import _provider_pump, _provider_sleep_ms
+from ._core import _TimerCore
+from ._schedule import schedule
+from ._ticks import _raw_sleep_ms as _sleep_ms
+from ._ticks import ticks_add, ticks_diff, ticks_ms
+
+name = "threading"
+uses_interrupts = False
+is_async = False
+_defer_sync_arm = False
+
+
+def pump():
+    _provider_pump()
+
+
+def sleep_ms(ms):
+    _provider_sleep_ms(ms)
+
+
+__all__ = ["Timer", "is_async", "name", "pump", "sleep_ms", "uses_interrupts"]
 
 if sys.implementation.name == "cpython":
     import threading

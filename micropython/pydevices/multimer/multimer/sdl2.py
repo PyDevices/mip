@@ -11,9 +11,14 @@ from usdl2 import (
     SDL_TimerCallback,
 )
 
-from .._core import _TimerCore
+from . import _provider_pump, _provider_sleep_ms
+from ._core import _TimerCore
 
 _sdl2_timer_inited = False
+name = "sdl2"
+uses_interrupts = False
+is_async = False
+_defer_sync_arm = True
 
 
 def _backend_drain():
@@ -89,3 +94,14 @@ class Timer(_TimerCore):
             self._busy = False
         if self._mode == self.ONE_SHOT:
             self.deinit()
+
+
+def pump():
+    _provider_pump(_backend_drain)
+
+
+def sleep_ms(ms):
+    _provider_sleep_ms(ms, drain=_backend_drain)
+
+
+__all__ = ["Timer", "is_async", "name", "pump", "sleep_ms", "uses_interrupts"]

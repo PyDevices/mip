@@ -15,11 +15,26 @@ import sys
 if sys.platform != "linux":
     raise ImportError("librt timer backend requires Linux")
 
-from .._core import _TimerCore
+from . import _provider_pump, _provider_sleep_ms
+from ._core import _TimerCore
 
 # librt fires timer callbacks via an RT signal on the main thread, so they run
 # during a plain sleep without any application-side pumping.
-_uses_signals = True
+name = "librt"
+uses_interrupts = True
+is_async = False
+_defer_sync_arm = False
+
+
+def pump():
+    _provider_pump()
+
+
+def sleep_ms(ms):
+    _provider_sleep_ms(ms, uses_interrupts=True)
+
+
+__all__ = ["Timer", "is_async", "name", "pump", "sleep_ms", "uses_interrupts"]
 
 _USE_CTYPES = sys.implementation.name == "cpython"
 _CLOCK_MONOTONIC = 1

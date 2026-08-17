@@ -4,18 +4,33 @@
 """Windows waitable-timer backend (CPython + ``uwin32``).
 
 APCs run on the main thread during an alertable wait. ``_backend_sleep_ms``
-uses ``SleepEx`` so ``uses_signals()`` is True (librt analogue).
+uses ``SleepEx`` so ``uses_interrupts`` is true (librt analogue).
 """
 
 import uwin32 as win
 
-from .._core import _TimerCore
+from . import _provider_pump, _provider_sleep_ms
+from ._core import _TimerCore
 
-_uses_signals = True
+name = "win32"
+uses_interrupts = True
+is_async = False
+_defer_sync_arm = False
 
 
 def _backend_sleep_ms(ms):
     win.SleepEx(ms, True)
+
+
+def pump():
+    _provider_pump()
+
+
+def sleep_ms(ms):
+    _provider_sleep_ms(ms, backend_sleep=_backend_sleep_ms, uses_interrupts=True)
+
+
+__all__ = ["Timer", "is_async", "name", "pump", "sleep_ms", "uses_interrupts"]
 
 
 class Timer(_TimerCore):

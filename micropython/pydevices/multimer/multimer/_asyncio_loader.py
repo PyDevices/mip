@@ -13,8 +13,6 @@ def load_asyncio():
 
     # Prefer ``asyncio`` over ``uasyncio``. On modern MicroPython, ``uasyncio`` is
     # a lazy shim whose ``__getattr__`` forwards into ``sys.modules["asyncio"]``.
-    # Caching that shim breaks ``install_asyncio_compat``: after the facade
-    # replaces the ``asyncio`` name, shim → facade → shim recurses on getattr.
     try:
         import asyncio as aio
 

@@ -38,9 +38,9 @@ _CAPTURE_PROFILES = {
 
 def _sleep_ms(milliseconds):
     try:
-        from multimer import sleep_ms
+        from multimer import win32 as timer
 
-        sleep_ms(milliseconds)
+        timer.sleep_ms(milliseconds)
     except Exception:
         time.sleep(milliseconds / 1000)
 

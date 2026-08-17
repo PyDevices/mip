@@ -3,10 +3,15 @@
 # SPDX-License-Identifier: MIT
 """Cooperative polling Timer (last-resort backend)."""
 
-from .._core import _TimerCore
-from .._ticks import ticks_add, ticks_diff, ticks_ms
+from . import _provider_pump, _provider_sleep_ms
+from ._core import _TimerCore
+from ._ticks import ticks_add, ticks_diff, ticks_ms
 
 _active = []
+name = "polling"
+uses_interrupts = False
+is_async = False
+_defer_sync_arm = True
 
 
 class Timer(_TimerCore):
@@ -70,3 +75,14 @@ def _backend_sleep_ms(ms):
             supervisor.delay(1)
         except Exception:
             time.sleep(0.001)
+
+
+def pump():
+    _provider_pump(_backend_drain)
+
+
+def sleep_ms(ms):
+    _provider_sleep_ms(ms, backend_sleep=_backend_sleep_ms, drain=_backend_drain)
+
+
+__all__ = ["Timer", "is_async", "name", "pump", "sleep_ms", "uses_interrupts"]
