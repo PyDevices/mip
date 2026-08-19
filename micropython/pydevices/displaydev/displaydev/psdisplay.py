@@ -40,7 +40,7 @@ def _buttons_tuple(buttons):
 
 class PSDevices:
     """
-    Unified input for a PyScript canvas, registered as an eventsys QUEUE device.
+    Unified input for a PyScript canvas, registered as an appdev HOST device.
 
     Captures all available browser input on a single HTML element and turns it
     into ``events`` objects (matching the desktop SDL2 / PyGame event
@@ -60,7 +60,7 @@ class PSDevices:
 
     Quit chord handling is configured on :class:`PSDisplay` via ``quit_chord``
     (default ``(keys.K_AC_BACK, 0)`` for browser/TV Back).
-    :class:`~eventsys.HostEventsDevice` applies the chord when constructed with
+    :class:`~appdev.HostEvents` applies the chord when constructed with
     ``display=``.
 
     Note:
@@ -114,7 +114,7 @@ class PSDevices:
 
     def read(self):
         """
-        Returns queued input events for an eventsys QUEUE device.
+        Returns queued input events for an appdev device.
 
         Polls connected gamepads (if any) and returns all events received since
         the last call.
@@ -323,7 +323,7 @@ class PSDisplay(DisplayDriver):
         quiet (bool): Suppress init chatter when True.
 
     Attributes:
-        needs_refresh (bool): True — ``eventsys.Runtime`` drives periodic ``show()``.
+        needs_refresh (bool): True — ``appdev.App`` drives periodic ``show()``.
     """
 
     needs_refresh = True

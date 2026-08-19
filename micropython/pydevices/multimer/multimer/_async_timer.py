@@ -34,7 +34,7 @@ class AsyncTimer(_TimerCore):
     Use when ``runtime.timer_async`` is True (PyScript, Jupyter, desktop async).
     :meth:`init` requires a running event loop — prefer constructing at import
     time and calling :meth:`init` (or passing kwargs) only after the loop starts,
-    or let ``eventsys.Runtime`` defer arming via ``arm_async_refresh``.
+    or let ``appdev.App`` defer arming via ``arm_async_refresh``.
 
     Inherited: :attr:`ONE_SHOT`, :attr:`PERIODIC`, :meth:`init`, :meth:`deinit`.
     """

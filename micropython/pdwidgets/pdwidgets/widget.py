@@ -56,7 +56,7 @@ class Widget:
             fg (int): Foreground color; falls back to the parent color.
             bg (int): Background color; falls back to the parent color.
             visible (bool): Whether the widget is shown immediately.
-            value: Widget value such as text, numeric state, or a model object.
+            value (Any): Widget value such as text, numeric state, or a model object.
             padding (tuple): Padding applied to the widget's content area.
             radius (int): Corner radius stored on the widget; subclasses may use
                 it when drawing rounded surfaces.
@@ -118,10 +118,10 @@ class Widget:
         """Register an event handler for this widget.
 
         Args:
-            event_type: ``events`` constant such as
+            event_type (int): ``events`` constant such as
                 ``events.MOUSEBUTTONDOWN`` or ``events.KEYDOWN``.
-            callback: Callable invoked as ``callback(data_or_sender, event)``.
-            data: User data passed as the first callback argument; defaults to
+            callback (callable): Callable invoked as ``callback(data_or_sender, event)``.
+            data (Any): User data passed as the first callback argument; defaults to
                 the widget itself.
 
         This is the primary way to react to pointer and keyboard input without
@@ -526,7 +526,7 @@ class Widget:
         Set the widget's value (equivalent to assigning ``widget.value``).
 
         Args:
-            value: The new value; triggers ``changed`` when it differs.
+            value (Any): The new value; triggers ``changed`` when it differs.
         """
         self.value = value
 

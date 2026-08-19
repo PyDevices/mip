@@ -31,8 +31,8 @@ class Task:
         """Schedule the first run ``delay`` ms from now.
 
         Args:
-            callback: Zero-argument callable to invoke on each run.
-            delay: Interval between runs, in milliseconds.
+            callback (callable): Zero-argument callable to invoke on each run.
+            delay (int): Interval between runs, in milliseconds.
         """
         self.callback = callback
         self.delay = delay

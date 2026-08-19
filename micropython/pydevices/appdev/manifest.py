@@ -1,10 +1,11 @@
 metadata(
-    description="PyDevices displaydev",
+    description="PyDevices appdev",
     version="0.1.3",
     author="Brad Barnett",
     license="MIT",
-    pypi_publish="pydevices-displaydev",
+    pypi_publish="pydevices-appdev",
 )
 require("events")
 require("keys")
-package("displaydev")
+require("multimer")
+package("appdev")

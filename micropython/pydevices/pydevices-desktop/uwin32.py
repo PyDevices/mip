@@ -9,7 +9,7 @@ Used by ``displaydev.windisplay``, ``multimer``'s win32 timer backend, and
 on CPython Windows.
 
 Exports real Win32 / WASAPI names (plus a few thin COM helpers that wrap
-vtable calls). Policy (eventsys mapping, PCM coalesce, timer ``_deliver``)
+vtable calls). Policy (event mapping, PCM coalesce, timer ``_deliver``)
 stays in the consumers.
 """
 
@@ -1613,7 +1613,7 @@ _VK_SPECIAL = {
 
 
 def virtual_key_to_sdl(vk):
-    """Map a Win32 virtual-key code to an eventsys / SDL keycode."""
+    """Map a Win32 virtual-key code to an events / SDL keycode."""
     vk = int(vk) & 0xFF
     if 0x41 <= vk <= 0x5A:
         return vk + 32  # 'A'..'Z' → 'a'..'z'

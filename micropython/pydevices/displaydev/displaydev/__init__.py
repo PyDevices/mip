@@ -305,11 +305,11 @@ def capabilities():
         "dialect": sys.implementation.name,
         "byteswap": _BYTESWAP_BACKEND,
         "modules": {
-            "busdisplay": {"eventsys": False, "auto_refresh": False},
-            "fbdisplay": {"eventsys": False, "auto_refresh": False},
-            "pixeldisplay": {"eventsys": False, "auto_refresh": False},
+            "busdisplay": {"appdev": False, "auto_refresh": False},
+            "fbdisplay": {"appdev": False, "auto_refresh": False},
+            "pixeldisplay": {"appdev": False, "auto_refresh": False},
             "sdldisplay": {
-                "eventsys": True,
+                "appdev": True,
                 "auto_refresh": True,
                 "default_period_ms": _DEFAULT_AUTO_REFRESH_PERIOD,
                 "async_default": False,
@@ -317,7 +317,7 @@ def capabilities():
                 "scroll_emulation": True,
             },
             "pgdisplay": {
-                "eventsys": True,
+                "appdev": True,
                 "auto_refresh": True,
                 "default_period_ms": _DEFAULT_AUTO_REFRESH_PERIOD,
                 "async_default": False,
@@ -325,7 +325,7 @@ def capabilities():
                 "scroll_emulation": True,
             },
             "windisplay": {
-                "eventsys": True,
+                "appdev": True,
                 "auto_refresh": True,
                 "default_period_ms": _DEFAULT_AUTO_REFRESH_PERIOD,
                 "async_default": False,
@@ -333,7 +333,7 @@ def capabilities():
                 "scroll_emulation": True,
             },
             "psdisplay": {
-                "eventsys": True,
+                "appdev": True,
                 "auto_refresh": True,
                 "default_period_ms": _DEFAULT_AUTO_REFRESH_PERIOD,
                 "async_default": True,
@@ -341,7 +341,7 @@ def capabilities():
                 "scroll_emulation": True,
             },
             "jndisplay": {
-                "eventsys": True,
+                "appdev": True,
                 "auto_refresh": True,
                 "default_period_ms": _DEFAULT_AUTO_REFRESH_PERIOD,
                 "async_default": True,
@@ -349,7 +349,7 @@ def capabilities():
                 "scroll_emulation": True,
             },
             "auto": {
-                "eventsys": True,
+                "appdev": True,
                 "auto_refresh": True,
                 "host_select": True,
             },
@@ -540,7 +540,7 @@ class DisplayDriver:
     applications use a concrete driver from ``board_config.display`` rather than
     instantiating this class directly.
 
-    Periodic presentation when needed is driven by ``eventsys.Runtime`` (see
+    Periodic presentation when needed is driven by ``appdev.App`` (see
     ``needs_refresh``).
 
     ``share_framebuffer``: when True, a GUI may bind the panel scanout

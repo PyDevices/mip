@@ -69,7 +69,7 @@ def _buttons_tuple(buttons):
 
 class JNDevices:
     """
-    Unified input for Jupyter Notebook, registered as an eventsys QUEUE device.
+    Unified input for Jupyter Notebook, registered as an appdev HOST device.
 
     Creates the interactive ``ipywidgets`` Image that mirrors the display buffer
     and watches it (via ``ipyevents``) for all available input, turning it into
@@ -84,7 +84,7 @@ class JNDevices:
 
     Quit chord handling is configured on :class:`JNDisplay` via ``quit_chord``
     (default ``(keys.K_AC_BACK, 0)``).
-    :class:`~eventsys.HostEventsDevice` applies the chord when constructed with
+    :class:`~appdev.HostEvents` applies the chord when constructed with
     ``display=``.
 
     This class also owns the display widget: ``JNDisplay`` pushes frames to it
@@ -129,7 +129,12 @@ class JNDevices:
                 "wheel",
                 "keydown",
                 "keyup",
+                "touchstart",
+                "touchend",
+                "touchmove",
+                "touchcancel",
             ],
+            prevent_default_action=True,
         )
         self._events.on_dom_event(self._on_dom_event)
 
@@ -154,7 +159,7 @@ class JNDevices:
 
     def read(self):
         """
-        Returns queued input events for an eventsys QUEUE device.
+        Returns queued input events for an appdev device.
 
         Returns:
             list or None: The events received since the last call, or None.
@@ -211,6 +216,12 @@ class JNDevices:
             self._on_mouse_button(event, events.MOUSEBUTTONDOWN)
         elif kind == "mouseup":
             self._on_mouse_button(event, events.MOUSEBUTTONUP)
+        elif kind == "touchstart":
+            self._on_touch(event, events.MOUSEBUTTONDOWN)
+        elif kind == "touchmove":
+            self._on_touch_move(event)
+        elif kind in ("touchend", "touchcancel"):
+            self._on_touch(event, events.MOUSEBUTTONUP)
         elif kind == "wheel":
             self._on_wheel(event)
         elif kind in ("keydown", "keyup"):
@@ -218,6 +229,31 @@ class JNDevices:
 
     def _pos(self, event):
         return (int(event.get("dataX", 0)), int(event.get("dataY", 0)))
+
+    def _touch_pos(self, event):
+        touches = event.get("touches") or event.get("changedTouches") or []
+        if touches:
+            t = touches[0]
+            return (int(t.get("dataX", 0)), int(t.get("dataY", 0)))
+        return self._pos(event)
+
+    def _on_touch(self, event, type):
+        self._queue.append(
+            events.Button(type, self._touch_pos(event), 1, False, None)
+        )
+
+    def _on_touch_move(self, event):
+        pos = self._touch_pos(event)
+        self._queue.append(
+            events.Motion(
+                events.MOUSEMOTION,
+                pos,
+                (0, 0),
+                (1, 0, 0),
+                False,
+                None,
+            )
+        )
 
     def _on_mouse_button(self, event, type):
         self._queue.append(
@@ -282,7 +318,7 @@ class JNDisplay(DisplayDriver):
         color_depth (int): Bits per pixel (16).
         touch_scale (float): Pointer scale for ``QueueDevice`` (always ``1.0``).
         quit_chord: Keyboard chord for quit (default browser Back); ``None`` disables.
-        needs_refresh (bool): True — ``eventsys.Runtime`` drives periodic ``show()``.
+        needs_refresh (bool): True — ``appdev.App`` drives periodic ``show()``.
     """
 
     needs_refresh = True
@@ -308,15 +344,22 @@ class JNDisplay(DisplayDriver):
 
         super().__init__(quiet=quiet)
 
+    def _ensure_devices(self):
+        if self._jn_devices is None:
+            try:
+                JNDevices(self)
+            except ImportError:
+                self._jn_devices = False
+        return self._jn_devices if self._jn_devices is not False else None
+
     def get_events(self):
         """Drain Jupyter input; lazily create :class:`JNDevices` on first use.
 
         Static notebooks that only call :meth:`show` never touch this and keep
         the non-interactive path.
         """
-        if self._jn_devices is None:
-            JNDevices(self)
-        return self._jn_devices.read()
+        dev = self._ensure_devices()
+        return dev.read() if dev is not None else None
 
     ############### Required API Methods ################
 
@@ -475,8 +518,9 @@ class JNDisplay(DisplayDriver):
         Updates the display with the current buffer.
         """
         frame = self.render()
-        if self._jn_devices is not None:
-            self._jn_devices.update_buffer(frame)
+        dev = self._ensure_devices()
+        if dev is not None:
+            dev.update_buffer(frame)
         elif not self._static_shown:
             if _timer is not None:
                 # Auto-refresh timer fired before a device or explicit show().

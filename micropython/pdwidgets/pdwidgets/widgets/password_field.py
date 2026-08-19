@@ -34,23 +34,23 @@ class PasswordField(TextInput):
         """Initialize a password field that masks displayed glyphs.
 
         Args:
-            parent: Parent widget or screen.
-            x: Relative x-coordinate.
-            y: Relative y-coordinate.
-            w: Width in pixels (defaults to parent width).
-            h: Height in pixels (defaults from ``text_height``).
-            align: Alignment constant from :data:`~pdwidgets.ALIGN`.
-            align_to: Widget to align against (default parent).
-            fg: Foreground / text color.
-            bg: Background / field fill color.
-            visible: Initial visibility (default ``True``).
-            value: Initial password string (default empty).
-            padding: ``(left, right, top, bottom)`` inset.
-            hint: Placeholder text when the value is empty.
-            text_height: Romfont height (``TEXT_SIZE`` member).
-            radius: Corner radius of the field border.
-            max_length: Optional maximum character count.
-            mask: Single character used to mask each glyph (default ``"*"``).
+            parent (Widget): Parent widget or screen.
+            x (int): Relative x-coordinate.
+            y (int): Relative y-coordinate.
+            w (int): Width in pixels (defaults to parent width).
+            h (int): Height in pixels (defaults from ``text_height``).
+            align (int): Alignment constant from :data:`~pdwidgets.ALIGN`.
+            align_to (Widget): Widget to align against (default parent).
+            fg (int): Foreground / text color.
+            bg (int): Background / field fill color.
+            visible (bool): Initial visibility (default ``True``).
+            value (str): Initial password string (default empty).
+            padding (tuple): ``(left, right, top, bottom)`` inset.
+            hint (str): Placeholder text when the value is empty.
+            text_height (int): Romfont height (``TEXT_SIZE`` member).
+            radius (int): Corner radius of the field border.
+            max_length (int): Optional maximum character count.
+            mask (str): Single character used to mask each glyph (default ``"*"``).
         """
         self.mask = mask
         super().__init__(

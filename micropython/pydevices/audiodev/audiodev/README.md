@@ -23,7 +23,7 @@ backend or `audiodev.auto`. Desktop `board_peripherals` uses auto (DirectSound e
 only when the selected backend is `pygame_audio`). `audiodev.auto` prefers
 `win_audio` on Windows CPython when `uwin32` imports, before pygame/SDL.
 
-This package does not import `displaydev`, `multimer`, or `eventsys`.
+This package does not import `displaydev`, `multimer`, or `appdev`.
 
 Family invariants (template for later displaydev / multimer):
 

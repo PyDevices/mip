@@ -43,7 +43,7 @@ class IconTheme:
         attribute callables such as ``icon_theme.home(ICON_SIZE.LARGE)``.
 
         Args:
-            path: Accepted for call-site compatibility and ignored; icons are
+            path (str): Accepted for call-site compatibility and ignored; icons are
                 always loaded by module name.
 
         Example:
@@ -104,7 +104,7 @@ class ColorTheme:
         """Build semantic color slots from a palette's ``color565`` converter.
 
         Args:
-            pal: A :class:`~palettes.Palette` (or compatible) object used only
+            pal (Palette): A :class:`~palettes.Palette` (or compatible) object used only
                 for ``color565`` conversion and byteswap handling.
         """
         c = pal.color565

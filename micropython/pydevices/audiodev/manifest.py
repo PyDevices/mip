@@ -1,7 +1,7 @@
 metadata(
     description="PyDevices audiodev",
     version="0.1.3",
-    author="Brad Barnett <contact@pydevices.com>",
+    author="Brad Barnett",
     license="MIT",
     pypi_publish="pydevices-audiodev",
 )

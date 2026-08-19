@@ -99,7 +99,7 @@ def _handle_window_close(window):
 
 
 def _convert(e):  # noqa: PLR0911 — one return per pygame event type
-    """Convert a pygame event to an eventsys namedtuple."""
+    """Convert a pygame event to an events namedtuple."""
     t = e.type
     if t == pg.QUIT:
         return events.Quit(events.QUIT)
@@ -169,12 +169,12 @@ def _process_pg_event(e):
 
 
 def poll_event():
-    """Non-blocking poll; return one eventsys event or ``None`` (not for QUEUE ``read``)."""
+    """Non-blocking poll; return one events event or ``None`` (not for QUEUE ``read``)."""
     return _process_pg_event(pg.event.poll())
 
 
 def get_events():
-    """Drain the pygame queue; return a list of eventsys events or ``None``."""
+    """Drain the pygame queue; return a list of events or ``None``."""
     raw = pg.event.get()
     if not raw:
         return None
@@ -188,8 +188,8 @@ def get_events():
 
 # Opened joystick handles, kept referenced so PyGame keeps delivering their
 # events.  PyGame's joystick events (JOYAXISMOTION, JOYBUTTONDOWN, ...) already
-# share eventsys's numeric types and attribute names, so they flow through
-# share eventsys's numeric types once joysticks are opened.
+# share events's numeric types and attribute names, so they flow through
+# share events's numeric types once joysticks are opened.
 _joysticks = []
 
 
@@ -232,7 +232,7 @@ class PGDisplay(DisplayDriver):
     Attributes:
         color_depth (int): Bits per pixel.
         touch_scale (float): Scale used to map host pointer coords into panel space.
-        needs_refresh (bool): True — ``eventsys.Runtime`` drives periodic ``show()``.
+        needs_refresh (bool): True — ``appdev.App`` drives periodic ``show()``.
     """
 
     needs_refresh = True

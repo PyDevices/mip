@@ -39,28 +39,28 @@ class Display(Widget):
     """Root display surface that owns the framebuffer, event loop, and widget tree.
 
     Create one :class:`Display` per hardware panel and attach it to the app's
-    shared :mod:`eventsys` runtime. The display becomes the root of the widget
-    hierarchy, and its render loop is driven by the runtime's tick callback so
+    shared :mod:`appdev` coordinator. The display becomes the root of the widget
+    hierarchy, and its render loop is driven by the app's timer callback so
     widgets redraw without a separate timer of their own.
 
     Typical setup:
 
     - build a :class:`Screen` for the active page
     - add child widgets with relative geometry and alignment
-    - call :meth:`runtime.run_forever() <eventsys.Runtime.run_forever>` after
+    - call :meth:`app.run() <appdev.App.run>` after
       construction to start input handling and rendering
     """
     displays = []
     timer = None  # pdwidgets owns no timer; kept as None for API/back-compat.
-    tick_period = 10  # Render tick period (ms) for the runtime on_tick subscription.
+    tick_period = 10  # Render tick period (ms) for the app every() subscription.
 
-    def __init__(self, display_drv, runtime, tfa=0, bfa=0, format=RGB565):
-        """Initialize a display root from the board's display driver and runtime.
+    def __init__(self, display_drv, app, tfa=0, bfa=0, format=RGB565):
+        """Initialize a display root from the board's display driver and app coordinator.
 
         Args:
             display_drv (DisplayDriver): The hardware driver that exposes the
                 framebuffer dimensions, color depth, and any scroll regions.
-            runtime (Runtime): The shared event runtime that will dispatch input
+            app (App): The shared application coordinator that will dispatch input
                 and drive periodic redraws.
             tfa (int): Top fixed area used for split displays or status bars.
             bfa (int): Bottom fixed area used for split displays or status bars.
@@ -68,10 +68,10 @@ class Display(Widget):
 
         Example:
             import board_config
-            import eventsys
+            import appdev
 
-            runtime = eventsys.Runtime.from_board_config(board_config)
-            display = Display(board_config.display_drv, runtime)
+            app = appdev.App(board_config)
+            display = Display(board_config.display_drv, app)
             screen = Screen(display)
             Label(screen, value="Hello")
         """
@@ -88,11 +88,13 @@ class Display(Widget):
             0,
             True,
             None,
+            None,
             (0, 0, 0, 0),
         )
         display_drv.set_vscroll(tfa, bfa)
         display_drv.vscroll = 0
-        self.runtime = runtime
+        self.app = app
+        self.runtime = app
         self._buffer = memoryview(
             bytearray(display_drv.width * display_drv.height * display_drv.color_depth // 8)
         )
@@ -113,35 +115,32 @@ class Display(Widget):
         )
         self._color_theme = ColorTheme(self.pal)
         self._tick_sub = None
+        self._refresh_claim = None
         Display.displays.append(self)
-        self._attach_to_runtime()
+        self._attach_to_app()
 
-    def _attach_to_runtime(self):
-        """Wire input dispatch and frame rendering into the shared runtime.
-
-        The display does not create its own event loop. Instead, it subscribes
-        to the runtime's event stream for widget input and registers a periodic
-        render tick that calls :meth:`tick`. The runtime decides whether that
-        tick should run synchronously or asynchronously depending on
-        ``runtime.timer_async``.
-        """
-        runtime = self.runtime
-        if runtime is None:
+    def _attach_to_app(self):
+        """Wire input dispatch and frame rendering into the shared app coordinator."""
+        app = self.app
+        if app is None:
             return
-        runtime.subscribe(self.handle_event, event_types=list(_WIDGET_EVENTS))
-        self._tick_sub = runtime.on_tick(
-            self._render_tick,
-            period=Display.tick_period,
-            async_=getattr(runtime, "timer_async", False),
-        )
-        # Launchers often call ``runtime.stop_timer()`` before building UI
-        # (clears display auto-refresh). That also drops ``_service_tick``, so
-        # touch/QUIT stop polling. LVGL's display_driver re-arms service; do the
-        # same here so widgets/graphics keep receiving MOUSEBUTTON* events.
-        arm = getattr(runtime, "_arm_service", None)
-        if callable(arm):
+        if hasattr(app, "on"):
+            app.on(list(_WIDGET_EVENTS), self.handle_event)
+        elif hasattr(app, "subscribe"):
+            app.subscribe(self.handle_event, event_types=list(_WIDGET_EVENTS))
+
+        if hasattr(app, "every"):
+            self._tick_sub = app.every(Display.tick_period, self._render_tick)
+        elif hasattr(app, "on_tick"):
+            self._tick_sub = app.on_tick(
+                self._render_tick,
+                period=Display.tick_period,
+                async_=getattr(app, "timer_async", False),
+            )
+
+        if hasattr(app, "pause_refresh"):
             try:
-                arm()
+                self._refresh_claim = app.pause_refresh()
             except Exception:
                 pass
 

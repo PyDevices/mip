@@ -166,7 +166,7 @@ def _panel_size(window_id=None):
 
 
 def _handle_window_event(e):
-    """Handle SDL_WINDOWEVENT; may return an eventsys event or ``None``."""
+    """Handle SDL_WINDOWEVENT; may return an events event or ``None``."""
     wev = e.window.event
     if wev != _SDL_WINDOWEVENT_CLOSE:
         return None
@@ -174,9 +174,9 @@ def _handle_window_event(e):
     display = _display_for_window_id(wid)
     if display is None or display is _displays[0] or len(_displays) <= 1:
         return events.Quit(events.QUIT)
-    runtime = getattr(display, "runtime", None)
-    if runtime is not None and callable(getattr(runtime, "remove_display", None)):
-        runtime.remove_display(display)
+    app = getattr(display, "app", None) or getattr(display, "runtime", None)
+    if app is not None and callable(getattr(app, "remove_display", None)):
+        app.remove_display(display)
     else:
         try:
             display.quit()
@@ -190,7 +190,7 @@ def _handle_window_event(e):
 
 
 def _process_sdl_event(raw):
-    """Convert one polled SDL event to eventsys, or ``None`` to skip."""
+    """Convert one polled SDL event to events, or ``None`` to skip."""
     e = usdl2.SDL_Event(raw)
     if e.type == _SDL_WINDOWEVENT:
         return _handle_window_event(e)
@@ -204,7 +204,7 @@ def poll_event():
     Poll for one pending event.
 
     Returns:
-        Optional[events]: One eventsys event, or ``None``.
+        Optional[events]: One events event, or ``None``.
     """
     global _event
     _flush_pending_displays()
@@ -218,7 +218,7 @@ def get_events():
     Drain all pending events from the SDL queue.
 
     Returns:
-        list | None: A list of eventsys events, or ``None`` if the queue was empty.
+        list | None: A list of events, or ``None`` if the queue was empty.
     """
     global _event
     _flush_pending_displays()
@@ -435,7 +435,7 @@ class SDLDisplay(DisplayDriver):
         quiet (bool): Suppress init chatter when True.
 
     Attributes:
-        needs_refresh (bool): True — ``eventsys.Runtime`` drives periodic ``show()``.
+        needs_refresh (bool): True — ``appdev.App`` drives periodic ``show()``.
     """
 
     needs_refresh = True

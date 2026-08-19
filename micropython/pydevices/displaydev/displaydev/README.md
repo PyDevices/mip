@@ -17,7 +17,8 @@ pip install \
   pydevices-displaydev
 ```
 
-Why both indexes: [two-index pip install](https://pydisplay.readthedocs.io/en/latest/publishing-micropython-lib/#two-index-pip-install-required).
+Why both indexes: PyDevices wheels are on TestPyPI while some of their
+dependencies are on PyPI only — [details](https://github.com/PyDevices/pydevices/blob/main/docs/troubleshooting.md#pip-cannot-resolve-a-pydevices-distribution).
 
 For desktop SDL, also install [`pydevices-desktop`](https://test.pypi.org/project/pydevices-desktop/) with the same two-index pattern (bundles `usdl2` and the desktop `board_config`). For PyGame, install `pygame-ce` from PyPI (`import pygame`).
 
@@ -41,26 +42,16 @@ display_drv.fill_rect(10, 10, 40, 40, 0xF800)
 display_drv.show()
 ```
 
-Optional host auto-selection lives in `displaydev.auto` (never imported from the package root):
+Optional host auto-selection lives in `displaydev.auto` (never imported from the
+package root); `AutoDisplay` picks `PSDisplay` on PyScript, `JNDisplay` on
+Jupyter, and `WinDisplay`→`PGDisplay`→`SDLDisplay` on desktop. Explicit boards
+import a backend directly.
 
-```python
-from displaydev.auto import AutoDisplay
-import eventsys
+Install a board package for MCU pins, or the desktop bundle from pydevices —
+see [install workflows](https://github.com/PyDevices/pydevices/blob/main/docs/install-workflows.md).
 
-display_drv = AutoDisplay(width=320, height=480, scale=2.0)
-runtime = eventsys.Runtime(
-    displays=[display_drv],
-    host_read=display_drv.get_events,
-    timer_async=display_drv.requires_async_timer,
-)
-```
-
-`AutoDisplay` picks `PSDisplay` (PyScript), `JNDisplay` (Jupyter), or
-`WinDisplay`→`PGDisplay`→`SDLDisplay` (desktop; Win32 first on Windows
-CPython). Explicit boards import a backend directly. Install a board package
-for MCU pins, or
-use the desktop bundle from pydevices
-([install workflows](https://pydevices.github.io/pydevices/install-workflows.html)).
+**Backends, the input contract, rotation, scrolling, and the internals are in
+[docs/displaydev.md](https://github.com/PyDevices/pydevices/blob/main/docs/displaydev.md).**
 
 ## What you get
 
@@ -69,15 +60,15 @@ use the desktop bundle from pydevices
 - `displaydev.auto.AutoDisplay` / `host_kind` for desktop-like host selection (board_config remains the app import surface)
 
 Host backends use `pydevices-events` and `pydevices-keys` for event records and
-key codes (`import events` / `import keys`). Install `pydevices-eventsys`
-separately when the application chooses that traffic controller.
+key codes (`import events` / `import keys`). Install `pydevices-appdev`
+separately when the application chooses that coordinator.
 
 ## Links
 
-- [Documentation — Displays](https://pydisplay.readthedocs.io/en/latest/concepts/displays/)
+- [Documentation — Displays](https://github.com/PyDevices/pydevices/blob/main/docs/displaydev.md)
 - [Source](https://github.com/PyDevices/pydevices/tree/main/lib/displaydev)
 - [Issues](https://github.com/PyDevices/pydevices/issues)
-- Related: `pydevices-events`, `pydevices-keys`, `pydevices-eventsys`,
+- Related: `pydevices-events`, `pydevices-keys`, `pydevices-appdev`,
   `pydevices-multimer`, `pydevices-pygraphics`, `pydevices-desktop`
 
 ## License

@@ -28,8 +28,8 @@ Proportional fonts:
 
 Timer architecture:
     pdwidgets owns **no** timer of its own. Each :class:`Display` wires itself
-    into the shared ``eventsys.Runtime`` at construction. Apps build the UI,
-    then ``runtime.run_forever()``.
+    into the shared ``appdev.App`` at construction. Apps build the UI,
+    then ``app.run()``.
 """
 
 import events
