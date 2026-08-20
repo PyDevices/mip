@@ -19,7 +19,7 @@ pip install \
 
 `pydevices` is one distribution covering the whole core `lib/` tree, so this
 also installs `events`, `keys`, `appdev`, `multimer`, `audiodev`, and
-`boarddev`. MIP publishes them separately: `mip.install("displaydev", …)`.
+`boarddev`. MIP ships the same set as one `pydevices` package.
 
 Why both indexes: PyDevices wheels are on TestPyPI while some of their
 dependencies are on PyPI only — [details](https://github.com/PyDevices/pydevices/blob/main/docs/troubleshooting.md#pip-cannot-resolve-a-pydevices-distribution).
@@ -31,7 +31,7 @@ For desktop SDL, also install [`pydevices-desktop`](https://test.pypi.org/projec
 ```python
 import mip
 
-mip.install("displaydev", index="https://PyDevices.github.io/mip")
+mip.install("pydevices", index="https://PyDevices.github.io/mip")
 ```
 
 ## Quick start

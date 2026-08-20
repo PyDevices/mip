@@ -17,14 +17,14 @@ pip install \
 ```
 
 `pydevices` is one distribution covering the whole core `lib/` tree. MIP
-publishes each component separately: `mip.install("multimer", …)`.
+ships the same set as one `pydevices` package.
 
 ### MicroPython (MIP)
 
 ```python
 import mip
 
-mip.install("multimer", index="https://PyDevices.github.io/mip")
+mip.install("pydevices", index="https://PyDevices.github.io/mip")
 ```
 
 ## Quick start

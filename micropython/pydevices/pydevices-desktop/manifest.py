@@ -1,6 +1,6 @@
 metadata(
     description="PyDevices pydevices-desktop",
-    version="0.1.4",
+    version="0.1.5",
     author="Brad Barnett",
     license="MIT",
     pypi_publish="pydevices-desktop",
