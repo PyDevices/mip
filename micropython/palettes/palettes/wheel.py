@@ -27,14 +27,14 @@ class WheelPalette(_Palette):
     through hue at a fixed saturation and brightness for more controlled ramps.
 
     Args:
-        name: Prefix for :attr:`~palettes.Palette.name` (length suffix is added).
-        color_depth: Output format; see :class:`~palettes.Palette`.
-        swapped: Byte-swap 16-bit colors when ``True``.
-        cached: Memoize index lookups when ``True`` (default).
-        length: Number of colors in the wheel (default ``256``).
-        saturation: HSV saturation in ``0.0``–``1.0``, or ``None`` for
+        name (str): Prefix for :attr:`~palettes.Palette.name` (length suffix is added).
+        color_depth (int): Output format; see :class:`~palettes.Palette`.
+        swapped (bool): Byte-swap 16-bit colors when ``True``.
+        cached (bool): Memoize index lookups when ``True`` (default).
+        length (int): Number of colors in the wheel (default ``256``).
+        saturation (float): HSV saturation in ``0.0``–``1.0``, or ``None`` for
             classic wheel mode.
-        value: HSV value in ``0.0``–``1.0``, or ``None`` for classic wheel mode.
+        value (float): HSV value in ``0.0``–``1.0``, or ``None`` for classic wheel mode.
 
     Raises:
         ValueError: If ``saturation`` or ``value`` is outside ``0``–``1`` in
@@ -54,15 +54,15 @@ class WheelPalette(_Palette):
         """Create a wheel or fixed-saturation HSV ramp palette.
 
         Args:
-            name: Prefix for :attr:`~palettes.Palette.name` (length suffix
+            name (str): Prefix for :attr:`~palettes.Palette.name` (length suffix
                 is added).
-            color_depth: Output format; see :class:`~palettes.Palette`.
-            swapped: Byte-swap 16-bit colors when ``True``.
-            cached: Memoize index lookups when ``True`` (default).
-            length: Number of colors in the wheel (default ``256``).
-            saturation: HSV saturation in ``0.0``–``1.0``, or ``None`` for
+            color_depth (int): Output format; see :class:`~palettes.Palette`.
+            swapped (bool): Byte-swap 16-bit colors when ``True``.
+            cached (bool): Memoize index lookups when ``True`` (default).
+            length (int): Number of colors in the wheel (default ``256``).
+            saturation (float): HSV saturation in ``0.0``–``1.0``, or ``None`` for
                 classic wheel mode.
-            value: HSV value in ``0.0``–``1.0``, or ``None`` for classic
+            value (float): HSV value in ``0.0``–``1.0``, or ``None`` for classic
                 wheel mode.
 
         Raises:

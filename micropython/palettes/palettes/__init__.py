@@ -55,15 +55,15 @@ def get_palette(name="default", **kwargs):
     rest of the UI.
 
     Args:
-        name: Palette type. One of ``"default"`` (Windows 16-color),
+        name (str): Palette type. One of ``"default"`` (Windows 16-color),
             ``"wheel"``, ``"cube"``, or ``"material_design"``. Unknown names
             fall back to :class:`Palette`.
-        **kwargs: Forwarded to the palette constructor (for example
+        **kwargs (Any): Forwarded to the palette constructor (for example
             ``color_depth``, ``length``, ``size``, ``saturation``, and
             ``swapped``).
 
     Returns:
-        A :class:`Palette` subclass instance.
+        Palette: A :class:`Palette` subclass instance.
 
     Example:
         >>> pal = get_palette(name="cube", size=3, color_depth=16)
@@ -93,22 +93,22 @@ class Palette:
     attached as attributes during initialization.
 
     Args:
-        name: Optional label stored in :attr:`name`.
-        color_depth: Output format for :meth:`__getitem__`: ``4`` (24-bit
+        name (str): Optional label stored in :attr:`name`.
+        color_depth (int): Output format for :meth:`__getitem__`: ``4`` (24-bit
             index), ``8`` (RGB332), ``16`` (RGB565), or ``24`` (``0xRRGGBB``).
-        swapped: If ``True``, byte-swap 16-bit colors (little-endian displays).
-        cached: If ``True``, memoize computed index colors in an internal dict.
+        swapped (bool): If ``True``, byte-swap 16-bit colors (little-endian displays).
+        cached (bool): If ``True``, memoize computed index colors in an internal dict.
     """
 
     def __init__(self, name="", color_depth=16, swapped=False, cached=False):
         """Create a palette from the default Windows 16-color name table.
 
         Args:
-            name: Optional label stored in :attr:`name`.
-            color_depth: Output format for :meth:`__getitem__`: ``4``, ``8``,
+            name (str): Optional label stored in :attr:`name`.
+            color_depth (int): Output format for :meth:`__getitem__`: ``4``, ``8``,
                 ``16``, or ``24``.
-            swapped: If ``True``, byte-swap 16-bit colors.
-            cached: If ``True``, memoize computed index colors.
+            swapped (bool): If ``True``, byte-swap 16-bit colors.
+            cached (bool): If ``True``, memoize computed index colors.
         """
         self._name = name
         self._color_depth = color_depth
@@ -152,10 +152,10 @@ class Palette:
         Negative indices and indices beyond the palette length wrap around.
 
         Args:
-            index: Color index (supports negative and out-of-range values).
+            index (int): Color index (supports negative and out-of-range values).
 
         Returns:
-            Color value as an integer (format depends on ``color_depth``).
+            int: Color value (format depends on ``color_depth``).
 
         Raises:
             ValueError: If ``color_depth`` is not 4, 8, 16, or 24.
@@ -185,13 +185,13 @@ class Palette:
         """Convert RGB to a 16-bit RGB565 value.
 
         Args:
-            r: Red component (0–255), a 24-bit ``0xRRGGBB`` integer, or an
+            r (int): Red component (0–255), a 24-bit ``0xRRGGBB`` integer, or an
                 ``(r, g, b)`` sequence.
-            g: Green component when ``r`` is passed separately.
-            b: Blue component when ``r`` is passed separately.
+            g (int): Green component when ``r`` is passed separately.
+            b (int): Blue component when ``r`` is passed separately.
 
         Returns:
-            16-bit color, optionally byte-swapped when ``swapped`` is ``True``.
+            int: 16-bit color, optionally byte-swapped when ``swapped`` is ``True``.
         """
         if isinstance(r, (tuple, list)):
             # r is a tuple or list
@@ -210,13 +210,13 @@ class Palette:
         """Convert RGB to an 8-bit RGB332 value.
 
         Args:
-            r: Red component (0–255), a 24-bit ``0xRRGGBB`` integer, or an
+            r (int): Red component (0–255), a 24-bit ``0xRRGGBB`` integer, or an
                 ``(r, g, b)`` sequence.
-            g: Green component when ``r`` is passed separately.
-            b: Blue component when ``r`` is passed separately.
+            g (int): Green component when ``r`` is passed separately.
+            b (int): Blue component when ``r`` is passed separately.
 
         Returns:
-            8-bit RGB332 color.
+            int: 8-bit RGB332 color.
         """
         # Convert r, g, b to 8-bit
         if isinstance(r, (tuple, list)):
@@ -233,11 +233,11 @@ class Palette:
         """Expand a packed color to an ``(r, g, b)`` tuple.
 
         Args:
-            color: A 16-bit integer, or a 2- or 3-byte sequence in display
+            color (int): A 16-bit integer, or a 2- or 3-byte sequence in display
                 byte order.
 
         Returns:
-            ``(red, green, blue)`` with each component in ``0``–``255``.
+            tuple: ``(red, green, blue)`` with each component in ``0``–``255``.
         """
         if isinstance(color, int):
             # convert 16-bit int color to 2 bytes
@@ -254,11 +254,11 @@ class Palette:
         """Return the name of the color at ``index``.
 
         Args:
-            index: Palette index (supports wrapping).
+            index (int): Palette index (supports wrapping).
 
         Returns:
-            A name from the palette name table, or a ``"#RRGGBB"`` hex string
-            when no name matches.
+            str: A name from the palette name table, or a ``"#RRGGBB"`` hex
+                string when no name matches.
         """
         return self.rgb_name(self._get_rgb(self._normalize(index)))
 
@@ -266,12 +266,12 @@ class Palette:
         """Look up a color name from RGB components.
 
         Args:
-            r: Red (0–255), a 24-bit integer, or an ``(r, g, b)`` sequence.
-            g: Green when ``r`` is passed separately.
-            b: Blue when ``r`` is passed separately.
+            r (int): Red (0–255), a 24-bit integer, or an ``(r, g, b)`` sequence.
+            g (int): Green when ``r`` is passed separately.
+            b (int): Blue when ``r`` is passed separately.
 
         Returns:
-            Matching name from :attr:`_names`, or ``"#RRGGBB"`` if unknown.
+            str: Matching name from :attr:`_names`, or ``"#RRGGBB"`` if unknown.
         """
         if isinstance(r, (tuple, list)):
             r, g, b = r
@@ -281,10 +281,10 @@ class Palette:
         """Perceived brightness of the color at ``index`` (ITU-R BT.601).
 
         Args:
-            index: Palette index.
+            index (int): Palette index.
 
         Returns:
-            Luminance in ``0.0``–``255.0``.
+            float: Luminance in ``0.0``–``255.0``.
         """
         r, g, b = self._get_rgb(index)
         return 0.299 * r + 0.587 * g + 0.114 * b
@@ -293,10 +293,10 @@ class Palette:
         """Average channel brightness of the color at ``index``.
 
         Args:
-            index: Palette index.
+            index (int): Palette index.
 
         Returns:
-            Normalized brightness in ``0.0``–``1.0``.
+            float: Normalized brightness in ``0.0``–``1.0``.
         """
         r, g, b = self._get_rgb(index)
         return (r + g + b) / 3 / 255
@@ -314,20 +314,20 @@ class MappedPalette(Palette):
     supply a pre-built map and named-color attributes.
 
     Args:
-        name: Optional label stored in :attr:`name`.
-        color_depth: Output format for :meth:`Palette.__getitem__`.
-        swapped: Byte-swap 16-bit colors when ``True``.
-        color_map: ``bytes`` or buffer of RGB triplets, length ``3 * n_colors``.
+        name (str): Optional label stored in :attr:`name`.
+        color_depth (int): Output format for :meth:`Palette.__getitem__`.
+        swapped (bool): Byte-swap 16-bit colors when ``True``.
+        color_map (bytes): ``bytes`` or buffer of RGB triplets, length ``3 * n_colors``.
     """
 
     def __init__(self, name, color_depth, swapped, color_map):
         """Create a palette from a flat RGB byte map.
 
         Args:
-            name: Optional label stored in :attr:`name`.
-            color_depth: Output format for :meth:`Palette.__getitem__`.
-            swapped: Byte-swap 16-bit colors when ``True``.
-            color_map: ``bytes`` or buffer of RGB triplets.
+            name (str): Optional label stored in :attr:`name`.
+            color_depth (int): Output format for :meth:`Palette.__getitem__`.
+            swapped (bool): Byte-swap 16-bit colors when ``True``.
+            color_map (bytes): ``bytes`` or buffer of RGB triplets.
         """
         self._color_map = color_map
         self._length = len(color_map) // 3

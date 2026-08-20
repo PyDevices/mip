@@ -29,23 +29,23 @@ class CubePalette(_Palette):
     values are spaced from ``0`` to ``255`` inclusive.
 
     Args:
-        name: Prefix for :attr:`~palettes.Palette.name` (length suffix is added).
-        color_depth: Output format; see :class:`~palettes.Palette`.
-        swapped: Byte-swap 16-bit colors when ``True``.
-        cached: Memoize index lookups when ``True`` (default).
-        size: Cube edge length. Must be ``2``, ``3``, ``4``, or ``5``.
+        name (str): Prefix for :attr:`~palettes.Palette.name` (length suffix is added).
+        color_depth (int): Output format; see :class:`~palettes.Palette`.
+        swapped (bool): Byte-swap 16-bit colors when ``True``.
+        cached (bool): Memoize index lookups when ``True`` (default).
+        size (int): Cube edge length. Must be ``2``, ``3``, ``4``, or ``5``.
     """
 
     def __init__(self, name="", color_depth=16, swapped=False, cached=True, size=5):
         """Create an evenly spaced RGB cube palette.
 
         Args:
-            name: Prefix for :attr:`~palettes.Palette.name` (length suffix
+            name (str): Prefix for :attr:`~palettes.Palette.name` (length suffix
                 is added).
-            color_depth: Output format; see :class:`~palettes.Palette`.
-            swapped: Byte-swap 16-bit colors when ``True``.
-            cached: Memoize index lookups when ``True`` (default).
-            size: Cube edge length. Must be ``2``, ``3``, ``4``, or ``5``.
+            color_depth (int): Output format; see :class:`~palettes.Palette`.
+            swapped (bool): Byte-swap 16-bit colors when ``True``.
+            cached (bool): Memoize index lookups when ``True`` (default).
+            size (int): Cube edge length. Must be ``2``, ``3``, ``4``, or ``5``.
         """
         self._size = size
         self._length = size**3

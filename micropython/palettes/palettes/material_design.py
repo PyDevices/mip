@@ -34,11 +34,11 @@ class MDPalette(MappedPalette):
     refers to the ``S500`` primary shade.
 
     Args:
-        name: Label for :attr:`~palettes.Palette.name`; defaults to
+        name (str): Label for :attr:`~palettes.Palette.name`; defaults to
             ``"MaterialDesign"`` when empty.
-        color_depth: Output format; see :class:`~palettes.Palette`.
-        swapped: Byte-swap 16-bit colors when ``True``.
-        color_map: RGB byte map; defaults to the built-in Material Design table.
+        color_depth (int): Output format; see :class:`~palettes.Palette`.
+        swapped (bool): Byte-swap 16-bit colors when ``True``.
+        color_map (bytes): RGB byte map; defaults to the built-in Material Design table.
     """
 
     _shades = [
@@ -60,11 +60,11 @@ class MDPalette(MappedPalette):
         """Create a Material Design swatch palette.
 
         Args:
-            name: Label for :attr:`~palettes.Palette.name`; defaults to
+            name (str): Label for :attr:`~palettes.Palette.name`; defaults to
                 ``"MaterialDesign"`` when empty.
-            color_depth: Output format; see :class:`~palettes.Palette`.
-            swapped: Byte-swap 16-bit colors when ``True``.
-            color_map: RGB byte map; defaults to the built-in Material Design
+            color_depth (int): Output format; see :class:`~palettes.Palette`.
+            swapped (bool): Byte-swap 16-bit colors when ``True``.
+            color_map (bytes): RGB byte map; defaults to the built-in Material Design
                 table.
         """
         super().__init__(name, color_depth, swapped, color_map)
