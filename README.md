@@ -18,7 +18,7 @@ import mip
 mip.install("package-name", index="https://PyDevices.github.io/mip")
 ```
 
-`mip` installs into the runtime's default library destination unless `target`
+`mip` installs into the interpreter's default library destination unless `target`
 is supplied. Use `mpy=False` to request portable `.py` source instead of
 MicroPython bytecode.
 
