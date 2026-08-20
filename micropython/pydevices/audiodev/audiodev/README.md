@@ -367,7 +367,7 @@ share one session — focus and the service stay up while any owner is open.
 
 Needs pyjnius and a python-for-android service named `mediaplayback` declared
 with `:foreground:foregroundServiceType=mediaPlayback` — see
-[pydevices-android-template](https://github.com/PyDevices/pydevices-android-template). Off Android
+[android-template](https://github.com/PyDevices/android-template). Off Android
 the import is a no-op.
 
 ## Tests

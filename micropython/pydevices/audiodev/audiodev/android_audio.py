@@ -6,7 +6,7 @@ acquires audio focus and starts a ``mediaPlayback`` foreground service, and
 the last ``close()`` releases both. Non-Android imports are a no-op.
 
 Requires pyjnius and a p4a service named ``mediaplayback`` with
-``:foreground:foregroundServiceType=mediaPlayback`` (see pydevices-android-template).
+``:foreground:foregroundServiceType=mediaPlayback`` (see android-template).
 """
 
 from __future__ import annotations

@@ -1,8 +1,7 @@
 metadata(
     description="PyDevices multimer",
-    version="0.1.3",
+    version="0.1.4",
     author="Brad Barnett",
     license="MIT",
-    pypi_publish="pydevices-multimer",
 )
 package("multimer")

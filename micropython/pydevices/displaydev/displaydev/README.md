@@ -14,8 +14,12 @@ This package is published as a pure-Python wheel to TestPyPI.
 pip install \
   -i https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  pydevices-displaydev
+  pydevices
 ```
+
+`pydevices` is one distribution covering the whole core `lib/` tree, so this
+also installs `events`, `keys`, `appdev`, `multimer`, `audiodev`, and
+`boarddev`. MIP publishes them separately: `mip.install("displaydev", …)`.
 
 Why both indexes: PyDevices wheels are on TestPyPI while some of their
 dependencies are on PyPI only — [details](https://github.com/PyDevices/pydevices/blob/main/docs/troubleshooting.md#pip-cannot-resolve-a-pydevices-distribution).
@@ -59,17 +63,16 @@ see [install workflows](https://github.com/PyDevices/pydevices/blob/main/docs/in
 - MCU (`BusDisplay`, `FBDisplay`) and host backends (SDL, PyGame, Jupyter, PyScript)
 - `displaydev.auto.AutoDisplay` / `host_kind` for desktop-like host selection (board_config remains the app import surface)
 
-Host backends use `pydevices-events` and `pydevices-keys` for event records and
-key codes (`import events` / `import keys`). Install `pydevices-appdev`
-separately when the application chooses that coordinator.
+Host backends use `events` and `keys` for event records and key codes, and
+`appdev` when the application chooses that coordinator. All three arrive with
+`pydevices` on pip; on MIP install them by name.
 
 ## Links
 
 - [Documentation — Displays](https://github.com/PyDevices/pydevices/blob/main/docs/displaydev.md)
 - [Source](https://github.com/PyDevices/pydevices/tree/main/lib/displaydev)
 - [Issues](https://github.com/PyDevices/pydevices/issues)
-- Related: `pydevices-events`, `pydevices-keys`, `pydevices-appdev`,
-  `pydevices-multimer`, `pydevices-pygraphics`, `pydevices-desktop`
+- Related: `pydevices-pygraphics`, `pydevices-desktop`
 
 ## License
 

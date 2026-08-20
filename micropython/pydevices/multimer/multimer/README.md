@@ -13,8 +13,11 @@ Canonical source: [pydevices/lib/multimer](https://github.com/PyDevices/pydevice
 pip install \
   -i https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  pydevices-multimer
+  pydevices
 ```
+
+`pydevices` is one distribution covering the whole core `lib/` tree. MIP
+publishes each component separately: `mip.install("multimer", …)`.
 
 ### MicroPython (MIP)
 
@@ -58,7 +61,7 @@ timers, `pump()` / `sleep_ms()`, hard versus soft delivery, and the
 - [Documentation — multimer](https://github.com/PyDevices/pydevices/blob/main/docs/multimer.md)
 - [Source](https://github.com/PyDevices/pydevices/tree/main/lib/multimer)
 - [Issues](https://github.com/PyDevices/pydevices/issues)
-- Related: `pydevices-appdev`
+- Related: `pydevices-pygraphics`, `pydevices-desktop`
 
 ## License
 

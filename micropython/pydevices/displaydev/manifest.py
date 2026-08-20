@@ -1,9 +1,8 @@
 metadata(
     description="PyDevices displaydev",
-    version="0.1.3",
+    version="0.1.4",
     author="Brad Barnett",
     license="MIT",
-    pypi_publish="pydevices-displaydev",
 )
 require("events")
 require("keys")
