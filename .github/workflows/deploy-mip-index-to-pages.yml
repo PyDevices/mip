@@ -20,6 +20,8 @@ permissions:
 
 env:
   PACKAGE_INDEX_PATH: /tmp/pydevices-mip-site
+  LOCKFILE: pydevices-lock.json
+  PUBLISHING_TOOLS_REF: publishing-v3
 
 jobs:
   build-complete-mip-pages-artifact:
@@ -31,6 +33,46 @@ jobs:
       - name: Set up MIP build environment
         run: source tools/ci.sh && ci_build_packages_setup
 
+      # The generated package trees are not committed -- they are rebuilt at
+      # publish time from the sources named in pydevices-lock.json. This
+      # workflow builds the index from the checked-out repository, so without
+      # the same regeneration it compiles an index containing only the upstream
+      # micropython-lib packages and deploys it over the real one, silently
+      # removing every PyDevices package from https://PyDevices.github.io/mip.
+      # That is exactly what a docs-only push to .site/ did on 2026-08-20.
+      - name: Check out shared publishing tools
+        uses: actions/checkout@v4
+        with:
+          repository: PyDevices/.github
+          ref: ${{ env.PUBLISHING_TOOLS_REF }}
+          path: .pydevices-publishing-tools
+
+      - name: Synchronize every locked source into the working tree
+        run: |
+          set -euo pipefail
+          rm -rf .publication-sources && mkdir -p .publication-sources
+
+          python3 -c "
+          import json
+          for profile, entry in json.load(open('$LOCKFILE')).items():
+              print(profile, entry['repository'], entry['ref'])
+          " | while read -r profile repository ref; do
+            echo "::group::$profile @ $ref"
+            git clone --quiet --depth 1 --branch "$ref" \
+              "https://github.com/${repository}.git" ".publication-sources/${profile}"
+            version="${ref#v}"
+            python .pydevices-publishing-tools/scripts/synchronize_mip_package.py \
+              --source-repository ".publication-sources/${profile}" \
+              --source-repository-name "$repository" \
+              --mip-repository . \
+              --profile "$profile" \
+              --version "$version"
+            echo "::endgroup::"
+          done
+
+      - name: Remove temporary checkouts
+        run: rm -rf .publication-sources .pydevices-publishing-tools
+
       - name: Build latest-only package index
         run: |
           rm -rf "$PACKAGE_INDEX_PATH"
@@ -39,6 +81,34 @@ jobs:
           ci_build_packages_compile_index
           cp -R .site/. "$PACKAGE_INDEX_PATH/"
           touch "$PACKAGE_INDEX_PATH/.nojekyll"
+
+      # Never deploy an index that lost a locked package: a deploy replaces the
+      # whole site, so a missing package here is a broken index, not a stale one.
+      - name: Verify every locked package reached the index
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, sys
+
+          index_root = pathlib.Path(os.environ["PACKAGE_INDEX_PATH"])
+          lock = json.loads(pathlib.Path(os.environ["LOCKFILE"]).read_text())
+          published = index_root / "package" / "py"
+
+          expected = sorted({p.parent.name for p in pathlib.Path("micropython").rglob("manifest.py")})
+          missing = [n for n in expected if not (published / n / "latest.json").is_file()]
+          print(f"{len(expected)} manifests, {len(list(published.iterdir()))} packages in the index")
+          if missing:
+              print("MISSING FROM INDEX:", missing, file=sys.stderr)
+              raise SystemExit(1)
+
+          for profile, entry in lock.items():
+              want = entry["ref"].lstrip("v")
+              got = json.loads((published / profile / "latest.json").read_text())["version"]
+              if got != want:
+                  print(f"{profile}: index has {got}, lockfile says {want}", file=sys.stderr)
+                  raise SystemExit(1)
+              print(f"  {profile} {got}")
+          print("index matches the lockfile")
+          PY
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
