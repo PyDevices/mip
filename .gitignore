@@ -8,3 +8,11 @@ __pycache__
 # Cursor IDE throwaways (do not ignore the whole .cursor/ tree)
 .cursor/debug*
 .cursor/plans/
+
+# Generated at publish time from the sources named in pydevices-lock.json --
+# see reusable-synchronize-mip-package.yml. Committing these is what made the
+# mirror look like editable source; they are build output.
+/micropython/pydevices/
+/micropython/palettes/
+/micropython/pdwidgets/
+/micropython/pygraphics/

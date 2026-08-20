@@ -1,0 +1,18 @@
+{
+  "pydevices": {
+    "repository": "PyDevices/pydevices",
+    "ref": "v0.1.5"
+  },
+  "palettes": {
+    "repository": "PyDevices/palettes",
+    "ref": "v0.0.10"
+  },
+  "pdwidgets": {
+    "repository": "PyDevices/pdwidgets",
+    "ref": "v0.0.19"
+  },
+  "pygraphics": {
+    "repository": "PyDevices/pygraphics",
+    "ref": "v0.0.33"
+  }
+}
