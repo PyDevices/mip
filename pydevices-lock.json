@@ -1,7 +1,7 @@
 {
   "pydevices": {
     "repository": "PyDevices/pydevices",
-    "ref": "v0.2.0"
+    "ref": "v0.2.1"
   },
   "palettes": {
     "repository": "PyDevices/palettes",
