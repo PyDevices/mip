@@ -39,7 +39,7 @@ permissions:
 
 jobs:
   synchronize-build-and-stage:
-    uses: PyDevices/.github/.github/workflows/reusable-synchronize-mip-package.yml@publishing-v4
+    uses: PyDevices/.github/.github/workflows/reusable-synchronize-mip-package.yml@publishing-v5
     with:
       source-repository: ${{ github.event.client_payload.source_repository || inputs.source-repository }}
       source-ref: ${{ github.event.client_payload.source_ref || inputs.source-ref }}
