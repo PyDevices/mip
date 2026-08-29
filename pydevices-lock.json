@@ -13,7 +13,7 @@
   },
   "pygraphics": {
     "repository": "PyDevices/pygraphics",
-    "ref": "v0.0.37"
+    "ref": "v0.0.38"
   },
   "audioinstruments": {
     "repository": "PyDevices/audioif",
