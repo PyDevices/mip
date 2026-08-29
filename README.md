@@ -1,5 +1,15 @@
 # PyDevices MIP package index
 
+> **This index is generated — do not edit package trees by hand.**
+> `pydevices-lock.json` is the source of truth: component repositories
+> publish through a serialized dispatch queue
+> (`process-mip-publication-request.yml`), each publication pins an exact
+> source tag in the lockfile, and every deploy re-syncs **all** locked
+> sources before publishing. Anything under the package directories is
+> build output; the only meaningful edits here are to the lockfile via
+> the queue, the workflows, and this documentation.
+
+
 This micropython-lib fork builds an installable package index containing both
 precompiled `.mpy` bytecode and raw `.py` source at:
 
