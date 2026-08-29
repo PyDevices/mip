@@ -29,6 +29,13 @@ jobs:
     steps:
       - name: Check out MIP source
         uses: actions/checkout@v4
+        with:
+          # Always build the branch TIP, never this run's trigger SHA: a
+          # queued deploy from an older push otherwise rebuilds a stale
+          # lockfile and, deploying last, overwrites a newer publication
+          # (it re-stranded audioinstruments at 0.0.3 minutes after the
+          # v0.0.4 republication on 2026-08-29).
+          ref: PyDevices
 
       - name: Set up MIP build environment
         run: source tools/ci.sh && ci_build_packages_setup
