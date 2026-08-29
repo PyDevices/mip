@@ -21,7 +21,7 @@ permissions:
 env:
   PACKAGE_INDEX_PATH: /tmp/pydevices-mip-site
   LOCKFILE: pydevices-lock.json
-  PUBLISHING_TOOLS_REF: publishing-v4
+  PUBLISHING_TOOLS_REF: publishing-v6
 
 jobs:
   build-complete-mip-pages-artifact:

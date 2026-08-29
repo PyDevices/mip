@@ -16,3 +16,5 @@ __pycache__
 /micropython/palettes/
 /micropython/pdwidgets/
 /micropython/pygraphics/
+/micropython/audioinstruments/
+/micropython/audioeffects/

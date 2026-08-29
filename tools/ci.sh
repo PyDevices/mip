@@ -20,7 +20,7 @@ function ci_commit_formatting_run {
 MICROPYTHON=/tmp/micropython/ports/unix/build-standard/micropython
 
 function ci_package_tests_setup_micropython {
-    git clone https://github.com/micropython/micropython.git /tmp/micropython
+    git clone --depth 1 --branch v1.28.0 https://github.com/micropython/micropython.git /tmp/micropython  # pinned: .mpy ABI must not float with upstream master
 
     # build mpy-cross and micropython (use -O0 to speed up the build)
     make -C /tmp/micropython/mpy-cross -j CFLAGS_EXTRA=-O0
