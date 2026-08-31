@@ -21,6 +21,6 @@
   },
   "audioeffects": {
     "repository": "PyDevices/audioif",
-    "ref": "v0.0.5"
+    "ref": "v0.1.1"
   }
 }
