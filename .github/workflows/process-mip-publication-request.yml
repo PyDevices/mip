@@ -47,6 +47,12 @@ jobs:
       source-ref: ${{ github.event.client_payload.source_ref || inputs.source-ref }}
       version: ${{ github.event.client_payload.version || inputs.version }}
       profile: ${{ github.event.client_payload.profile || inputs.profile }}
+      # The tools' PROFILE_REPOSITORIES map is a second guard beside the
+      # lockfile; publishing-v6..v8 still name PyDevices/audioif for the two
+      # audio profiles that moved to PyDevices/audiocomponents (.github#35).
+      # Pin the commit that carries the corrected map until the next
+      # publishing tag is cut; then this line becomes that tag.
+      publishing-tools-ref: 9aef8e68a2df90623d858c715bdc9e4145c67a55
     # The sync mints its own App token; inherit passes the App secrets through.
     secrets: inherit
 
