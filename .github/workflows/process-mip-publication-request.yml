@@ -66,3 +66,12 @@ jobs:
       - name: Deploy the complete MIP index to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # The committed package list (packages.json + the README block) describes
+  # the index that just went live; see refresh-package-list.yml. It sits on
+  # top of the lockfile commit the reusable workflow pushed.
+  refresh-package-list:
+    needs: deploy-complete-mip-index
+    permissions:
+      contents: write
+    uses: ./.github/workflows/refresh-package-list.yml

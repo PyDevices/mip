@@ -1,8 +1,5 @@
 {
   "index": "https://PyDevices.github.io/mip",
-  "index_updated": "2026-09-03",
-  "source": "https://PyDevices.github.io/mip/index.json",
-  "lockfile": "pydevices-lock.json",
   "packages": [
     {
       "name": "pydevices",
@@ -15,8 +12,7 @@
       "ref": "v0.3.8",
       "repository_url": "https://github.com/PyDevices/pydevices",
       "release_url": "https://github.com/PyDevices/pydevices/releases/tag/v0.3.8",
-      "install": "mip.install(\"pydevices\", index=\"https://PyDevices.github.io/mip\")",
-      "published": true
+      "install": "mip.install(\"pydevices\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
       "name": "pydevices-desktop",
@@ -29,8 +25,7 @@
       "ref": "v0.3.8",
       "repository_url": "https://github.com/PyDevices/pydevices",
       "release_url": "https://github.com/PyDevices/pydevices/releases/tag/v0.3.8",
-      "install": "mip.install(\"pydevices-desktop\", index=\"https://PyDevices.github.io/mip\")",
-      "published": true
+      "install": "mip.install(\"pydevices-desktop\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
       "name": "palettes",
@@ -43,8 +38,7 @@
       "ref": "v0.0.13",
       "repository_url": "https://github.com/PyDevices/palettes",
       "release_url": "https://github.com/PyDevices/palettes/releases/tag/v0.0.13",
-      "install": "mip.install(\"palettes\", index=\"https://PyDevices.github.io/mip\")",
-      "published": true
+      "install": "mip.install(\"palettes\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
       "name": "pdwidgets",
@@ -57,8 +51,7 @@
       "ref": "v0.0.23",
       "repository_url": "https://github.com/PyDevices/pdwidgets",
       "release_url": "https://github.com/PyDevices/pdwidgets/releases/tag/v0.0.23",
-      "install": "mip.install(\"pdwidgets\", index=\"https://PyDevices.github.io/mip\")",
-      "published": true
+      "install": "mip.install(\"pdwidgets\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
       "name": "pygraphics",
@@ -71,8 +64,7 @@
       "ref": "v0.0.38",
       "repository_url": "https://github.com/PyDevices/pygraphics",
       "release_url": "https://github.com/PyDevices/pygraphics/releases/tag/v0.0.38",
-      "install": "mip.install(\"pygraphics\", index=\"https://PyDevices.github.io/mip\")",
-      "published": true
+      "install": "mip.install(\"pygraphics\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
       "name": "audioinstruments",
@@ -85,8 +77,7 @@
       "ref": "v0.2.0",
       "repository_url": "https://github.com/PyDevices/audiocomponents",
       "release_url": "https://github.com/PyDevices/audiocomponents/releases/tag/v0.2.0",
-      "install": "mip.install(\"audioinstruments\", index=\"https://PyDevices.github.io/mip\")",
-      "published": true
+      "install": "mip.install(\"audioinstruments\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
       "name": "audioeffects",
@@ -99,8 +90,7 @@
       "ref": "v0.2.0",
       "repository_url": "https://github.com/PyDevices/audiocomponents",
       "release_url": "https://github.com/PyDevices/audiocomponents/releases/tag/v0.2.0",
-      "install": "mip.install(\"audioeffects\", index=\"https://PyDevices.github.io/mip\")",
-      "published": true
+      "install": "mip.install(\"audioeffects\", index=\"https://PyDevices.github.io/mip\")"
     }
   ]
 }

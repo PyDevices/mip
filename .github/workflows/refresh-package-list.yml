@@ -1,0 +1,78 @@
+name: Refresh the package list from the deployed index
+
+# Called after the deploy job of both workflows that publish the index:
+# process-mip-publication-request.yml (every publication -- the path that
+# runs many times a week) and deploy-mip-index-to-pages.yml (docs pushes and
+# manual runs). Without this the committed list only moved on the rare path,
+# and went stale after every real publication.
+#
+# The index is read out of the run's own github-pages artifact, not fetched
+# from https://PyDevices.github.io/mip: Pages serves index.json behind a CDN
+# with a ten-minute cache, so a fetch straight after the deploy can still
+# return the previous index. The artifact is byte-for-byte what went live.
+#
+# scripts/update_package_list.py refuses to write anything that disagrees
+# with pydevices-lock.json, so a stale or hand-edited state fails this job
+# (visibly, after the deploy already succeeded) instead of being committed.
+#
+# The commit goes back with GITHUB_TOKEN, which triggers no workflows; and
+# neither deploy workflow's path filter matches README.md or packages.json.
+# No loop either way.
+
+on:
+  workflow_call:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-package-list:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the branch tip
+        uses: actions/checkout@v4
+        with:
+          # The tip, not the trigger SHA: a publication run has just pushed
+          # its lockfile commit, and the list must sit on top of it.
+          ref: PyDevices
+          # Full history so the commit below can rebase if a push races.
+          fetch-depth: 0
+
+      - name: Download the deployed site
+        uses: actions/download-artifact@v8
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/deployed
+
+      - name: Unpack index.json from the Pages artifact
+        run: |
+          set -euo pipefail
+          tarball=$(find "$RUNNER_TEMP/deployed" -name artifact.tar -print -quit)
+          [ -n "$tarball" ] || { echo "no artifact.tar in the github-pages artifact" >&2; exit 1; }
+          mkdir -p "$RUNNER_TEMP/site"
+          tar -xf "$tarball" -C "$RUNNER_TEMP/site"
+          test -f "$RUNNER_TEMP/site/index.json"
+          python3 -c "import json, sys; d = json.load(open(sys.argv[1])); print(len(d['packages']), 'packages, index updated', d['updated'])" "$RUNNER_TEMP/site/index.json"
+
+      - name: Refresh the package list from the deployed index
+        run: python3 scripts/update_package_list.py --index "$RUNNER_TEMP/site/index.json"
+
+      - name: Commit the package list
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add packages.json README.md
+          if git diff --cached --quiet; then
+            echo "Package list already matches the deployed index."
+          else
+            git commit -m "Refresh the package list from the deployed index"
+            # Same rebase-and-retry as the lockfile commit in dotgithub's
+            # reusable-synchronize-mip-package.yml: the queue serializes
+            # runs, but a commit can still land between checkout and push.
+            for attempt in 1 2 3; do
+              if git push origin HEAD; then break; fi
+              echo "push rejected (attempt $attempt); rebasing onto origin"
+              git pull --rebase origin "$(git rev-parse --abbrev-ref HEAD)"
+              [ "$attempt" = 3 ] && { echo "push failed after 3 rebase attempts" >&2; exit 1; }
+            done
+          fi

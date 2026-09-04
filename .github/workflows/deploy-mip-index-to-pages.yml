@@ -21,17 +21,18 @@ permissions:
 env:
   PACKAGE_INDEX_PATH: /tmp/pydevices-mip-site
   LOCKFILE: pydevices-lock.json
-  PUBLISHING_TOOLS_REF: publishing-v6
+  # The tools' PROFILE_REPOSITORIES map is a second guard beside the
+  # lockfile; publishing-v6..v8 still name PyDevices/audioif for the two
+  # audio profiles that moved to PyDevices/audiocomponents (.github#35), so
+  # at any of those tags the sync step below rejects the lockfile and the
+  # deploy dies. Pin the commit that carries the corrected map -- the same
+  # pin as publishing-tools-ref in process-mip-publication-request.yml --
+  # until the next publishing tag is cut; then both lines become that tag.
+  PUBLISHING_TOOLS_REF: 9aef8e68a2df90623d858c715bdc9e4145c67a55
 
 jobs:
   build-complete-mip-pages-artifact:
     runs-on: ubuntu-latest
-    permissions:
-      # contents: write only here, and only so the refreshed package list
-      # (packages.json + the README block) can be committed back.
-      contents: write
-      pages: write
-      id-token: write
     steps:
       - name: Check out MIP source
         uses: actions/checkout@v4
@@ -42,8 +43,6 @@ jobs:
           # (it re-stranded audioinstruments at 0.0.3 minutes after the
           # v0.0.4 republication on 2026-08-29).
           ref: PyDevices
-          # Full history so the package-list commit below can rebase.
-          fetch-depth: 0
 
       - name: Set up MIP build environment
         run: source tools/ci.sh && ci_build_packages_setup
@@ -61,6 +60,34 @@ jobs:
           repository: PyDevices/.github
           ref: ${{ env.PUBLISHING_TOOLS_REF }}
           path: .pydevices-publishing-tools
+
+      # Fail here, naming the pin, rather than inside the sync loop after a
+      # few clones: the tools' PROFILE_REPOSITORIES map must agree with every
+      # lockfile entry. This is the check that would have caught
+      # PUBLISHING_TOOLS_REF sitting at publishing-v6 after the two audio
+      # profiles moved to PyDevices/audiocomponents.
+      - name: Verify the publishing tools know every locked repository
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, sys
+
+          sys.path.insert(0, ".pydevices-publishing-tools/scripts")
+          from synchronize_mip_package import PROFILE_REPOSITORIES
+
+          ref = os.environ["PUBLISHING_TOOLS_REF"]
+          lock = json.loads(pathlib.Path(os.environ["LOCKFILE"]).read_text())
+          wrong = [
+              f"{profile}: tools at {ref} map it to {PROFILE_REPOSITORIES.get(profile)}, "
+              f"lockfile says {entry['repository']}"
+              for profile, entry in lock.items()
+              if PROFILE_REPOSITORIES.get(profile) != entry["repository"]
+          ]
+          if wrong:
+              print("\n".join(wrong), file=sys.stderr)
+              print(f"move PUBLISHING_TOOLS_REF ({ref}) to a commit whose PROFILE_REPOSITORIES matches the lockfile", file=sys.stderr)
+              raise SystemExit(1)
+          print(f"tools at {ref} agree with the lockfile for all {len(lock)} profiles")
+          PY
 
       - name: Synchronize every locked source into the working tree
         run: |
@@ -125,34 +152,6 @@ jobs:
           print("index matches the lockfile")
           PY
 
-      # The list of PyDevices packages, read from the index we just built
-      # (never from PyPI/TestPyPI). Both steps are continue-on-error: a
-      # deploy must never fail because of the list.
-      - name: Refresh the package list from the built index
-        continue-on-error: true
-        run: python3 scripts/update_package_list.py --index "$PACKAGE_INDEX_PATH/index.json"
-
-      - name: Commit the package list
-        continue-on-error: true
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add packages.json README.md
-          if git diff --cached --quiet; then
-            echo "Package list already matches the index."
-          else
-            git commit -m "Refresh the package list from the deployed index"
-            # Same rebase-and-retry as the lockfile commit in dotgithub's
-            # reusable-synchronize-mip-package.yml: the queue serializes
-            # runs, but a commit can still land between checkout and push.
-            for attempt in 1 2 3; do
-              if git push origin HEAD; then break; fi
-              echo "push rejected (attempt $attempt); rebasing onto origin"
-              git pull --rebase origin "$(git rev-parse --abbrev-ref HEAD)"
-              [ "$attempt" = 3 ] && { echo "push failed after 3 rebase attempts" >&2; exit 1; }
-            done
-          fi
-
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
@@ -171,3 +170,12 @@ jobs:
       - name: Deploy MIP index documentation
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # The committed package list (packages.json + the README block) describes
+  # the index that just went live; see refresh-package-list.yml. contents:
+  # write is granted to this job only, for that commit.
+  refresh-package-list:
+    needs: deploy-complete-mip-index
+    permissions:
+      contents: write
+    uses: ./.github/workflows/refresh-package-list.yml
