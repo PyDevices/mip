@@ -22,7 +22,7 @@ env:
   PACKAGE_INDEX_PATH: /tmp/pydevices-mip-site
   LOCKFILE: pydevices-lock.json
   # The tools' PROFILE_REPOSITORIES map is a second guard beside the
-  # lockfile; publishing-v6..v8 still name PyDevices/audioif for the two
+  # lockfile; publishing-v6..v8 still name the DSP repository for the two
   # audio profiles that moved to PyDevices/audiocomponents (.github#35), so
   # at any of those tags the sync step below rejects the lockfile and the
   # deploy dies. Pin the commit that carries the corrected map -- the same
