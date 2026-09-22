@@ -53,7 +53,7 @@ jobs:
       # tools take the expected repository from the lockfile rather than a
       # second hardcoded map. Move a profile by editing pydevices-lock.json on
       # this branch, never by changing a pin.
-      publishing-tools-ref: publishing-v9
+      publishing-tools-ref: publishing-v11
     # The sync mints its own App token; inherit passes the App secrets through.
     secrets: inherit
 
