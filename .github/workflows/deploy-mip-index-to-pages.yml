@@ -21,14 +21,12 @@ permissions:
 env:
   PACKAGE_INDEX_PATH: /tmp/pydevices-mip-site
   LOCKFILE: pydevices-lock.json
-  # The tools' PROFILE_REPOSITORIES map is a second guard beside the
-  # lockfile; publishing-v6..v8 still name the DSP repository for the two
-  # audio profiles that moved to PyDevices/audiocomponents (.github#35), so
-  # at any of those tags the sync step below rejects the lockfile and the
-  # deploy dies. Pin the commit that carries the corrected map -- the same
-  # pin as publishing-tools-ref in process-mip-publication-request.yml --
-  # until the next publishing tag is cut; then both lines become that tag.
-  PUBLISHING_TOOLS_REF: 9aef8e68a2df90623d858c715bdc9e4145c67a55
+  # Same tag as publishing-tools-ref in process-mip-publication-request.yml.
+  # The two must move together: this workflow rebuilds every package on each
+  # deploy, so an older tools ref here overwrites what a publication wrote.
+  # 9aef8e68 predated the shared pydevices descriptions (.github 11a264c), and
+  # every deploy put "PyDevices pydevices" back into the index (.github#50).
+  PUBLISHING_TOOLS_REF: publishing-v11
 
 jobs:
   build-complete-mip-pages-artifact:
@@ -60,34 +58,6 @@ jobs:
           repository: PyDevices/.github
           ref: ${{ env.PUBLISHING_TOOLS_REF }}
           path: .pydevices-publishing-tools
-
-      # Fail here, naming the pin, rather than inside the sync loop after a
-      # few clones: the tools' PROFILE_REPOSITORIES map must agree with every
-      # lockfile entry. This is the check that would have caught
-      # PUBLISHING_TOOLS_REF sitting at publishing-v6 after the two audio
-      # profiles moved to PyDevices/audiocomponents.
-      - name: Verify the publishing tools know every locked repository
-        run: |
-          python3 - <<'PY'
-          import json, os, pathlib, sys
-
-          sys.path.insert(0, ".pydevices-publishing-tools/scripts")
-          from synchronize_mip_package import PROFILE_REPOSITORIES
-
-          ref = os.environ["PUBLISHING_TOOLS_REF"]
-          lock = json.loads(pathlib.Path(os.environ["LOCKFILE"]).read_text())
-          wrong = [
-              f"{profile}: tools at {ref} map it to {PROFILE_REPOSITORIES.get(profile)}, "
-              f"lockfile says {entry['repository']}"
-              for profile, entry in lock.items()
-              if PROFILE_REPOSITORIES.get(profile) != entry["repository"]
-          ]
-          if wrong:
-              print("\n".join(wrong), file=sys.stderr)
-              print(f"move PUBLISHING_TOOLS_REF ({ref}) to a commit whose PROFILE_REPOSITORIES matches the lockfile", file=sys.stderr)
-              raise SystemExit(1)
-          print(f"tools at {ref} agree with the lockfile for all {len(lock)} profiles")
-          PY
 
       - name: Synchronize every locked source into the working tree
         run: |
