@@ -4,7 +4,7 @@
     {
       "name": "pydevices",
       "version": "0.5.0",
-      "description": "Portable display, audio, event, and timing foundations for PyDevices",
+      "description": "PyDevices pydevices",
       "license": "MIT",
       "path": "micropython/pydevices/pydevices",
       "profile": "pydevices",
@@ -17,7 +17,7 @@
     {
       "name": "pydevices-desktop",
       "version": "0.5.0",
-      "description": "Complete PyDevices desktop stack and board configuration",
+      "description": "PyDevices pydevices-desktop",
       "license": "MIT",
       "path": "micropython/pydevices/pydevices-desktop",
       "profile": "pydevices",
