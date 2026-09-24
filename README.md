@@ -94,7 +94,7 @@ index also carries are upstream's.
 | --- | --- | --- | --- |
 | `pydevices` | 0.5.1 | Portable display, audio, event, and timing foundations for PyDevices | [PyDevices/pydevices @ v0.5.1](https://github.com/PyDevices/pydevices/releases/tag/v0.5.1) |
 | `pydevices-desktop` | 0.5.1 | Complete PyDevices desktop stack and board configuration | [PyDevices/pydevices @ v0.5.1](https://github.com/PyDevices/pydevices/releases/tag/v0.5.1) |
-| `palettes` | 0.0.13 | Color palette toolkit for PyDevices (wheel, cube, material_design) | [PyDevices/palettes @ v0.0.13](https://github.com/PyDevices/palettes/releases/tag/v0.0.13) |
+| `palettes` | 0.0.14 | Color palette toolkit for PyDevices (wheel, cube, material_design) | [PyDevices/palettes @ v0.0.14](https://github.com/PyDevices/palettes/releases/tag/v0.0.14) |
 | `pdwidgets` | 0.0.23 | Cross-platform widget toolkit for PyDevices | [PyDevices/pdwidgets @ v0.0.23](https://github.com/PyDevices/pdwidgets/releases/tag/v0.0.23) |
 | `pygraphics` | 0.0.38 | Pure-Python pygraphics for MicroPython/CircuitPython/CPython (FrameBuffer, Draw, fonts); import as pygraphics | [PyDevices/pygraphics @ v0.0.38](https://github.com/PyDevices/pygraphics/releases/tag/v0.0.38) |
 | `audioinstruments` | 0.3.1 | 53 synthio instruments for PyDevices (drum machines and synthesizers); import as audioinstruments | [PyDevices/audiocomponents @ v0.3.1](https://github.com/PyDevices/audiocomponents/releases/tag/v0.3.1) |

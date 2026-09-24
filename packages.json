@@ -29,15 +29,15 @@
     },
     {
       "name": "palettes",
-      "version": "0.0.13",
+      "version": "0.0.14",
       "description": "Color palette toolkit for PyDevices (wheel, cube, material_design)",
       "license": "MIT",
       "path": "micropython/palettes",
       "profile": "palettes",
       "repository": "PyDevices/palettes",
-      "ref": "v0.0.13",
+      "ref": "v0.0.14",
       "repository_url": "https://github.com/PyDevices/palettes",
-      "release_url": "https://github.com/PyDevices/palettes/releases/tag/v0.0.13",
+      "release_url": "https://github.com/PyDevices/palettes/releases/tag/v0.0.14",
       "install": "mip.install(\"palettes\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
