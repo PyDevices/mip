@@ -68,15 +68,15 @@
     },
     {
       "name": "audioinstruments",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "description": "53 synthio instruments for PyDevices (drum machines and synthesizers); import as audioinstruments",
       "license": "MIT",
       "path": "micropython/audioinstruments",
       "profile": "audioinstruments",
       "repository": "PyDevices/audiocomponents",
-      "ref": "v0.3.0",
+      "ref": "v0.3.1",
       "repository_url": "https://github.com/PyDevices/audiocomponents",
-      "release_url": "https://github.com/PyDevices/audiocomponents/releases/tag/v0.3.0",
+      "release_url": "https://github.com/PyDevices/audiocomponents/releases/tag/v0.3.1",
       "install": "mip.install(\"audioinstruments\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
