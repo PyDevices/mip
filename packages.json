@@ -42,15 +42,15 @@
     },
     {
       "name": "pdwidgets",
-      "version": "0.0.23",
+      "version": "0.0.24",
       "description": "Cross-platform widget toolkit for PyDevices",
       "license": "MIT",
       "path": "micropython/pdwidgets",
       "profile": "pdwidgets",
       "repository": "PyDevices/pdwidgets",
-      "ref": "v0.0.23",
+      "ref": "v0.0.24",
       "repository_url": "https://github.com/PyDevices/pdwidgets",
-      "release_url": "https://github.com/PyDevices/pdwidgets/releases/tag/v0.0.23",
+      "release_url": "https://github.com/PyDevices/pdwidgets/releases/tag/v0.0.24",
       "install": "mip.install(\"pdwidgets\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
