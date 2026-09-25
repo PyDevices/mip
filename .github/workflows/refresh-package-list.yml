@@ -15,19 +15,41 @@ name: Refresh the package list from the deployed index
 # with pydevices-lock.json, so a stale or hand-edited state fails this job
 # (visibly, after the deploy already succeeded) instead of being committed.
 #
-# The commit goes back with GITHUB_TOKEN, which triggers no workflows; and
-# neither deploy workflow's path filter matches README.md or packages.json.
-# No loop either way.
+# The same commit regenerates .site/index.html, whose "Packages in this
+# index" table is rendered from packages.json by PyDevices/.github's
+# scripts/generate_sites.py (--only mip). Without that the page lagged one
+# publication behind and .github's generator-idempotency check failed after
+# every release (.github#51, #54). The generator comes from .github's main,
+# not a publishing tag: that check runs main's generator against this
+# branch, so main's output is the one the page has to match.
+#
+# The site that just went live was built before the page moved, so when the
+# page changed, redeploy-site-page puts the deployed artifact back up with
+# only index.html replaced. It is not rebuilt from source: index.json and the
+# packages stay byte-for-byte what the first deploy published.
+#
+# The commit goes back with GITHUB_TOKEN, which triggers no workflows, so the
+# .site/** path filter on deploy-mip-index-to-pages.yml doesn't fire on it.
+# No loop.
 
 on:
   workflow_call:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+env:
+  REFRESHED_PAGES_ARTIFACT: github-pages-refreshed
 
 jobs:
   refresh-package-list:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      page-changed: ${{ steps.commit.outputs.page-changed }}
     steps:
       - name: Check out the branch tip
         uses: actions/checkout@v4
@@ -57,13 +79,39 @@ jobs:
       - name: Refresh the package list from the deployed index
         run: python3 scripts/update_package_list.py --index "$RUNNER_TEMP/site/index.json"
 
-      - name: Commit the package list
+      - name: Check out the site generator
+        uses: actions/checkout@v4
+        with:
+          repository: PyDevices/.github
+          ref: main
+          path: .pydevices-site-generator/dotgithub
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The generator finds mip as its 'mip' sibling, so lay out a two-repo
+      # workspace: .github as dotgithub, and a link to this checkout as mip.
+      - name: Regenerate the site page from the package list
+        run: |
+          set -euo pipefail
+          ln -s .. .pydevices-site-generator/mip
+          python3 .pydevices-site-generator/dotgithub/scripts/generate_sites.py --only mip
+          rm -rf .pydevices-site-generator
+
+      - name: Commit the package list and site page
+        id: commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add packages.json README.md
+          git add packages.json README.md .site/index.html
+          if git diff --cached --quiet -- .site/index.html; then
+            echo "page-changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "page-changed=true" >> "$GITHUB_OUTPUT"
+          fi
           if git diff --cached --quiet; then
-            echo "Package list already matches the deployed index."
+            echo "Package list and page already match the deployed index."
           else
             git commit -m "Refresh the package list from the deployed index"
             # Same rebase-and-retry as the lockfile commit in dotgithub's
@@ -76,3 +124,31 @@ jobs:
               [ "$attempt" = 3 ] && { echo "push failed after 3 rebase attempts" >&2; exit 1; }
             done
           fi
+
+      - name: Put the new page into the deployed site
+        if: steps.commit.outputs.page-changed == 'true'
+        run: cp .site/index.html "$RUNNER_TEMP/site/index.html"
+
+      - name: Upload the site with the new page
+        if: steps.commit.outputs.page-changed == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          name: ${{ env.REFRESHED_PAGES_ARTIFACT }}
+          path: ${{ runner.temp }}/site
+
+  redeploy-site-page:
+    needs: refresh-package-list
+    if: needs.refresh-package-list.outputs.page-changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy the site with the refreshed page
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: ${{ env.REFRESHED_PAGES_ARTIFACT }}
