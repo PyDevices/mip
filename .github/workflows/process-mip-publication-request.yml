@@ -75,4 +75,6 @@ jobs:
     needs: deploy-complete-mip-index
     permissions:
       contents: write
+      pages: write
+      id-token: write
     uses: ./.github/workflows/refresh-package-list.yml

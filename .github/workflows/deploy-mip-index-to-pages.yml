@@ -142,10 +142,13 @@ jobs:
         uses: actions/deploy-pages@v4
 
   # The committed package list (packages.json + the README block) describes
-  # the index that just went live; see refresh-package-list.yml. contents:
-  # write is granted to this job only, for that commit.
+  # the index that just went live, and the site page is regenerated from it
+  # and redeployed; see refresh-package-list.yml. contents: write is granted
+  # to this job only, for that commit; pages: write for the redeploy.
   refresh-package-list:
     needs: deploy-complete-mip-index
     permissions:
       contents: write
+      pages: write
+      id-token: write
     uses: ./.github/workflows/refresh-package-list.yml
