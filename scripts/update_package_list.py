@@ -58,7 +58,14 @@ README_END = "<!-- PACKAGES: END -->"
 # ever grows a third package, this table is the one place to say so; the
 # mismatch check below reports the index entry until it is.
 MULTI_PACKAGE_PROFILES = {
-    "pydevices": ("micropython/pydevices/pydevices", "micropython/pydevices/pydevices-desktop"),
+    # bledev is its own package from the same lockfile entry (pydevices'
+    # mip-split.toml marks it own-package), so a board without a radio
+    # doesn't carry BLE. Published since publishing-v12.
+    "pydevices": (
+        "micropython/pydevices/pydevices",
+        "micropython/pydevices/pydevices-desktop",
+        "micropython/pydevices/bledev",
+    ),
 }
 
 
