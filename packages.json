@@ -3,29 +3,42 @@
   "packages": [
     {
       "name": "pydevices",
-      "version": "0.6.2",
+      "version": "0.6.3",
       "description": "Portable display, audio, event, and timing foundations for PyDevices",
       "license": "MIT",
       "path": "micropython/pydevices/pydevices",
       "profile": "pydevices",
       "repository": "PyDevices/pydevices",
-      "ref": "v0.6.2",
+      "ref": "v0.6.3",
       "repository_url": "https://github.com/PyDevices/pydevices",
-      "release_url": "https://github.com/PyDevices/pydevices/releases/tag/v0.6.2",
+      "release_url": "https://github.com/PyDevices/pydevices/releases/tag/v0.6.3",
       "install": "mip.install(\"pydevices\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
       "name": "pydevices-desktop",
-      "version": "0.6.2",
+      "version": "0.6.3",
       "description": "Complete PyDevices desktop stack and board configuration",
       "license": "MIT",
       "path": "micropython/pydevices/pydevices-desktop",
       "profile": "pydevices",
       "repository": "PyDevices/pydevices",
-      "ref": "v0.6.2",
+      "ref": "v0.6.3",
       "repository_url": "https://github.com/PyDevices/pydevices",
-      "release_url": "https://github.com/PyDevices/pydevices/releases/tag/v0.6.2",
+      "release_url": "https://github.com/PyDevices/pydevices/releases/tag/v0.6.3",
       "install": "mip.install(\"pydevices-desktop\", index=\"https://PyDevices.github.io/mip\")"
+    },
+    {
+      "name": "bledev",
+      "version": "0.6.3",
+      "description": "Portable async Bluetooth Low Energy for PyDevices, over aioble on boards",
+      "license": "MIT",
+      "path": "micropython/pydevices/bledev",
+      "profile": "pydevices",
+      "repository": "PyDevices/pydevices",
+      "ref": "v0.6.3",
+      "repository_url": "https://github.com/PyDevices/pydevices",
+      "release_url": "https://github.com/PyDevices/pydevices/releases/tag/v0.6.3",
+      "install": "mip.install(\"bledev\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
       "name": "palettes",
@@ -69,7 +82,7 @@
     {
       "name": "audioinstruments",
       "version": "0.3.2",
-      "description": "53 synthio instruments for PyDevices (drum machines and synthesizers); import as audioinstruments",
+      "description": "55 synthio instruments for PyDevices (drum machines and synthesizers); import as audioinstruments",
       "license": "MIT",
       "path": "micropython/audioinstruments",
       "profile": "audioinstruments",

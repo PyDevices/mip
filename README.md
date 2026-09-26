@@ -92,12 +92,13 @@ index also carries are upstream's.
 
 | Package | Version | Description | Source |
 | --- | --- | --- | --- |
-| `pydevices` | 0.6.2 | Portable display, audio, event, and timing foundations for PyDevices | [PyDevices/pydevices @ v0.6.2](https://github.com/PyDevices/pydevices/releases/tag/v0.6.2) |
-| `pydevices-desktop` | 0.6.2 | Complete PyDevices desktop stack and board configuration | [PyDevices/pydevices @ v0.6.2](https://github.com/PyDevices/pydevices/releases/tag/v0.6.2) |
+| `pydevices` | 0.6.3 | Portable display, audio, event, and timing foundations for PyDevices | [PyDevices/pydevices @ v0.6.3](https://github.com/PyDevices/pydevices/releases/tag/v0.6.3) |
+| `pydevices-desktop` | 0.6.3 | Complete PyDevices desktop stack and board configuration | [PyDevices/pydevices @ v0.6.3](https://github.com/PyDevices/pydevices/releases/tag/v0.6.3) |
+| `bledev` | 0.6.3 | Portable async Bluetooth Low Energy for PyDevices, over aioble on boards | [PyDevices/pydevices @ v0.6.3](https://github.com/PyDevices/pydevices/releases/tag/v0.6.3) |
 | `palettes` | 0.0.14 | Color palette toolkit for PyDevices (wheel, cube, material_design) | [PyDevices/palettes @ v0.0.14](https://github.com/PyDevices/palettes/releases/tag/v0.0.14) |
 | `pdwidgets` | 0.0.24 | Cross-platform widget toolkit for PyDevices | [PyDevices/pdwidgets @ v0.0.24](https://github.com/PyDevices/pdwidgets/releases/tag/v0.0.24) |
 | `pygraphics` | 0.0.39 | Pure-Python pygraphics for MicroPython/CircuitPython/CPython (FrameBuffer, Draw, fonts); import as pygraphics | [PyDevices/pygraphics @ v0.0.39](https://github.com/PyDevices/pygraphics/releases/tag/v0.0.39) |
-| `audioinstruments` | 0.3.2 | 53 synthio instruments for PyDevices (drum machines and synthesizers); import as audioinstruments | [PyDevices/audiocomponents @ v0.3.2](https://github.com/PyDevices/audiocomponents/releases/tag/v0.3.2) |
+| `audioinstruments` | 0.3.2 | 55 synthio instruments for PyDevices (drum machines and synthesizers); import as audioinstruments | [PyDevices/audiocomponents @ v0.3.2](https://github.com/PyDevices/audiocomponents/releases/tag/v0.3.2) |
 | `audioeffects` | 0.3.2 | Effect classes for PyDevices audio (delay, drive, dynamics, eq, modulation, pitch, reverb); import as audioeffects | [PyDevices/audiocomponents @ v0.3.2](https://github.com/PyDevices/audiocomponents/releases/tag/v0.3.2) |
 
 ```python
@@ -105,6 +106,7 @@ import mip
 
 mip.install("pydevices", index="https://PyDevices.github.io/mip")
 mip.install("pydevices-desktop", index="https://PyDevices.github.io/mip")
+mip.install("bledev", index="https://PyDevices.github.io/mip")
 mip.install("palettes", index="https://PyDevices.github.io/mip")
 mip.install("pdwidgets", index="https://PyDevices.github.io/mip")
 mip.install("pygraphics", index="https://PyDevices.github.io/mip")
