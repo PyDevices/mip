@@ -3,28 +3,28 @@
   "packages": [
     {
       "name": "pydevices",
-      "version": "0.5.5",
+      "version": "0.6.1",
       "description": "Portable display, audio, event, and timing foundations for PyDevices",
       "license": "MIT",
       "path": "micropython/pydevices/pydevices",
       "profile": "pydevices",
       "repository": "PyDevices/pydevices",
-      "ref": "v0.5.5",
+      "ref": "v0.6.1",
       "repository_url": "https://github.com/PyDevices/pydevices",
-      "release_url": "https://github.com/PyDevices/pydevices/releases/tag/v0.5.5",
+      "release_url": "https://github.com/PyDevices/pydevices/releases/tag/v0.6.1",
       "install": "mip.install(\"pydevices\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
       "name": "pydevices-desktop",
-      "version": "0.5.5",
+      "version": "0.6.1",
       "description": "Complete PyDevices desktop stack and board configuration",
       "license": "MIT",
       "path": "micropython/pydevices/pydevices-desktop",
       "profile": "pydevices",
       "repository": "PyDevices/pydevices",
-      "ref": "v0.5.5",
+      "ref": "v0.6.1",
       "repository_url": "https://github.com/PyDevices/pydevices",
-      "release_url": "https://github.com/PyDevices/pydevices/releases/tag/v0.5.5",
+      "release_url": "https://github.com/PyDevices/pydevices/releases/tag/v0.6.1",
       "install": "mip.install(\"pydevices-desktop\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
