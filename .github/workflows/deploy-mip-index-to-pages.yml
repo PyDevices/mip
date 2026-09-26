@@ -26,7 +26,7 @@ env:
   # deploy, so an older tools ref here overwrites what a publication wrote.
   # 9aef8e68 predated the shared pydevices descriptions (.github 11a264c), and
   # every deploy put "PyDevices pydevices" back into the index (.github#50).
-  PUBLISHING_TOOLS_REF: publishing-v11
+  PUBLISHING_TOOLS_REF: publishing-v12
 
 jobs:
   build-complete-mip-pages-artifact:
