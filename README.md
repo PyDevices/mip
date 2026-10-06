@@ -92,9 +92,9 @@ index also carries are upstream's.
 
 | Package | Version | Description | Source |
 | --- | --- | --- | --- |
-| `pydevices` | 0.6.5 | Portable display, audio, event, and timing foundations for PyDevices | [PyDevices/pydevices @ v0.6.5](https://github.com/PyDevices/pydevices/releases/tag/v0.6.5) |
-| `pydevices-desktop` | 0.6.5 | Complete PyDevices desktop stack and board configuration | [PyDevices/pydevices @ v0.6.5](https://github.com/PyDevices/pydevices/releases/tag/v0.6.5) |
-| `bledev` | 0.6.5 | Portable async Bluetooth Low Energy for PyDevices, over aioble on boards | [PyDevices/pydevices @ v0.6.5](https://github.com/PyDevices/pydevices/releases/tag/v0.6.5) |
+| `pydevices` | 0.6.6 | Portable display, audio, event, and timing foundations for PyDevices | [PyDevices/pydevices @ v0.6.6](https://github.com/PyDevices/pydevices/releases/tag/v0.6.6) |
+| `pydevices-desktop` | 0.6.6 | Complete PyDevices desktop stack and board configuration | [PyDevices/pydevices @ v0.6.6](https://github.com/PyDevices/pydevices/releases/tag/v0.6.6) |
+| `bledev` | 0.6.6 | Portable async Bluetooth Low Energy for PyDevices, over aioble on boards | [PyDevices/pydevices @ v0.6.6](https://github.com/PyDevices/pydevices/releases/tag/v0.6.6) |
 | `palettes` | 0.0.14 | Color palette toolkit for PyDevices (wheel, cube, material_design) | [PyDevices/palettes @ v0.0.14](https://github.com/PyDevices/palettes/releases/tag/v0.0.14) |
 | `pdwidgets` | 0.0.24 | Cross-platform widget toolkit for PyDevices | [PyDevices/pdwidgets @ v0.0.24](https://github.com/PyDevices/pdwidgets/releases/tag/v0.0.24) |
 | `pygraphics` | 0.0.41 | Pure-Python pygraphics for MicroPython/CircuitPython/CPython (FrameBuffer, Draw, fonts); import as pygraphics | [PyDevices/pygraphics @ v0.0.41](https://github.com/PyDevices/pygraphics/releases/tag/v0.0.41) |
