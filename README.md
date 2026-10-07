@@ -201,6 +201,8 @@ should follow this license.
 * Expand unit testing coverage.
 * Add support for referencing remote/third-party repositories.
 
+What's planned next is in [ROADMAP.md](ROADMAP.md).
+
 ## Notes on terminology
 
 The terms *library*, *package*, and *module* are overloaded and lead to some
