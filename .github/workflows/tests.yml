@@ -1,6 +1,16 @@
 name: Package tests
 
-on: [push, pull_request]
+# Documentation-only changes can't change this result, so they don't run it.
+on:
+  push:
+    branches: [PyDevices]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
 
 jobs:
   build:
