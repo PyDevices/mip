@@ -97,7 +97,7 @@ index also carries are upstream's.
 | `bledev` | 0.6.6 | Portable async Bluetooth Low Energy for PyDevices, over aioble on boards | [PyDevices/pydevices @ v0.6.6](https://github.com/PyDevices/pydevices/releases/tag/v0.6.6) |
 | `palettes` | 0.0.14 | Color palette toolkit for PyDevices (wheel, cube, material_design) | [PyDevices/palettes @ v0.0.14](https://github.com/PyDevices/palettes/releases/tag/v0.0.14) |
 | `pdwidgets` | 0.0.24 | Cross-platform widget toolkit for PyDevices | [PyDevices/pdwidgets @ v0.0.24](https://github.com/PyDevices/pdwidgets/releases/tag/v0.0.24) |
-| `pygraphics` | 0.0.41 | Pure-Python pygraphics for MicroPython/CircuitPython/CPython (FrameBuffer, Draw, fonts); import as pygraphics | [PyDevices/pygraphics @ v0.0.41](https://github.com/PyDevices/pygraphics/releases/tag/v0.0.41) |
+| `pygraphics` | 0.1.0 | Pure-Python pygraphics for MicroPython/CircuitPython/CPython (FrameBuffer, Draw, fonts); import as pygraphics | [PyDevices/pygraphics @ v0.1.0](https://github.com/PyDevices/pygraphics/releases/tag/v0.1.0) |
 | `audioinstruments` | 0.3.2 | 55 synthio instruments for PyDevices (drum machines and synthesizers); import as audioinstruments | [PyDevices/audiocomponents @ v0.3.2](https://github.com/PyDevices/audiocomponents/releases/tag/v0.3.2) |
 | `audioeffects` | 0.3.2 | Effect classes for PyDevices audio (delay, drive, dynamics, eq, modulation, pitch, reverb); import as audioeffects | [PyDevices/audiocomponents @ v0.3.2](https://github.com/PyDevices/audiocomponents/releases/tag/v0.3.2) |
 
