@@ -1,6 +1,16 @@
 # https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 name: Python code lint and formatting with ruff
-on: [push, pull_request]
+# Documentation-only changes can't change this result, so they don't run it.
+on:
+  push:
+    branches: [PyDevices]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
 jobs:
   ruff:
     # Synced PyDevices packages are linted in their canonical source repos.

@@ -1,6 +1,9 @@
 name: Check commit message formatting
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [PyDevices]
+  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
