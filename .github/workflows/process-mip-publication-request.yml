@@ -66,7 +66,7 @@ jobs:
     steps:
       - name: Deploy the complete MIP index to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
   # The committed package list (packages.json + the README block) describes
   # the index that just went live; see refresh-package-list.yml. It sits on
