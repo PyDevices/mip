@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out MIP source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # Always build the branch TIP, never this run's trigger SHA: a
           # queued deploy from an older push otherwise rebuilds a stale
@@ -53,7 +53,7 @@ jobs:
       # removing every PyDevices package from https://PyDevices.github.io/mip.
       # That is exactly what a docs-only push to .site/ did on 2026-08-20.
       - name: Check out shared publishing tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: PyDevices/.github
           ref: ${{ env.PUBLISHING_TOOLS_REF }}
@@ -123,10 +123,10 @@ jobs:
           PY
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload complete Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ${{ env.PACKAGE_INDEX_PATH }}
 
@@ -139,7 +139,7 @@ jobs:
     steps:
       - name: Deploy MIP index documentation
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
   # The committed package list (packages.json + the README block) describes
   # the index that just went live, and the site page is regenerated from it

@@ -52,7 +52,7 @@ jobs:
       page-changed: ${{ steps.commit.outputs.page-changed }}
     steps:
       - name: Check out the branch tip
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # The tip, not the trigger SHA: a publication run has just pushed
           # its lockfile commit, and the list must sit on top of it.
@@ -80,13 +80,13 @@ jobs:
         run: python3 scripts/update_package_list.py --index "$RUNNER_TEMP/site/index.json"
 
       - name: Check out the site generator
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: PyDevices/.github
           ref: main
           path: .pydevices-site-generator/dotgithub
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -131,7 +131,7 @@ jobs:
 
       - name: Upload the site with the new page
         if: steps.commit.outputs.page-changed == 'true'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           name: ${{ env.REFRESHED_PAGES_ARTIFACT }}
           path: ${{ runner.temp }}/site
@@ -149,6 +149,6 @@ jobs:
     steps:
       - name: Deploy the site with the refreshed page
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
         with:
           artifact_name: ${{ env.REFRESHED_PAGES_ARTIFACT }}

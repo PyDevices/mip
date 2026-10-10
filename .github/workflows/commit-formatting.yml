@@ -16,9 +16,9 @@ jobs:
     if: github.repository == 'micropython/micropython-lib'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: '100'
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v7
     - name: Check commit message formatting
       run: source tools/ci.sh && ci_commit_formatting_run
