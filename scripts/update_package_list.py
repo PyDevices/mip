@@ -68,17 +68,60 @@ MULTI_PACKAGE_PROFILES = {
     ),
 }
 
+# Packages a profile gained at a release, keyed by the first version that has
+# them. The lockfile still names the release before for a while after this
+# table learns about the next one, and a release's packages can't be expected
+# of an index built from the one before. So a package is expected only once
+# the locked ref is at or past its version, and from then on it is held to
+# the same standard as the rest: in the index, at the locked version.
+#
+# 0.7.6 is midiports and the USB packages, which pydevices' mip-split.toml
+# marks `top-level` (they are directories at the repository root, each with
+# its own manifest.py) and the publisher writes beside the others.
+PROFILE_PACKAGES_SINCE = {
+    "pydevices": {
+        "0.7.6": (
+            "micropython/pydevices/midiports",
+            "micropython/pydevices/usb-core",
+            "micropython/pydevices/usb-device-audio",
+            "micropython/pydevices/usb-device-msc",
+            "micropython/pydevices/usb-device-video",
+            "micropython/pydevices/usb-hid",
+            "micropython/pydevices/usb-host-audio",
+            "micropython/pydevices/usb-host-cdc",
+            "micropython/pydevices/usb-host-hid",
+            "micropython/pydevices/usb-host-msc",
+            "micropython/pydevices/usb-host-net",
+            "micropython/pydevices/usb-host-video",
+        ),
+    },
+}
 
-def packages_for_profile(profile: str) -> tuple[str, ...]:
-    """Index paths the publication sync writes for one lockfile profile."""
-    return MULTI_PACKAGE_PROFILES.get(profile, (f"micropython/{profile}",))
+
+def version_key(version: str) -> tuple[int, ...]:
+    """Leading numeric parts of a version, so "0.7.6.dev1" compares as 0.7.6."""
+    parts = []
+    for part in version.removeprefix("v").split("."):
+        if not part.isdigit():
+            break
+        parts.append(int(part))
+    return tuple(parts)
+
+
+def packages_for_profile(profile: str, ref: str = "") -> tuple[str, ...]:
+    """Index paths the publication sync writes for one lockfile profile at *ref*."""
+    paths = MULTI_PACKAGE_PROFILES.get(profile, (f"micropython/{profile}",))
+    for since, added in PROFILE_PACKAGES_SINCE.get(profile, {}).items():
+        if version_key(ref) >= version_key(since):
+            paths += added
+    return paths
 
 
 def derive_expected(lock: dict) -> list[dict]:
     """The package set, in lockfile order, with its source pin attached."""
     expected = []
     for profile, entry in lock.items():
-        for path in packages_for_profile(profile):
+        for path in packages_for_profile(profile, entry["ref"]):
             expected.append(
                 {
                     "name": path.rsplit("/", 1)[1],
@@ -306,6 +349,7 @@ def self_check() -> int:
     healthy = [
         _entry("pydevices", "0.3.8", "micropython/pydevices/pydevices"),
         _entry("pydevices-desktop", "0.3.8", "micropython/pydevices/pydevices-desktop"),
+        _entry("bledev", "0.3.8", "micropython/pydevices/bledev"),
         _entry("palettes", "0.0.13", "micropython/palettes", "wheel | cube"),
         *upstream_entries,
     ]
@@ -370,7 +414,7 @@ def self_check() -> int:
             failures.append("README outside the block was not preserved")
         doc = json.loads(packages_text)
         names = [p["name"] for p in doc["packages"]]
-        if names != ["pydevices", "pydevices-desktop", "palettes"]:
+        if names != ["pydevices", "pydevices-desktop", "bledev", "palettes"]:
             failures.append(f"packages.json order/content wrong: {names}")
         if set(doc) != {"index", "packages"}:
             failures.append(f"packages.json carries environment-dependent keys: {sorted(doc)}")
@@ -421,6 +465,44 @@ def self_check() -> int:
             1,
             expect_written=False,
             expect_problem="pydevices-extra: in the index at micropython/pydevices-extra",
+        )
+        # The 0.7.6 packages: midiports and the USB packages.
+        newer = {**lock, "pydevices": {"repository": "PyDevices/pydevices", "ref": "v0.7.6"}}
+        since = PROFILE_PACKAGES_SINCE["pydevices"]["0.7.6"]
+        base = [e for e in healthy if not e["path"].startswith("micropython/pydevices/")]
+        at_new = [
+            _entry(path.rsplit("/", 1)[1], "0.7.6", path)
+            for path in (*MULTI_PACKAGE_PROFILES["pydevices"], *since)
+        ]
+        with_new_lock = {"palettes": lock["palettes"], "pydevices": newer["pydevices"]}
+
+        def case_with_lock(name, entries, expect_rc, expect_problem=""):
+            nonlocal passed
+            out, err = io.StringIO(), io.StringIO()
+            readme = work / "README.md"
+            readme.write_text(marked, encoding="utf-8")
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                rc = refresh(index_of(entries), with_new_lock, readme, work / "packages.json", REPO_ROOT)
+            if rc != expect_rc or (expect_problem and expect_problem not in err.getvalue()):
+                failures.append(f"{name}: exit {rc}, expected {expect_rc}; stderr {err.getvalue().strip()!r}")
+            else:
+                passed += 1
+                print(f"ok: {name}")
+
+        case_with_lock("a 0.7.6 index with its twelve new packages is written", [*base, *at_new], 0)
+        case_with_lock(
+            "a 0.7.6 lockfile with a USB package missing from the index is a mismatch",
+            [*base, *[e for e in at_new if e["name"] != "usb-host-msc"]],
+            1,
+            "usb-host-msc: derived from lockfile profile 'pydevices'",
+        )
+        case(
+            "the 0.7.6 packages in an index the lockfile still pins at 0.3.8 are a mismatch",
+            index_of([*healthy, *[_entry(p.rsplit("/", 1)[1], "0.7.6", p) for p in since]]),
+            readme_text,
+            1,
+            expect_written=False,
+            expect_problem="usb-core: in the index at micropython/pydevices/usb-core",
         )
         case(
             "README without markers is a failure, packages.json untouched",
