@@ -111,7 +111,7 @@ index also carries are upstream's.
 | `pdwidgets` | 0.0.24 | Cross-platform widget toolkit for PyDevices | [PyDevices/pdwidgets @ v0.0.24](https://github.com/PyDevices/pdwidgets/releases/tag/v0.0.24) |
 | `pygraphics` | 0.1.1 | Pure-Python pygraphics for MicroPython/CircuitPython/CPython (FrameBuffer, Draw, fonts); import as pygraphics | [PyDevices/pygraphics @ v0.1.1](https://github.com/PyDevices/pygraphics/releases/tag/v0.1.1) |
 | `audioinstruments` | 0.4.0 | 55 synthio instruments for PyDevices (drum machines and synthesizers); import as audioinstruments | [PyDevices/audiocomponents @ v0.4.0](https://github.com/PyDevices/audiocomponents/releases/tag/v0.4.0) |
-| `audioeffects` | 0.4.0 | Effect classes for PyDevices audio (delay, drive, dynamics, eq, modulation, pitch, reverb); import as audioeffects | [PyDevices/audiocomponents @ v0.4.0](https://github.com/PyDevices/audiocomponents/releases/tag/v0.4.0) |
+| `audioeffects` | 0.4.1 | Effect classes for PyDevices audio (delay, drive, dynamics, eq, modulation, pitch, reverb); import as audioeffects | [PyDevices/audiocomponents @ v0.4.1](https://github.com/PyDevices/audiocomponents/releases/tag/v0.4.1) |
 
 ```python
 import mip
