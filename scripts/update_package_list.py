@@ -94,6 +94,13 @@ PROFILE_PACKAGES_SINCE = {
             "micropython/pydevices/usb-host-net",
             "micropython/pydevices/usb-host-video",
         ),
+        # 0.7.7 adds hmilink, a top-level package in mip-split.toml like the
+        # ones above (pydevices 6f671de). Without this line the 0.7.7
+        # publication deployed its index and then failed the list refresh
+        # with "hmilink: in the index ... but not derived from the lockfile".
+        "0.7.7": (
+            "micropython/pydevices/hmilink",
+        ),
     },
 }
 
