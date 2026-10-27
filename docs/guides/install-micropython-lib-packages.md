@@ -23,7 +23,7 @@ If you build your own firmware, every package here has a `manifest.py` you can p
 
 ## Copy the files by hand
 
-Many packages are a single file. From a clone of this repository, to add `base64`, copy `python-stdlib/base64/base64.py` to `lib` on your board:
+Many packages are a single file. From a clone of this repository, to add `base64`, copy [`python-stdlib/base64/base64.py`](../../python-stdlib/base64/base64.py) to `lib` on your board:
 
 ```bash
 mpremote connect /dev/ttyUSB0 cp python-stdlib/base64/base64.py :/lib
