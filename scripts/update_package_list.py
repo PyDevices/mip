@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Regenerate the list of PyDevices packages this index publishes.
 
-Writes packages.json and rewrites the PACKAGES block in README.md. The set of
-packages is derived from pydevices-lock.json (every profile the publication
-sync builds), and the data for each -- version, description, license -- comes
-from the index's own index.json, never from PyPI or TestPyPI.
+Writes packages.json and rewrites the PACKAGES block in
+docs/reference/packages.md. The set of packages is derived from
+pydevices-lock.json (every profile the publication sync builds), and the
+data for each -- version, description, license -- comes from the index's own
+index.json, never from PyPI or TestPyPI.
 
 Stdlib only. The refresh-package-list workflow runs it after every deploy --
 a publication or a docs push -- against the index that was just deployed; by
@@ -553,7 +554,9 @@ def main() -> int:
         "or an http(s) URL, fetched (default: the live index). No fallback between the two.",
     )
     parser.add_argument("--lockfile", type=Path, default=REPO_ROOT / "pydevices-lock.json")
-    parser.add_argument("--readme", type=Path, default=REPO_ROOT / "README.md")
+    parser.add_argument(
+        "--readme", type=Path, default=REPO_ROOT / "docs" / "reference" / "packages.md"
+    )
     parser.add_argument("--output", type=Path, default=REPO_ROOT / "packages.json")
     parser.add_argument(
         "--self-check",
