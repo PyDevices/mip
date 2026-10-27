@@ -141,7 +141,7 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v5
 
-  # The committed package list (packages.json + the README block) describes
+  # The committed package list (packages.json + the block in docs/reference/packages.md) describes
   # the index that just went live, and the site page is regenerated from it
   # and redeployed; see refresh-package-list.yml. contents: write is granted
   # to this job only, for that commit; pages: write for the redeploy.
