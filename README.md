@@ -38,6 +38,6 @@ print("red, green, blue as RGB565: 0x%04X 0x%04X 0x%04X" % (wheel[0], wheel[120]
 red, green, blue as RGB565: 0xF800 0x07E0 0x001F
 ```
 
-[Docs](https://github.com/PyDevices/mip/blob/PyDevices/docs/index.md) · [Examples](https://pydevices.github.io/pydevices-examples/gallery/) · [Roadmap](ROADMAP.md)
+[Docs](https://github.com/PyDevices/mip/blob/PyDevices/docs/index.md) · [Examples](https://pydevices.github.io/gallery/gallery/) · [Roadmap](ROADMAP.md)
 
 Made by [PyDevices](https://pydevices.com).
