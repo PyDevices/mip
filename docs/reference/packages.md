@@ -9,22 +9,22 @@ index also carries are upstream's.
 
 | Package | Version | Description | Source |
 | --- | --- | --- | --- |
-| `pydevices` | 0.7.7 | Portable display, audio, event, and timing foundations for PyDevices | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `pydevices-desktop` | 0.7.7 | Complete PyDevices desktop stack and board configuration | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `bledev` | 0.7.7 | Portable async Bluetooth Low Energy for PyDevices, over aioble on boards | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `midiports` | 0.7.7 | MIDI ports for adafruit_midi: USB device, UART, and a computer's own MIDI ports. | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `usb-core` | 0.7.7 | usb.core and usb.util: talk to USB devices from a host board, in PyUSB's shape. | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `usb-device-audio` | 0.7.7 | USB audio (UAC2) sound card on machine.USBDevice's streaming endpoints. | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `usb-device-msc` | 0.7.7 | USB mass storage device (Bulk-Only Transport, SCSI) over a MicroPython block device. | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `usb-device-video` | 0.7.7 | USB video (UVC) webcam on machine.USBDevice's streaming endpoints. | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `usb-hid` | 0.7.7 | CircuitPython's usb_hid on MicroPython, over usb-device-hid, for adafruit_hid. | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `usb-host-audio` | 0.7.7 | Play to a USB speaker or record from a USB microphone on this board's host port, over usb.core, alone or as audiodev outputs and inputs. | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `usb-host-cdc` | 0.7.7 | Talk to a USB serial device (CDC-ACM) on this board's host port, over usb.core. | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `usb-host-hid` | 0.7.7 | Keys, mouse buttons and movement from a keyboard or mouse plugged into this board's USB host port, named the way adafruit_hid names them. | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `usb-host-msc` | 0.7.7 | Mount a USB flash drive plugged into this board's host port, over usb.core. | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `usb-host-net` | 0.7.7 | Internet over USB: a phone's USB tethering on this board's host port, as a network interface. | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `usb-host-video` | 0.7.7 | Stream a webcam plugged into this board's USB host port, over usb.core. | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
-| `hmilink` | 0.7.7 | Any screen as a device's front panel: one document, ops, telemetry and events over any transport. | [PyDevices/pydevices @ v0.7.7](https://github.com/PyDevices/pydevices/releases/tag/v0.7.7) |
+| `pydevices` | 0.7.8 | Portable display, audio, event, and timing foundations for PyDevices | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `pydevices-desktop` | 0.7.8 | Complete PyDevices desktop stack and board configuration | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `bledev` | 0.7.8 | Portable async Bluetooth Low Energy for PyDevices, over aioble on boards | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `midiports` | 0.7.8 | MIDI ports for adafruit_midi: USB device, UART, and a computer's own MIDI ports. | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `usb-core` | 0.7.8 | usb.core and usb.util: talk to USB devices from a host board, in PyUSB's shape. | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `usb-device-audio` | 0.7.8 | USB audio (UAC2) sound card on machine.USBDevice's streaming endpoints. | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `usb-device-msc` | 0.7.8 | USB mass storage device (Bulk-Only Transport, SCSI) over a MicroPython block device. | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `usb-device-video` | 0.7.8 | USB video (UVC) webcam on machine.USBDevice's streaming endpoints. | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `usb-hid` | 0.7.8 | CircuitPython's usb_hid on MicroPython, over usb-device-hid, for adafruit_hid. | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `usb-host-audio` | 0.7.8 | Play to a USB speaker or record from a USB microphone on this board's host port, over usb.core, alone or as audiodev outputs and inputs. | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `usb-host-cdc` | 0.7.8 | Talk to a USB serial device (CDC-ACM) on this board's host port, over usb.core. | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `usb-host-hid` | 0.7.8 | Keys, mouse buttons and movement from a keyboard or mouse plugged into this board's USB host port, named the way adafruit_hid names them. | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `usb-host-msc` | 0.7.8 | Mount a USB flash drive plugged into this board's host port, over usb.core. | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `usb-host-net` | 0.7.8 | Internet over USB: a phone's USB tethering on this board's host port, as a network interface. | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `usb-host-video` | 0.7.8 | Stream a webcam plugged into this board's USB host port, over usb.core. | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
+| `hmilink` | 0.7.8 | Any screen as a device's front panel: one document, ops, telemetry and events over any transport. | [PyDevices/pydevices @ v0.7.8](https://github.com/PyDevices/pydevices/releases/tag/v0.7.8) |
 | `palettes` | 0.0.14 | Color palette toolkit for PyDevices (wheel, cube, material_design) | [PyDevices/palettes @ v0.0.14](https://github.com/PyDevices/palettes/releases/tag/v0.0.14) |
 | `pdwidgets` | 0.0.24 | Cross-platform widget toolkit for PyDevices | [PyDevices/pdwidgets @ v0.0.24](https://github.com/PyDevices/pdwidgets/releases/tag/v0.0.24) |
 | `pygraphics` | 0.1.1 | Pure-Python pygraphics for MicroPython/CircuitPython/CPython (FrameBuffer, Draw, fonts); import as pygraphics | [PyDevices/pygraphics @ v0.1.1](https://github.com/PyDevices/pygraphics/releases/tag/v0.1.1) |
