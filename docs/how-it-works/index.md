@@ -8,7 +8,7 @@ The index is a fork of [micropython-lib](https://github.com/micropython/micropyt
 
 When a repository releases, it sends a publication request. Requests run one at a time through [`process-mip-publication-request.yml`](../../.github/workflows/process-mip-publication-request.yml), and each one updates the package's pin in the lockfile. Every deploy then syncs all the pinned sources again before it publishes, so one release can't leave another package stale. The lockfile also says which repository may publish each package, and a request from any other repository is refused.
 
-After each deploy, [`scripts/update_package_list.py`](../../scripts/update_package_list.py) reads the live index back and rewrites `packages.json` and the [package list](../reference/packages.md), so the list always matches what's actually being served.
+After each deploy, [`scripts/update_package_list.py`](../../scripts/update_package_list.py) reads the live index back and rewrites [`packages.json`](../../packages.json) and the [package list](../reference/packages.md), so the list always matches what's actually being served.
 
 ## Only the latest version
 
