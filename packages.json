@@ -250,28 +250,28 @@
     },
     {
       "name": "audioinstruments",
-      "version": "0.4.1",
+      "version": "0.5.0",
       "description": "55 synthio instruments for PyDevices (drum machines and synthesizers); import as audioinstruments",
       "license": "MIT",
       "path": "micropython/audioinstruments",
       "profile": "audioinstruments",
-      "repository": "PyDevices/audiocomponents",
-      "ref": "v0.4.1",
-      "repository_url": "https://github.com/PyDevices/audiocomponents",
-      "release_url": "https://github.com/PyDevices/audiocomponents/releases/tag/v0.4.1",
+      "repository": "PyDevices/audioinstruments",
+      "ref": "v0.5.0",
+      "repository_url": "https://github.com/PyDevices/audioinstruments",
+      "release_url": "https://github.com/PyDevices/audioinstruments/releases/tag/v0.5.0",
       "install": "mip.install(\"audioinstruments\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
       "name": "audioeffects",
-      "version": "0.4.1",
+      "version": "0.5.0",
       "description": "Effect classes for PyDevices audio (delay, drive, dynamics, eq, modulation, pitch, reverb); import as audioeffects",
       "license": "MIT",
       "path": "micropython/audioeffects",
       "profile": "audioeffects",
-      "repository": "PyDevices/audiocomponents",
-      "ref": "v0.4.1",
-      "repository_url": "https://github.com/PyDevices/audiocomponents",
-      "release_url": "https://github.com/PyDevices/audiocomponents/releases/tag/v0.4.1",
+      "repository": "PyDevices/audioeffects",
+      "ref": "v0.5.0",
+      "repository_url": "https://github.com/PyDevices/audioeffects",
+      "release_url": "https://github.com/PyDevices/audioeffects/releases/tag/v0.5.0",
       "install": "mip.install(\"audioeffects\", index=\"https://PyDevices.github.io/mip\")"
     }
   ]
