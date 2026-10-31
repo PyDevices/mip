@@ -16,11 +16,11 @@
     "ref": "v0.1.2"
   },
   "audioinstruments": {
-    "repository": "PyDevices/audiocomponents",
-    "ref": "v0.4.1"
+    "repository": "PyDevices/audioinstruments",
+    "ref": "v0.5.0"
   },
   "audioeffects": {
-    "repository": "PyDevices/audiocomponents",
-    "ref": "v0.4.1"
+    "repository": "PyDevices/audioeffects",
+    "ref": "v0.5.0"
   }
 }
