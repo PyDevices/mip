@@ -67,6 +67,17 @@ MULTI_PACKAGE_PROFILES = {
         "micropython/pydevices/pydevices-desktop",
         "micropython/pydevices/bledev",
     ),
+    # The apps repository publishes applibs, which installs its members, and
+    # each member as a package of its own (publishing-v19).
+    "applibs": (
+        "micropython/applibs",
+        "micropython/appkit",
+        "micropython/controlkit",
+        "micropython/songmodel",
+        "micropython/soundmodule",
+        "micropython/spectrum",
+        "micropython/touchkit",
+    ),
 }
 
 # Packages a profile gained at a release, keyed by the first version that has
