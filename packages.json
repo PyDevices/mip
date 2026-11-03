@@ -263,15 +263,15 @@
     },
     {
       "name": "audioeffects",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "description": "Studio and guitar-pedal effects on audiodsp (reverbs, delays, compressors, overdrive, EQs); import as audioeffects",
       "license": "MIT",
       "path": "micropython/audioeffects",
       "profile": "audioeffects",
       "repository": "PyDevices/audioeffects",
-      "ref": "v0.5.0",
+      "ref": "v0.5.1",
       "repository_url": "https://github.com/PyDevices/audioeffects",
-      "release_url": "https://github.com/PyDevices/audioeffects/releases/tag/v0.5.0",
+      "release_url": "https://github.com/PyDevices/audioeffects/releases/tag/v0.5.1",
       "install": "mip.install(\"audioeffects\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
