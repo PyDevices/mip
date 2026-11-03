@@ -28,7 +28,7 @@ index also carries are upstream's.
 | `palettes` | 0.0.14 | Color palette toolkit for PyDevices (wheel, cube, material_design) | [PyDevices/palettes @ v0.0.14](https://github.com/PyDevices/palettes/releases/tag/v0.0.14) |
 | `pdwidgets` | 0.0.24 | Cross-platform widget toolkit for PyDevices | [PyDevices/pdwidgets @ v0.0.24](https://github.com/PyDevices/pdwidgets/releases/tag/v0.0.24) |
 | `pygraphics` | 0.1.2 | Pure-Python pygraphics for MicroPython/CircuitPython/CPython (FrameBuffer, Draw, fonts); import as pygraphics | [PyDevices/pygraphics @ v0.1.2](https://github.com/PyDevices/pygraphics/releases/tag/v0.1.2) |
-| `audioinstruments` | 0.5.0 | Playable synthesizers, organs, electric pianos and drum machines on audiodsp; import as audioinstruments | [PyDevices/audioinstruments @ v0.5.0](https://github.com/PyDevices/audioinstruments/releases/tag/v0.5.0) |
+| `audioinstruments` | 0.5.1 | Playable synthesizers, organs, electric pianos and drum machines on audiodsp; import as audioinstruments | [PyDevices/audioinstruments @ v0.5.1](https://github.com/PyDevices/audioinstruments/releases/tag/v0.5.1) |
 | `audioeffects` | 0.5.0 | Studio and guitar-pedal effects on audiodsp (reverbs, delays, compressors, overdrive, EQs); import as audioeffects | [PyDevices/audioeffects @ v0.5.0](https://github.com/PyDevices/audioeffects/releases/tag/v0.5.0) |
 | `applibs` | 0.1.1 | The libraries apps share; installs each of them | [PyDevices/apps @ v0.1.1](https://github.com/PyDevices/apps/releases/tag/v0.1.1) |
 | `appkit` | 0.1.1 | Apps you can switch between, and a launcher to run them | [PyDevices/apps @ v0.1.1](https://github.com/PyDevices/apps/releases/tag/v0.1.1) |
