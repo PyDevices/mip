@@ -30,13 +30,13 @@ index also carries are upstream's.
 | `pygraphics` | 0.1.2 | Pure-Python pygraphics for MicroPython/CircuitPython/CPython (FrameBuffer, Draw, fonts); import as pygraphics | [PyDevices/pygraphics @ v0.1.2](https://github.com/PyDevices/pygraphics/releases/tag/v0.1.2) |
 | `audioinstruments` | 0.5.0 | Playable synthesizers, organs, electric pianos and drum machines on audiodsp; import as audioinstruments | [PyDevices/audioinstruments @ v0.5.0](https://github.com/PyDevices/audioinstruments/releases/tag/v0.5.0) |
 | `audioeffects` | 0.5.0 | Studio and guitar-pedal effects on audiodsp (reverbs, delays, compressors, overdrive, EQs); import as audioeffects | [PyDevices/audioeffects @ v0.5.0](https://github.com/PyDevices/audioeffects/releases/tag/v0.5.0) |
-| `applibs` | 0.1.0 | The libraries apps share; installs each of them | [PyDevices/apps @ v0.1.0](https://github.com/PyDevices/apps/releases/tag/v0.1.0) |
-| `appkit` | 0.1.0 | Apps you can switch between, and a launcher to run them | [PyDevices/apps @ v0.1.0](https://github.com/PyDevices/apps/releases/tag/v0.1.0) |
-| `controlkit` | 0.1.0 | LVGL controls: encoders, sliders, meters, lamp buttons, pad grids and a dot-matrix display | [PyDevices/apps @ v0.1.0](https://github.com/PyDevices/apps/releases/tag/v0.1.0) |
-| `songmodel` | 0.1.0 | The song a groovebox edits, and the link that carries it to a front panel | [PyDevices/apps @ v0.1.0](https://github.com/PyDevices/apps/releases/tag/v0.1.0) |
-| `soundmodule` | 0.1.0 | A sound module that plays MIDI, headless from a port or through files | [PyDevices/apps @ v0.1.0](https://github.com/PyDevices/apps/releases/tag/v0.1.0) |
-| `spectrum` | 0.1.0 | A spectrum analyzer in an app's area, sharing the panel with LVGL | [PyDevices/apps @ v0.1.0](https://github.com/PyDevices/apps/releases/tag/v0.1.0) |
-| `touchkit` | 0.1.0 | What the apps on an ESP32-P4 touch board share | [PyDevices/apps @ v0.1.0](https://github.com/PyDevices/apps/releases/tag/v0.1.0) |
+| `applibs` | 0.1.1 | The libraries apps share; installs each of them | [PyDevices/apps @ v0.1.1](https://github.com/PyDevices/apps/releases/tag/v0.1.1) |
+| `appkit` | 0.1.1 | Apps you can switch between, and a launcher to run them | [PyDevices/apps @ v0.1.1](https://github.com/PyDevices/apps/releases/tag/v0.1.1) |
+| `controlkit` | 0.1.1 | LVGL controls: encoders, sliders, meters, lamp buttons, pad grids and a dot-matrix display | [PyDevices/apps @ v0.1.1](https://github.com/PyDevices/apps/releases/tag/v0.1.1) |
+| `songmodel` | 0.1.1 | The song a groovebox edits, and the link that carries it to a front panel | [PyDevices/apps @ v0.1.1](https://github.com/PyDevices/apps/releases/tag/v0.1.1) |
+| `soundmodule` | 0.1.1 | A sound module that plays MIDI, headless from a port or through files | [PyDevices/apps @ v0.1.1](https://github.com/PyDevices/apps/releases/tag/v0.1.1) |
+| `spectrum` | 0.1.1 | A spectrum analyzer in an app's area, sharing the panel with LVGL | [PyDevices/apps @ v0.1.1](https://github.com/PyDevices/apps/releases/tag/v0.1.1) |
+| `touchkit` | 0.1.1 | What the apps on an ESP32-P4 touch board share | [PyDevices/apps @ v0.1.1](https://github.com/PyDevices/apps/releases/tag/v0.1.1) |
 
 ```python
 import mip
