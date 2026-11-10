@@ -73,6 +73,7 @@ MULTI_PACKAGE_PROFILES = {
         "micropython/applibs",
         "micropython/appkit",
         "micropython/controlkit",
+        "micropython/sayso",
         "micropython/songmodel",
         "micropython/soundmodule",
         "micropython/spectrum",
@@ -112,6 +113,11 @@ PROFILE_PACKAGES_SINCE = {
         # with "hmilink: in the index ... but not derived from the lockfile".
         "0.7.7": (
             "micropython/pydevices/hmilink",
+        ),
+        # 0.7.9 adds medialink and usb-host-mtp, top-level like the rest.
+        "0.7.9": (
+            "micropython/pydevices/medialink",
+            "micropython/pydevices/usb-host-mtp",
         ),
     },
 }
