@@ -263,15 +263,15 @@
     },
     {
       "name": "pygraphics",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "description": "Pure-Python pygraphics for MicroPython/CircuitPython/CPython (FrameBuffer, Draw, fonts); import as pygraphics",
       "license": "MIT",
       "path": "micropython/pygraphics",
       "profile": "pygraphics",
       "repository": "PyDevices/pygraphics",
-      "ref": "v0.1.4",
+      "ref": "v0.1.5",
       "repository_url": "https://github.com/PyDevices/pygraphics",
-      "release_url": "https://github.com/PyDevices/pygraphics/releases/tag/v0.1.4",
+      "release_url": "https://github.com/PyDevices/pygraphics/releases/tag/v0.1.5",
       "install": "mip.install(\"pygraphics\", index=\"https://PyDevices.github.io/mip\")"
     },
     {
