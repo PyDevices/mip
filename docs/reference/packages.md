@@ -29,7 +29,7 @@ index also carries are upstream's.
 | `usb-host-mtp` | 0.7.9 | Photos and files off a phone or a camera on this board's host port, over MTP/PTP. | [PyDevices/pydevices @ v0.7.9](https://github.com/PyDevices/pydevices/releases/tag/v0.7.9) |
 | `palettes` | 0.0.14 | Color palette toolkit for PyDevices (wheel, cube, material_design) | [PyDevices/palettes @ v0.0.14](https://github.com/PyDevices/palettes/releases/tag/v0.0.14) |
 | `pdwidgets` | 0.0.24 | Cross-platform widget toolkit for PyDevices | [PyDevices/pdwidgets @ v0.0.24](https://github.com/PyDevices/pdwidgets/releases/tag/v0.0.24) |
-| `pygraphics` | 0.1.2 | Pure-Python pygraphics for MicroPython/CircuitPython/CPython (FrameBuffer, Draw, fonts); import as pygraphics | [PyDevices/pygraphics @ v0.1.2](https://github.com/PyDevices/pygraphics/releases/tag/v0.1.2) |
+| `pygraphics` | 0.1.3 | Pure-Python pygraphics for MicroPython/CircuitPython/CPython (FrameBuffer, Draw, fonts); import as pygraphics | [PyDevices/pygraphics @ v0.1.3](https://github.com/PyDevices/pygraphics/releases/tag/v0.1.3) |
 | `audioinstruments` | 0.5.1 | Playable synthesizers, organs, electric pianos and drum machines on audiodsp; import as audioinstruments | [PyDevices/audioinstruments @ v0.5.1](https://github.com/PyDevices/audioinstruments/releases/tag/v0.5.1) |
 | `audioeffects` | 0.5.1 | Studio and guitar-pedal effects on audiodsp (reverbs, delays, compressors, overdrive, EQs); import as audioeffects | [PyDevices/audioeffects @ v0.5.1](https://github.com/PyDevices/audioeffects/releases/tag/v0.5.1) |
 | `applibs` | 0.1.1 | The libraries apps share; installs each of them | [PyDevices/apps @ v0.1.1](https://github.com/PyDevices/apps/releases/tag/v0.1.1) |
