@@ -1,43 +1,17 @@
-![The index's web page, with a live MicroPython demo running in the browser](docs/images/index-page.png)
+# PyDevices mip index (retired)
 
-# PyDevices package index
-
-A `mip` package index for MicroPython: every PyDevices library, plus all of micropython-lib, as precompiled `.mpy` files or plain `.py` source.
-
-## Install
-
-On a board with a network connection:
+This package index no longer takes releases. Install PyDevices packages from
+[lib.omnipython.org](https://lib.omnipython.org):
 
 ```python
-import mip
-mip.install("palettes", index="https://PyDevices.github.io/mip")
+import omip
+omip.install("palettes")
 ```
 
-From your computer, onto a board on USB (the board needs no network):
+`omip` comes with OmniPython firmware. On other MicroPython firmware, run
+`mip.install("github:PyDevices/pydevices/lib/omip.py")` once to put it on the
+board.
 
-```bash
-mpremote mip install --index https://PyDevices.github.io/mip palettes
-```
-
-## Try it
-
-With the unix port of MicroPython, install a package into `lib/` and use it:
-
-```bash
-micropython -m mip install --index https://PyDevices.github.io/mip --target lib palettes
-```
-
-```python
-from palettes import get_palette
-
-wheel = get_palette(name="wheel", length=360, color_depth=16)
-print("red, green, blue as RGB565: 0x%04X 0x%04X 0x%04X" % (wheel[0], wheel[120], wheel[240]))
-```
-
-```text
-red, green, blue as RGB565: 0xF800 0x07E0 0x001F
-```
-
-[Docs](https://github.com/PyDevices/mip/blob/PyDevices/docs/index.md) · [Examples](https://pydevices.github.io/gallery/gallery/) · [Roadmap](ROADMAP.md)
-
-Made by [PyDevices](https://pydevices.com).
+The packages published here before it stopped stay up at the old address, so a
+board that already points there keeps working. They won't get newer versions.
+[Packages in this index](docs/reference/packages.md) lists what it holds.

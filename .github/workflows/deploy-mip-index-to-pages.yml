@@ -21,7 +21,7 @@ permissions:
 env:
   PACKAGE_INDEX_PATH: /tmp/pydevices-mip-site
   LOCKFILE: pydevices-lock.json
-  # Same tag as publishing-tools-ref in process-mip-publication-request.yml.
+  # Last tag this workflow used to build the index.
   # The two must move together: this workflow rebuilds every package on each
   # deploy, so an older tools ref here overwrites what a publication wrote.
   # 9aef8e68 predated the shared pydevices descriptions (.github 11a264c), and
@@ -141,15 +141,3 @@ jobs:
       - name: Deploy MIP index documentation
         id: deployment
         uses: actions/deploy-pages@v5
-
-  # The committed package list (packages.json + the block in docs/reference/packages.md) describes
-  # the index that just went live, and the site page is regenerated from it
-  # and redeployed; see refresh-package-list.yml. contents: write is granted
-  # to this job only, for that commit; pages: write for the redeploy.
-  refresh-package-list:
-    needs: deploy-complete-mip-index
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
-    uses: ./.github/workflows/refresh-package-list.yml
