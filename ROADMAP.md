@@ -1,8 +1,8 @@
 # Roadmap
 
-No larger changes are planned for the index right now. Packages arrive here
-when their own repositories release them, so what's coming for a package is in
-that repository's roadmap.
+Nothing is planned for this index: it is retired and takes no new releases.
+Packages are installed from [lib.omnipython.org](https://lib.omnipython.org),
+and what's coming for a package is in that package's own repository.
 
-If an install from the index fails or a package is missing, open an issue on
-the package's own repository.
+If an install fails or a package is missing, open an issue on the package's own
+repository.
