@@ -1,7 +1,7 @@
 {
   "pydevices": {
     "repository": "PyDevices/pydevices",
-    "ref": "v0.7.9"
+    "ref": "v0.8.0.dev17"
   },
   "palettes": {
     "repository": "PyDevices/palettes",
@@ -26,5 +26,9 @@
   "applibs": {
     "repository": "PyDevices/apps",
     "ref": "v0.1.2.dev6"
+  },
+  "iconkit": {
+    "repository": "PyDevices/pydevices",
+    "ref": "iconkit-v0.1.0.dev1"
   }
 }

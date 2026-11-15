@@ -26,7 +26,7 @@ env:
   # deploy, so an older tools ref here overwrites what a publication wrote.
   # 9aef8e68 predated the shared pydevices descriptions (.github 11a264c), and
   # every deploy put "PyDevices pydevices" back into the index (.github#50).
-  PUBLISHING_TOOLS_REF: publishing-v23
+  PUBLISHING_TOOLS_REF: publishing-v24
 
 jobs:
   build-complete-mip-pages-artifact:
@@ -73,6 +73,7 @@ jobs:
             git clone --quiet --depth 1 --branch "$ref" \
               "https://github.com/${repository}.git" ".publication-sources/${profile}"
             version="${ref#v}"
+            version="${version##*-v}"
             python .pydevices-publishing-tools/scripts/synchronize_mip_package.py \
               --source-repository ".publication-sources/${profile}" \
               --source-repository-name "$repository" \
@@ -113,7 +114,7 @@ jobs:
               raise SystemExit(1)
 
           for profile, entry in lock.items():
-              want = entry["ref"].lstrip("v")
+              want = entry["ref"].rsplit("-v", 1)[-1].lstrip("v")
               got = json.loads((published / profile / "latest.json").read_text())["version"]
               if got != want:
                   print(f"{profile}: index has {got}, lockfile says {want}", file=sys.stderr)
