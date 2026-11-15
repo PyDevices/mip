@@ -73,6 +73,8 @@ MULTI_PACKAGE_PROFILES = {
         "micropython/applibs",
         "micropython/appkit",
         "micropython/controlkit",
+        "micropython/deskkit",
+        "micropython/programkit",
         "micropython/sayso",
         "micropython/songmodel",
         "micropython/soundmodule",
@@ -119,6 +121,15 @@ PROFILE_PACKAGES_SINCE = {
             "micropython/pydevices/medialink",
             "micropython/pydevices/usb-host-mtp",
         ),
+        # 0.8.0 adds castdisplay, mp4mux, vtterm, usb-device-net and
+        # usb-host-dfu, top-level like the rest.
+        "0.8.0": (
+            "micropython/pydevices/castdisplay",
+            "micropython/pydevices/mp4mux",
+            "micropython/pydevices/usb-device-net",
+            "micropython/pydevices/usb-host-dfu",
+            "micropython/pydevices/vtterm",
+        ),
     },
 }
 
@@ -154,8 +165,9 @@ def derive_expected(lock: dict) -> list[dict]:
                     "path": path,
                     "repository": entry["repository"],
                     "ref": entry["ref"],
-                    # The workflows' Verify steps compare the same way (${ref#v}).
-                    "version": entry["ref"].removeprefix("v"),
+                    # The workflows' Verify steps compare the same way: a folder
+                    # package's ref is <name>-v<version>.
+                    "version": entry["ref"].rsplit("-v", 1)[-1].removeprefix("v"),
                 }
             )
     return expected
