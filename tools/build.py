@@ -235,6 +235,15 @@ def _compile_as_mpy(
                 mpy_cross=mpy_cross_path,
             )
         except mpy_cross.CrossCompileError as e:
+            if "invalid arch" in str(e):
+                # @micropython.viper and @micropython.native compile to machine
+                # code for one architecture, which an index shared by every
+                # board cannot carry. Ship the source: the board compiles it
+                # for itself on import.
+                _copy_as_py(
+                    package_name, package_json, tagged_path, target_path, out_file_dir, hash_prefix_len
+                )
+                return
             print(
                 error_color("Error:"),
                 "Unable to compile",
