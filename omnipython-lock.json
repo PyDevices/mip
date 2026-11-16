@@ -1,6 +1,6 @@
 {
-  "pydevices": {
-    "repository": "PyDevices/pydevices",
+  "omnipython": {
+    "repository": "PyDevices/omnipython",
     "ref": "v0.8.0.dev17"
   },
   "palettes": {
@@ -28,7 +28,7 @@
     "ref": "v0.1.2.dev6"
   },
   "iconkit": {
-    "repository": "PyDevices/pydevices",
+    "repository": "PyDevices/omnipython",
     "ref": "iconkit-v0.1.0.dev1"
   }
 }

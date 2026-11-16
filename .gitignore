@@ -9,10 +9,10 @@ __pycache__
 .cursor/debug*
 .cursor/plans/
 
-# Generated at publish time from the sources named in pydevices-lock.json --
+# Generated at publish time from the sources named in omnipython-lock.json --
 # see reusable-synchronize-mip-package.yml. Committing these is what made the
 # mirror look like editable source; they are build output.
-/micropython/pydevices/
+/micropython/omnipython/
 /micropython/palettes/
 /micropython/pdwidgets/
 /micropython/pygraphics/
