@@ -4,7 +4,7 @@ The index was a fork of [micropython-lib](https://github.com/micropython/micropy
 
 ## Nobody edits the package trees
 
-[`pydevices-lock.json`](../../pydevices-lock.json) is the source of truth. It pins each PyDevices package to an exact release tag in the repository that owns it. Everything under the package folders is build output.
+[`omnipython-lock.json`](../../omnipython-lock.json) is the source of truth. It pins each PyDevices package to an exact release tag in the repository that owns it. Everything under the package folders is build output.
 
 When a repository releases, it sends a publication request. Requests run one at a time through `process-mip-publication-request.yml` (since removed), and each one updates the package's pin in the lockfile. Every deploy then syncs all the pinned sources again before it publishes, so one release can't leave another package stale. The lockfile also says which repository may publish each package, and a request from any other repository is refused.
 

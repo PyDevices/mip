@@ -3,7 +3,7 @@
 
 Writes packages.json and rewrites the PACKAGES block in
 docs/reference/packages.md. The set of packages is derived from
-pydevices-lock.json (every profile the publication sync builds), and the
+omnipython-lock.json (every profile the publication sync builds), and the
 data for each -- version, description, license -- comes from the index's own
 index.json, never from PyPI or TestPyPI.
 
@@ -50,22 +50,22 @@ README_END = "<!-- PACKAGES: END -->"
 
 # Which packages a lockfile profile publishes, as index paths.
 #
-# The "pydevices" profile is the one profile that publishes MORE THAN ONE
-# package: synchronize_pydevices() in PyDevices/.github's
-# scripts/synchronize_mip_package.py writes micropython/pydevices/pydevices
-# (all of lib/) and micropython/pydevices/pydevices-desktop (utils/ plus the
+# The "omnipython" profile is the one profile that publishes MORE THAN ONE
+# package: synchronize_omnipython() in PyDevices/.github's
+# scripts/synchronize_mip_package.py writes micropython/omnipython/omnipython
+# (all of lib/) and micropython/omnipython/omnipython-desktop (utils/ plus the
 # desktop board config). Every other profile publishes exactly one package,
-# named after the profile, at micropython/<profile>. If synchronize_pydevices
+# named after the profile, at micropython/<profile>. If synchronize_omnipython
 # ever grows a third package, this table is the one place to say so; the
 # mismatch check below reports the index entry until it is.
 MULTI_PACKAGE_PROFILES = {
-    # bledev is its own package from the same lockfile entry (pydevices'
+    # bledev is its own package from the same lockfile entry (omnipython'
     # mip-split.toml marks it own-package), so a board without a radio
     # doesn't carry BLE. Published since publishing-v12.
-    "pydevices": (
-        "micropython/pydevices/pydevices",
-        "micropython/pydevices/pydevices-desktop",
-        "micropython/pydevices/bledev",
+    "omnipython": (
+        "micropython/omnipython/omnipython",
+        "micropython/omnipython/omnipython-desktop",
+        "micropython/omnipython/bledev",
     ),
     # The apps repository publishes applibs, which installs its members, and
     # each member as a package of its own (publishing-v19).
@@ -90,45 +90,45 @@ MULTI_PACKAGE_PROFILES = {
 # the locked ref is at or past its version, and from then on it is held to
 # the same standard as the rest: in the index, at the locked version.
 #
-# 0.7.6 is midiports and the USB packages, which pydevices' mip-split.toml
+# 0.7.6 is midiports and the USB packages, which omnipython' mip-split.toml
 # marks `top-level` (they are directories at the repository root, each with
 # its own manifest.py) and the publisher writes beside the others.
 PROFILE_PACKAGES_SINCE = {
-    "pydevices": {
+    "omnipython": {
         "0.7.6": (
-            "micropython/pydevices/midiports",
-            "micropython/pydevices/usb-core",
-            "micropython/pydevices/usb-device-audio",
-            "micropython/pydevices/usb-device-msc",
-            "micropython/pydevices/usb-device-video",
-            "micropython/pydevices/usb-hid",
-            "micropython/pydevices/usb-host-audio",
-            "micropython/pydevices/usb-host-cdc",
-            "micropython/pydevices/usb-host-hid",
-            "micropython/pydevices/usb-host-msc",
-            "micropython/pydevices/usb-host-net",
-            "micropython/pydevices/usb-host-video",
+            "micropython/omnipython/midiports",
+            "micropython/omnipython/usb-core",
+            "micropython/omnipython/usb-device-audio",
+            "micropython/omnipython/usb-device-msc",
+            "micropython/omnipython/usb-device-video",
+            "micropython/omnipython/usb-hid",
+            "micropython/omnipython/usb-host-audio",
+            "micropython/omnipython/usb-host-cdc",
+            "micropython/omnipython/usb-host-hid",
+            "micropython/omnipython/usb-host-msc",
+            "micropython/omnipython/usb-host-net",
+            "micropython/omnipython/usb-host-video",
         ),
         # 0.7.7 adds hmilink, a top-level package in mip-split.toml like the
-        # ones above (pydevices 6f671de). Without this line the 0.7.7
+        # ones above (omnipython 6f671de). Without this line the 0.7.7
         # publication deployed its index and then failed the list refresh
         # with "hmilink: in the index ... but not derived from the lockfile".
         "0.7.7": (
-            "micropython/pydevices/hmilink",
+            "micropython/omnipython/hmilink",
         ),
         # 0.7.9 adds medialink and usb-host-mtp, top-level like the rest.
         "0.7.9": (
-            "micropython/pydevices/medialink",
-            "micropython/pydevices/usb-host-mtp",
+            "micropython/omnipython/medialink",
+            "micropython/omnipython/usb-host-mtp",
         ),
         # 0.8.0 adds castdisplay, mp4mux, vtterm, usb-device-net and
         # usb-host-dfu, top-level like the rest.
         "0.8.0": (
-            "micropython/pydevices/castdisplay",
-            "micropython/pydevices/mp4mux",
-            "micropython/pydevices/usb-device-net",
-            "micropython/pydevices/usb-host-dfu",
-            "micropython/pydevices/vtterm",
+            "micropython/omnipython/castdisplay",
+            "micropython/omnipython/mp4mux",
+            "micropython/omnipython/usb-device-net",
+            "micropython/omnipython/usb-host-dfu",
+            "micropython/omnipython/vtterm",
         ),
     },
 }
@@ -269,7 +269,7 @@ def render_readme_block(packages: list[dict]) -> str:
     lines = [
         README_START,
         "These are the PyDevices packages this index publishes, each built from the",
-        "source tag pinned in `pydevices-lock.json`; the micropython-lib packages the",
+        "source tag pinned in `omnipython-lock.json`; the micropython-lib packages the",
         "index also carries are upstream's.",
         "",
         "| Package | Version | Description | Source |",
@@ -377,16 +377,16 @@ def self_check() -> int:
     upstream_entries = [_entry(p.name, "0.1.0", str(p.relative_to(REPO_ROOT))) for p in upstream]
     for p in upstream:
         # A locked profile must never shadow an upstream package in this check.
-        assert p.name not in ("pydevices", "palettes"), p
+        assert p.name not in ("omnipython", "palettes"), p
 
     lock = {
-        "pydevices": {"repository": "PyDevices/pydevices", "ref": "v0.3.8"},
+        "omnipython": {"repository": "PyDevices/omnipython", "ref": "v0.3.8"},
         "palettes": {"repository": "PyDevices/palettes", "ref": "v0.0.13"},
     }
     healthy = [
-        _entry("pydevices", "0.3.8", "micropython/pydevices/pydevices"),
-        _entry("pydevices-desktop", "0.3.8", "micropython/pydevices/pydevices-desktop"),
-        _entry("bledev", "0.3.8", "micropython/pydevices/bledev"),
+        _entry("omnipython", "0.3.8", "micropython/omnipython/omnipython"),
+        _entry("omnipython-desktop", "0.3.8", "micropython/omnipython/omnipython-desktop"),
+        _entry("bledev", "0.3.8", "micropython/omnipython/bledev"),
         _entry("palettes", "0.0.13", "micropython/palettes", "wheel | cube"),
         *upstream_entries,
     ]
@@ -439,11 +439,11 @@ def self_check() -> int:
         )
         block = readme_text[readme_text.index(README_START) : readme_text.index(README_END)]
         for must in (
-            "| `pydevices` | 0.3.8 |",
-            "| `pydevices-desktop` | 0.3.8 |",
+            "| `omnipython` | 0.3.8 |",
+            "| `omnipython-desktop` | 0.3.8 |",
             "| `palettes` | 0.0.13 | wheel \\| cube |",
             "https://github.com/PyDevices/palettes/releases/tag/v0.0.13",
-            'mip.install("pydevices-desktop", index="https://PyDevices.github.io/mip")',
+            'mip.install("omnipython-desktop", index="https://PyDevices.github.io/mip")',
         ):
             if must not in block:
                 failures.append(f"README block lacks {must!r}")
@@ -451,7 +451,7 @@ def self_check() -> int:
             failures.append("README outside the block was not preserved")
         doc = json.loads(packages_text)
         names = [p["name"] for p in doc["packages"]]
-        if names != ["pydevices", "pydevices-desktop", "bledev", "palettes"]:
+        if names != ["omnipython", "omnipython-desktop", "bledev", "palettes"]:
             failures.append(f"packages.json order/content wrong: {names}")
         if set(doc) != {"index", "packages"}:
             failures.append(f"packages.json carries environment-dependent keys: {sorted(doc)}")
@@ -485,33 +485,33 @@ def self_check() -> int:
             index_of(
                 [
                     *healthy,
-                    _entry("pydevices-extra", "0.0.1", "micropython/pydevices/pydevices-extra"),
+                    _entry("omnipython-extra", "0.0.1", "micropython/omnipython/omnipython-extra"),
                 ]
             ),
             readme_text,
             1,
             expect_written=False,
-            expect_problem="pydevices-extra: in the index at micropython/pydevices/pydevices-extra",
+            expect_problem="omnipython-extra: in the index at micropython/omnipython/omnipython-extra",
         )
         case(
             "sync output with no committed manifest is a mismatch",
             index_of(
-                [*healthy, _entry("pydevices-extra", "0.0.1", "micropython/pydevices-extra")]
+                [*healthy, _entry("omnipython-extra", "0.0.1", "micropython/omnipython-extra")]
             ),
             readme_text,
             1,
             expect_written=False,
-            expect_problem="pydevices-extra: in the index at micropython/pydevices-extra",
+            expect_problem="omnipython-extra: in the index at micropython/omnipython-extra",
         )
         # The 0.7.6 packages: midiports and the USB packages.
-        newer = {**lock, "pydevices": {"repository": "PyDevices/pydevices", "ref": "v0.7.6"}}
-        since = PROFILE_PACKAGES_SINCE["pydevices"]["0.7.6"]
-        base = [e for e in healthy if not e["path"].startswith("micropython/pydevices/")]
+        newer = {**lock, "omnipython": {"repository": "PyDevices/omnipython", "ref": "v0.7.6"}}
+        since = PROFILE_PACKAGES_SINCE["omnipython"]["0.7.6"]
+        base = [e for e in healthy if not e["path"].startswith("micropython/omnipython/")]
         at_new = [
             _entry(path.rsplit("/", 1)[1], "0.7.6", path)
-            for path in (*MULTI_PACKAGE_PROFILES["pydevices"], *since)
+            for path in (*MULTI_PACKAGE_PROFILES["omnipython"], *since)
         ]
-        with_new_lock = {"palettes": lock["palettes"], "pydevices": newer["pydevices"]}
+        with_new_lock = {"palettes": lock["palettes"], "omnipython": newer["omnipython"]}
 
         def case_with_lock(name, entries, expect_rc, expect_problem=""):
             nonlocal passed
@@ -531,7 +531,7 @@ def self_check() -> int:
             "a 0.7.6 lockfile with a USB package missing from the index is a mismatch",
             [*base, *[e for e in at_new if e["name"] != "usb-host-msc"]],
             1,
-            "usb-host-msc: derived from lockfile profile 'pydevices'",
+            "usb-host-msc: derived from lockfile profile 'omnipython'",
         )
         case(
             "the 0.7.6 packages in an index the lockfile still pins at 0.3.8 are a mismatch",
@@ -539,7 +539,7 @@ def self_check() -> int:
             readme_text,
             1,
             expect_written=False,
-            expect_problem="usb-core: in the index at micropython/pydevices/usb-core",
+            expect_problem="usb-core: in the index at micropython/omnipython/usb-core",
         )
         case(
             "README without markers is a failure, packages.json untouched",
@@ -582,7 +582,7 @@ def main() -> int:
         help="index.json to read: an existing file path (the deploy's artifact) "
         "or an http(s) URL, fetched (default: the live index). No fallback between the two.",
     )
-    parser.add_argument("--lockfile", type=Path, default=REPO_ROOT / "pydevices-lock.json")
+    parser.add_argument("--lockfile", type=Path, default=REPO_ROOT / "omnipython-lock.json")
     parser.add_argument(
         "--readme", type=Path, default=REPO_ROOT / "docs" / "reference" / "packages.md"
     )
