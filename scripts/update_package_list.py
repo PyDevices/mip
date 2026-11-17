@@ -5,7 +5,7 @@ Writes packages.json and rewrites the PACKAGES block in
 docs/reference/packages.md. The set of packages is derived from
 omnipython-lock.json (every profile the publication sync builds), and the
 data for each -- version, description, license -- comes from the index's own
-index.json, never from PyPI or TestPyPI.
+index.json, never from PyPI.
 
 Stdlib only. The refresh-package-list workflow runs it after every deploy --
 a publication or a docs push -- against the index that was just deployed; by
